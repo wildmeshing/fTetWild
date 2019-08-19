@@ -32,10 +32,18 @@ void Logger::init(bool use_cout, const std::string &filename, bool truncate) {
 		sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, truncate));
 	}
 
-	logger_ = std::make_shared<spdlog::async_logger>("float-tetwild", sinks.begin(), sinks.end(),
-		spdlog::thread_pool(), spdlog::async_overflow_policy::block);
-	spdlog::drop("float-tetwild");
-	spdlog::register_logger(logger_);
+	auto &registry_inst = spdlog::details::registry::instance();
+
+	// create global thread pool if not already exists..
+	std::lock_guard<std::recursive_mutex> tp_lock(registry_inst.tp_mutex());
+	auto tp = registry_inst.get_tp();
+	if (tp == nullptr) {
+		tp = std::make_shared<spdlog::details::thread_pool>(spdlog::details::default_async_q_size, 1);
+		registry_inst.set_tp(tp);
+	}
+
+    logger_ = std::make_shared<spdlog::async_logger>("float-tetwild", sinks.begin(), sinks.end(), std::move(tp), spdlog::async_overflow_policy::block);
+    registry_inst.register_and_init(logger_);
 }
 
 } // namespace floattetwild

@@ -1,10 +1,10 @@
 set(SOURCES
-	AABBWrapper.h
-	AABBWrapper.cpp
+        AABBWrapper.h
+        AABBWrapper.cpp
 
 
-	auto_table.hpp
-	auto_table.cpp
+        auto_table.hpp
+        auto_table.cpp
 
 	LocalOperations.h
 	LocalOperations.cpp
@@ -12,20 +12,18 @@ set(SOURCES
 	EdgeSplitting.cpp
 	EdgeCollapsing.h
 	EdgeCollapsing.cpp
-	EdgeSwapping.h
-	EdgeSwapping.cpp
-	VertexSmoothing.h
-	VertexSmoothing.cpp
+        EdgeSwapping.h
+        EdgeSwapping.cpp
+        VertexSmoothing.h
+        VertexSmoothing.cpp
 
-	MeshImprovement.h
-	MeshImprovement.cpp
+        MeshImprovement.h
+        MeshImprovement.cpp
 
 
-	FloatTetwild.h
-	FloatTetwild.cpp
 
-	FloatTetDelaunay.h
-	FloatTetDelaunay.cpp
+        FloatTetDelaunay.h
+        FloatTetDelaunay.cpp
 	FloatTetCutting.h
 	FloatTetCutting.cpp
 	FloatTetCuttingCheck.h
@@ -39,20 +37,20 @@ set(SOURCES
 	Simplification.h
 	Simplification.cpp
 
-	Mesh.cpp
-	Mesh.hpp
+        Mesh.cpp
+        Mesh.hpp
 
-	MeshIO.hpp
-	MeshIO.cpp
+        MeshIO.hpp
+        MeshIO.cpp
 
-	Logger.hpp
-	Logger.cpp
+        Logger.hpp
+        Logger.cpp
 
-	Parameters.h
+        Parameters.h
 
-	Types.hpp
+        Types.hpp
 
-	Statistics.h
+        Statistics.h
 )
 
 prepend_current_path(SOURCES)

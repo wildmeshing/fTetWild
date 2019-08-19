@@ -16,15 +16,14 @@ namespace floatTetWild {
 #define SCALAR_ZERO_3 1e-24
 #endif
 
-    typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixXs;
-
     typedef Eigen::Matrix<Scalar, 3, 3> Matrix3;
-
+	
     typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
     typedef Eigen::Matrix<Scalar, 2, 1> Vector2;
-
+	
 
     typedef Eigen::Matrix<int, 4, 1> Vector4i;
     typedef Eigen::Matrix<int, 3, 1> Vector3i;
     typedef Eigen::Matrix<int, 2, 1> Vector2i;
-	}
+	
+}

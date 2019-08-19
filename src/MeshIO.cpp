@@ -3,6 +3,7 @@
 #include <floattetwild/Logger.hpp>
 #include <floattetwild/MshSaver.h>
 #include <floattetwild/MeshImprovement.h>
+#include <floattetwild/Statistics.h>
 
 #include <igl/Timer.h>
 
@@ -25,59 +26,51 @@ namespace floatTetWild
 {
 	namespace
 	{
-    void extract_volume_mesh(const Mesh&                     mesh,
-                             const std::function<bool(int)>& skip_tet,
-                             const std::function<bool(int)>& skip_vertex,
-                             MatrixXs&                       V,
-                             Eigen::MatrixXi&                T)
-    {
-        const auto& points = mesh.tet_vertices;
-        const auto& tets   = mesh.tets;
+		void extract_surface_mesh(const Mesh &mesh, const std::function<bool(int)> &skip_tet, const std::function<bool(int)> &skip_vertex, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &VS, Eigen::Matrix<int, Eigen::Dynamic, 3> &FS)
+		{
+			const auto &points = mesh.tet_vertices;
+			const auto &tets = mesh.tets;
 
-        V.resize(points.size(), 3);
-        T.resize(tets.size(), 4);
+			Eigen::Matrix<Scalar, Eigen::Dynamic, 3> points_tmp(points.size(), 3);
+			Eigen::Matrix<int, Eigen::Dynamic, 4> tets_tmp(tets.size(), 4);
 
-        size_t                index = 0;
-		std::vector<int> old_2_new(points.size(), -1);
-        for (size_t i = 0; i < points.size(); ++i) {
-            if (skip_vertex(i)) {
-                continue;
-            }
-            old_2_new[i]          = index;
-            V.row(index) = points[i].pos.transpose();
-            ++index;
-        }
+			std::map<int, int> old_2_new;
+			int index = 0;
 
-        V.conservativeResize(index, 3);
 
-        index = 0;
-        for (size_t i = 0; i < tets.size(); ++i) {
-            if (skip_tet(i))
-                continue;
-            for (int j = 0; j < 4; j++) {
-                T(index, j) = old_2_new[tets[i][j]];
-            }
-            ++index;
-        }
-        T.conservativeResize(index, 4);
-    }
+			for(size_t i = 0; i < points.size(); ++i){
+				if(skip_vertex(i))
+					continue;
+				old_2_new[i] = index;
+				points_tmp.row(index) = points[i].pos;
+				++index;
+			}
 
-    void extract_surface_mesh(const Mesh&                               mesh,
-                              const std::function<bool(int)>&           skip_tet,
-                              const std::function<bool(int)>&           skip_vertex,
-                              Eigen::Matrix<Scalar, Eigen::Dynamic, 3>& VS,
-                              Eigen::Matrix<int, Eigen::Dynamic, 3>&    FS)
-    {
-        MatrixXs        VT;
-        Eigen::MatrixXi TT;
-        extract_volume_mesh(mesh, skip_tet, skip_vertex, VT, TT);
+			points_tmp.conservativeResize(index, 3);
 
-        Eigen::VectorXi I;
-        igl::boundary_facets(TT, FS);
-        igl::remove_unreferenced(VT, FS, VS, FS, I);
-    }
+			index = 0;
+			for(size_t i = 0; i < tets.size(); ++i){
+				if (skip_tet(i))
+					continue;
+				for (int j = 0; j < 4; j++) {
+					tets_tmp(index, j) = old_2_new[tets[i][j]];
+				}
+				++index;
+			}
+			tets_tmp.conservativeResize(index, 4);
 
-    void write_mesh_aux(const std::string &path, const Mesh &mesh, const std::vector<int> &t_ids, const std::vector<Scalar> &color, const bool binary, const std::function<bool(int)> &skip_tet, const std::function<bool(int)> &skip_vertex)
+
+			Eigen::VectorXi I;
+			igl::boundary_facets(tets_tmp, FS);
+			igl::remove_unreferenced(points_tmp, FS, VS, FS, I);
+			// for(int i=0;i < FS.rows();i++){
+			// 	int tmp = FS(i, 0);
+			// 	FS(i, 0) = FS(i, 2);
+			// 	FS(i, 2) = tmp;
+			// }
+		}
+
+		void write_mesh_aux(const std::string &path, const Mesh &mesh, const std::vector<int> &t_ids, const std::vector<Scalar> &color, const bool binary, const std::function<bool(int)> &skip_tet, const std::function<bool(int)> &skip_vertex)
 		{
 			std::string output_format = path.substr(path.size() - 4, 4);
 
@@ -328,21 +321,4 @@ namespace floatTetWild
 		timer.stop();
 		logger().info(" took {}s", timer.getElapsedTime());
 	}
-
-  void MeshIO::extract_volume_mesh(const Mesh&      mesh,
-                                   MatrixXs&        V,
-                                   Eigen::MatrixXi& T,
-                                   bool             only_interior)
-  {
-      if (only_interior) {
-          const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_outside; };
-          const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_outside; };
-          floatTetWild::extract_volume_mesh(mesh, skip_tet, skip_vertex, V, T);
-      }
-      else {
-          const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_removed; };
-          const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_removed; };
-          floatTetWild::extract_volume_mesh(mesh, skip_tet, skip_vertex, V, T);
-      }
-  }
 }

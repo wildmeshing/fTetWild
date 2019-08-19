@@ -162,7 +162,7 @@ namespace floatTetWild {
         auto &tet_vertices = mesh.tet_vertices;
         auto &tets = mesh.tets;
 
-        is_face_inserted.assign(input_faces.size(), false);
+        is_face_inserted.resize(input_faces.size(), false);
 
         Vector3 min, max;
         get_bb_corners(params, input_vertices, min, max);

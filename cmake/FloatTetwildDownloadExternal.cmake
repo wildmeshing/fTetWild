@@ -1,5 +1,4 @@
 ################################################################################
-
 include(DownloadProject)
 
 # With CMake 3.8 and above, we can hide warnings about git being in a
@@ -78,7 +77,7 @@ endfunction()
 function(float_tetwild_download_spdlog)
     float_tetwild_download_project(spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG         v1.3.1
+        GIT_TAG        188cff7d6567b80c6b99bc15899fef9637a8fe52
     )
 endfunction()
 
@@ -89,6 +88,7 @@ function(float_tetwild_download_geogram)
         GIT_TAG        v1.6.8
     )
 endfunction()
+
 
 ## aabbcc
 function(float_tetwild_download_aabbcc)

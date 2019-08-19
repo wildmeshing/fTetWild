@@ -1,9 +1,5 @@
-# Download Catch2 unit test framework
-float_tetwild_download_catch2()
-list(APPEND CMAKE_MODULE_PATH ${FLOAT_TETWILD_EXTERNAL}/Catch2/contrib)
-
-# Add catch2
-add_subdirectory(${FLOAT_TETWILD_EXTERNAL}/Catch2 catch2)
+cmake_minimum_required(VERSION 3.1)
+################################################################################
 
 set(test_sources
 	main.cpp
@@ -21,10 +17,11 @@ foreach(source IN ITEMS ${test_sources})
     source_group("tests" FILES "${source}")
 endforeach()
 
-target_link_libraries(unit_tests PUBLIC FloatTetwild Catch2::Catch2 warnings::all)
+target_link_libraries(unit_tests PUBLIC FloatTetwild catch warnings::all)
 
 # set(DATA_DIR "${THIRD_PARTY_DIR}/data/")
 # target_compile_definitions(unit_tests PUBLIC -DDATA_DIR=\"${DATA_DIR}\")
+
 
 if(FLOAT_TETWILD_WITH_SANITIZERS)
 	add_sanitizers(unit_tests)

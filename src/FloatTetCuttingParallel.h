@@ -4,7 +4,7 @@
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/AABBWrapper.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>

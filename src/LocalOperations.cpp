@@ -3,7 +3,7 @@
 
 #include <igl/Timer.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
@@ -130,7 +130,7 @@ void floatTetWild::set_opp_t_id(Mesh& mesh, int t_id, int j){
 void floatTetWild::get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2>>& edges){
     edges.reserve(mesh.tets.size()*6);
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     tbb::concurrent_vector<std::array<int, 2>> edges_tbb;
     tbb::parallel_for( size_t(0), mesh.tets.size(), [&](size_t i)
 #else
@@ -138,7 +138,7 @@ void floatTetWild::get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2
 #endif
         {
         if (mesh.tets[i].is_removed){
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
             return;
 #else
             continue;
@@ -148,7 +148,7 @@ void floatTetWild::get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2
             std::array<int, 2> e = {{mesh.tets[i][0], mesh.tets[i][j + 1]}};
             if (e[0] > e[1])
                 std::swap(e[0], e[1]);
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
             edges_tbb.push_back(e);
 #else
             edges.push_back(e);
@@ -156,14 +156,14 @@ void floatTetWild::get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2
             e = {{mesh.tets[i][j + 1], mesh.tets[i][mod3(j + 1) + 1]}};
             if (e[0] > e[1])
                 std::swap(e[0], e[1]);
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
             edges_tbb.push_back(e);
 #else
             edges.push_back(e);
 #endif
         }
     }
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     );
     edges.reserve(edges_tbb.size());
     edges.insert(edges.end(), edges_tbb.begin(), edges_tbb.end());
@@ -281,7 +281,7 @@ bool floatTetWild::is_valid_edge(const Mesh& mesh, int v1_id, int v2_id) {
 //    set_intersection(mesh.tet_vertices[v1_id].conn_tets, mesh.tet_vertices[v2_id].conn_tets, tmp);
 //    if (tmp.empty()) {
 //        cout<<"happen"<<endl;
-//        pausee();
+//        //pausee();
 //        return false;
 //    }
 
@@ -779,21 +779,21 @@ void floatTetWild::set_intersection(const std::unordered_set<int>& s1, const std
     }
 }
 
-void floatTetWild::set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, const std::unordered_set<int>& s3, 
+void floatTetWild::set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, const std::unordered_set<int>& s3,
                                     std::vector<int>& v) {
     if (s2.size() < s1.size() && s2.size() < s1.size()) {
         set_intersection(s2, s1, s3, v);
         return;
     }
-    
+
     if (s3.size() < s1.size() && s3.size() < s2.size()) {
         set_intersection(s3, s1, s2, v);
         return;
     }
-    
+
     assert(s1.size() <= s2.size());
     assert(s1.size() <= s3.size());
-    
+
     v.clear();
     v.reserve(s1.size());
     for (int x : s1) {

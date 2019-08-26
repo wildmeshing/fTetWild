@@ -178,7 +178,7 @@ void floatTetWild::find_tets_for_cut_new(const std::vector<Vector3> &input_verti
             }
             cout<<endl;
         }
-        pausee();
+        //pausee();
     }
 }
 
@@ -197,7 +197,7 @@ bool floatTetWild::check(const Mesh &mesh) {
         for (int j = 0; j < 4; j++) {
             if (tet_vertices[tets[i][j]].conn_tets.find(i) == tet_vertices[tets[i][j]].conn_tets.end()) {
                 cout << "conn_tets error!" << endl;
-                pausee();
+                //pausee();
             }
         }
     }
@@ -207,12 +207,12 @@ bool floatTetWild::check(const Mesh &mesh) {
         for(int t_id:tet_vertices[i].conn_tets){
             if(t_id>tets.size() || t_id<0){
                 cout<<"t_id>tets.size() || t_id<0"<<endl;
-                pausee();
+                //pausee();
             }
             int j = tets[t_id].find(i);
             if(j<0){
                 cout<<"conn_tets error: j<0"<<endl;
-                pausee();
+                //pausee();
             }
         }
     }
@@ -251,14 +251,14 @@ bool floatTetWild::check(const Mesh &mesh) {
                                                    tet_vertices[tets[i][2]].pos, tet_vertices[tets[i][3]].pos);
         if (fabs(area) < SCALAR_ZERO) {
 //            cout << fabs(area) << endl;
-//            pausee();
+//            //pausee();
         }
     }
     if (cnt > 0) {
         is_valid = false;
 
         cout << "inversion error " << cnt << endl;
-        pausee();
+        //pausee();
     }
 
     //check Euler
@@ -306,7 +306,7 @@ bool floatTetWild::check(const Mesh &mesh) {
                 cout << "error edge: " << all_edges[i][0] << " " << all_edges[i][1] << endl;
                 MeshIO::write_mesh("/Users/yixinhu/Downloads/60246_euler.stl_euler.mesh", mesh, one_ring);
                 MeshIO::write_mesh("/Users/yixinhu/Downloads/60246_euler.stl_euler.msh", mesh, one_ring);
-                pausee();
+                //pausee();
             }
         }
     };
@@ -345,7 +345,7 @@ bool floatTetWild::check(const Mesh &mesh) {
 
 //        find_euler_error(edges);
 
-        pausee();
+        //pausee();
     }
 
     //check conn_tets
@@ -371,7 +371,7 @@ bool floatTetWild::check(const Mesh &mesh) {
             for (auto &ii:tmp_conn_tets[i])
                 cout << ii << " ";
             cout << endl;
-            pausee();
+            //pausee();
         }
     }
 
@@ -403,7 +403,7 @@ bool floatTetWild::check(const Mesh &mesh) {
 //            for (auto &ii:tets[i].opp_t_ids)
 //                cout << ii << " ";
 //            cout << endl;
-//            pausee();
+//            //pausee();
 //        }
 //    }
 //
@@ -419,7 +419,7 @@ bool floatTetWild::check(const Mesh &mesh) {
         set_intersection(mesh.tet_vertices[f[2]].conn_tets, tmp, pair);
         if (pair.size() > 2) {
             cout << "face nonmanifold" << endl;
-            pausee();
+            //pausee();
         }
     }
     //edges
@@ -443,7 +443,7 @@ bool floatTetWild::check(const Mesh &mesh) {
         vector_unique(tmp_v_ids);
         if(tmp_v_ids.size() - tmp.size() > 1){
             cout << "edge nonmanifold" << endl;
-            pausee();
+            //pausee();
         }
 
 //        vector_unique(edge_faces);
@@ -471,7 +471,7 @@ bool floatTetWild::check(const Mesh &mesh) {
                 cout<<"v "<<i<<endl;
                 for(int t_id:tmp)
                     cout<<tets[t_id][0]<<' '<<tets[t_id][1]<<' '<<tets[t_id][2]<<' '<<tets[t_id][3]<<endl;
-                pausee();
+                //pausee();
             }
     }
 
@@ -520,7 +520,7 @@ bool floatTetWild::check(const Mesh &mesh) {
 
             cout<<"tet_vertices[i].conn_tets.size() = "<<tet_vertices[i].conn_tets.size()<<endl;
 
-            pausee();
+            //pausee();
         }
     }
 
@@ -561,20 +561,20 @@ void floatTetWild::check_is_surface_fs(const Mesh &mesh){
                     (my_sf == NOT_SURFACE && opp_sf != NOT_SURFACE) || (my_sf != NOT_SURFACE && my_sf + opp_sf != 0)) {
                 cout << "surface error (NOT_SURFACE)" << endl;
                 cout << my_sf << " " << opp_sf << endl;
-                pausee();
+                //pausee();
             }
 
 //            if (my_sf == NOT_SURFACE) {
 //                if (opp_sf != NOT_SURFACE) {
 //                    cout << "surface error (NOT_SURFACE)" << endl;
 //                    cout << my_sf << " " << opp_sf << endl;
-//                    pausee();
+//                    //pausee();
 //                }
 //            } else {
 //                if (my_sf + opp_sf != 0) {
 //                    cout << "surface error " << endl;
 //                    cout << my_sf << " " << opp_sf << endl;
-//                    pausee();
+//                    //pausee();
 //                }
 //            }
         }
@@ -656,7 +656,7 @@ void floatTetWild::check_cut_f_ids(const std::vector<Vector3> &input_vertices, c
 //                for (int f_id:cut_f_ids[t_id][j])
 //                    cout << f_id << " ";
 //                cout << endl;
-//                pausee();
+//                //pausee();
 //            }
 //        }
 //    }
@@ -701,7 +701,7 @@ void floatTetWild::check_cut_f_ids(const std::vector<Vector3> &input_vertices, c
                         cout << "opp_t_id " << opp_t_id << " " << k << ": " << tets[opp_t_id][0] << " "
                              << tets[opp_t_id][1] << " "
                              << tets[opp_t_id][2] << " " << tets[opp_t_id][3] << endl;
-                        pausee();
+                        //pausee();
                     }
                     break;
                 }
@@ -734,7 +734,7 @@ void floatTetWild::check_cut_f_ids(const std::vector<Vector3> &input_vertices, c
                     cout << n2.transpose() << endl;
                     cout << "tet " << i << endl;
                     cout << "tri " << f_id << endl;
-                    pausee();
+                    //pausee();
                 }
             }
         }
@@ -774,7 +774,7 @@ void floatTetWild::plot_cover_for_tetf(const std::vector<Vector3> &input_vertice
         cout << to_2d(input_vertices[input_faces[f_id][2]], t).transpose() << endl;
     }
 
-    pausee();
+    //pausee();
 }
 
 void floatTetWild::plot_cover_for_trif(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
@@ -809,7 +809,7 @@ void floatTetWild::plot_cover_for_trif(const std::vector<Vector3> &input_vertice
         cout << tet_vertices[tets[t_id][mod4(j + 2)]].pos.transpose() << endl;
         cout << tet_vertices[tets[t_id][mod4(j + 3)]].pos.transpose() << endl;
     }
-    pausee();
+    //pausee();
 }
 
 void floatTetWild::find_bad_cover_for_tetf(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
@@ -963,7 +963,7 @@ void floatTetWild::find_bad_cover_for_trif(const std::vector<Vector3> &input_ver
                     cout << tet_vertices[tets[t_id][mod4(j + 2)]].pos.transpose() << endl;
                     cout << tet_vertices[tets[t_id][mod4(j + 3)]].pos.transpose() << endl;
                 }
-                pausee();
+                //pausee();
 
                 break;
             }

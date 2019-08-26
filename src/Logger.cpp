@@ -10,40 +10,40 @@
 //
 
 #include "Logger.hpp"
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/async.h>
 #include <spdlog/details/registry.h>
 #include <spdlog/details/thread_pool.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <iostream>
 #include <memory>
 #include <mutex>
-#include <iostream>
 
 namespace floatTetWild {
 
-std::shared_ptr<spdlog::async_logger> Logger::logger_;
+std::shared_ptr<spdlog::logger> Logger::logger_;
 
-// Some code was copied over from <spdlog/async.h>
-void Logger::init(bool use_cout, const std::string &filename, bool truncate) {
-	std::vector<spdlog::sink_ptr> sinks;
-	if (use_cout) {
-		sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-	}
-	if (!filename.empty()) {
-		sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, truncate));
-	}
+// See https://github.com/gabime/spdlog#asynchronous-logger-with-multi-sinks
+void Logger::init(bool use_cout, const spdlog::filename_t& filename, bool truncate)
+{
+    std::vector<spdlog::sink_ptr> sinks;
+    if (use_cout) {
+        sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    }
+    if (!filename.empty()) {
+        sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename, truncate));
+    }
 
-	auto &registry_inst = spdlog::details::registry::instance();
+    spdlog::init_thread_pool(8192, 1);
 
-	// create global thread pool if not already exists..
-	std::lock_guard<std::recursive_mutex> tp_lock(registry_inst.tp_mutex());
-	auto tp = registry_inst.get_tp();
-	if (tp == nullptr) {
-		tp = std::make_shared<spdlog::details::thread_pool>(spdlog::details::default_async_q_size, 1);
-		registry_inst.set_tp(tp);
-	}
+    logger_ = std::make_shared<spdlog::async_logger>("float-tetwild",
+                                                     sinks.begin(),
+                                                     sinks.end(),
+                                                     spdlog::thread_pool(),
+                                                     spdlog::async_overflow_policy::block);
 
-    logger_ = std::make_shared<spdlog::async_logger>("float-tetwild", sinks.begin(), sinks.end(), std::move(tp), spdlog::async_overflow_policy::block);
-    registry_inst.register_and_init(logger_);
+    spdlog::drop("float-tetwild");
+    spdlog::register_logger(logger_);
 }
 
-} // namespace floattetwild
+}  // namespace floatTetWild

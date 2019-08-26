@@ -56,7 +56,7 @@
 #include <geogram/mesh/mesh.h>
 #include <geogram/basic/geometry.h>
 
-namespace GEO {
+namespace floatTetWild {
 
     /**
      * \brief Axis Aligned Bounding Box tree of mesh facets.
@@ -76,7 +76,7 @@ namespace GEO {
          *  called else the algorithm will be pretty unefficient).
          * \pre M.facets.are_simplices()
          */
-        MeshFacetsAABBWithEps(const Mesh& M);
+        MeshFacetsAABBWithEps(const GEO::Mesh& M);
 
         /**
          * \brief Computes all the pairs of intersecting facets.
@@ -114,7 +114,7 @@ namespace GEO {
          */
         template< class ACTION >
         void compute_bbox_facet_bbox_intersections(
-            const Box& box_in,
+            const GEO::Box& box_in,
             ACTION& action
         ) const {
             bbox_intersect_recursive(
@@ -129,10 +129,10 @@ namespace GEO {
          * \param[out] sq_dist squared distance between p and the surface.
          * \return the index of the facet nearest to point p.
          */
-        index_t nearest_facet(
-            const vec3& p, vec3& nearest_point, double& sq_dist
+        GEO::index_t nearest_facet(
+            const GEO::vec3& p, GEO::vec3& nearest_point, double& sq_dist
         ) const {
-            index_t nearest_facet;
+            GEO::index_t nearest_facet;
             get_nearest_facet_hint(p, nearest_facet, nearest_point, sq_dist);
             nearest_facet_recursive(
                 p,
@@ -162,10 +162,10 @@ namespace GEO {
          *   forget to update it when calling it within a loop).
          */
         void nearest_facet_with_hint(
-            const vec3& p,
-            index_t& nearest_facet, vec3& nearest_point, double& sq_dist
+            const GEO::vec3& p,
+            GEO::index_t& nearest_facet, GEO::vec3& nearest_point, double& sq_dist
         ) const {
-            if(nearest_facet == NO_FACET) {
+            if(nearest_facet == GEO::NO_FACET) {
                 get_nearest_facet_hint(
                     p, nearest_facet, nearest_point, sq_dist
                 );
@@ -181,10 +181,10 @@ namespace GEO {
          * Finds the nearest facet on the surface, but stops early if a
          * point within a given distance is found.
          */
-        index_t facet_in_envelope(
-            const vec3& p, double sq_epsilon, vec3& nearest_point, double& sq_dist
+        GEO::index_t facet_in_envelope(
+            const GEO::vec3& p, double sq_epsilon, GEO::vec3& nearest_point, double& sq_dist
         ) const {
-            index_t nearest_facet;
+            GEO::index_t nearest_facet;
             get_nearest_facet_hint(p, nearest_facet, nearest_point, sq_dist);
             facet_in_envelope_recursive(
                 p, sq_epsilon,
@@ -199,10 +199,10 @@ namespace GEO {
          * within a given distance bound from the triangle mesh.
          */
         void facet_in_envelope_with_hint(
-            const vec3& p, double sq_epsilon,
-            index_t& nearest_facet, vec3& nearest_point, double& sq_dist
+            const GEO::vec3& p, double sq_epsilon,
+            GEO::index_t& nearest_facet, GEO::vec3& nearest_point, double& sq_dist
         ) const {
-            if(nearest_facet == NO_FACET) {
+            if(nearest_facet == GEO::NO_FACET) {
                 get_nearest_facet_hint(
                     p, nearest_facet, nearest_point, sq_dist
                 );
@@ -220,8 +220,8 @@ namespace GEO {
          * \param[in] p query point
          * \return the squared distance between \p p and the surface.
          */
-        double squared_distance(const vec3& p) const {
-            vec3 nearest_point;
+        double squared_distance(const GEO::vec3& p) const {
+            GEO::vec3 nearest_point;
             double result;
             nearest_facet(p, nearest_point, result);
             return result;
@@ -235,7 +235,7 @@ namespace GEO {
 	 *  and a facet of the mesh.
 	 * \retval false otherwise.
 	 */
-	bool segment_intersection(const vec3& q1, const vec3& q2) const;
+	bool segment_intersection(const GEO::vec3& q1, const GEO::vec3& q2) const;
 
     protected:
 
@@ -260,8 +260,8 @@ namespace GEO {
         template <class ACTION>
         void bbox_intersect_recursive(
             ACTION& action,
-            const Box& box,
-            index_t node, index_t b, index_t e
+            const GEO::Box& box,
+            GEO::index_t node, GEO::index_t b, GEO::index_t e
         ) const {
             geo_debug_assert(e != b);
 
@@ -277,9 +277,9 @@ namespace GEO {
             }
 
             // Recursion
-            index_t m = b + (e - b) / 2;
-            index_t node_l = 2 * node;
-            index_t node_r = 2 * node + 1;
+            GEO::index_t m = b + (e - b) / 2;
+            GEO::index_t node_l = 2 * node;
+            GEO::index_t node_r = 2 * node + 1;
 
             bbox_intersect_recursive(action, box, node_l, b, m);
             bbox_intersect_recursive(action, box, node_r, m, e);
@@ -309,8 +309,8 @@ namespace GEO {
         template <class ACTION>
         void intersect_recursive(
             ACTION& action,
-            index_t node1, index_t b1, index_t e1,
-            index_t node2, index_t b2, index_t e2
+            GEO::index_t node1, GEO::index_t b1, GEO::index_t e1,
+            GEO::index_t node2, GEO::index_t b2, GEO::index_t e2
         ) const {
             geo_debug_assert(e1 != b1);
             geo_debug_assert(e2 != b2);
@@ -339,15 +339,15 @@ namespace GEO {
             // else
             //   intersect node1's two children with node2
             if(e2 - b2 > e1 - b1) {
-                index_t m2 = b2 + (e2 - b2) / 2;
-                index_t node2_l = 2 * node2;
-                index_t node2_r = 2 * node2 + 1;
+                GEO::index_t m2 = b2 + (e2 - b2) / 2;
+                GEO::index_t node2_l = 2 * node2;
+                GEO::index_t node2_r = 2 * node2 + 1;
                 intersect_recursive(action, node1, b1, e1, node2_l, b2, m2);
                 intersect_recursive(action, node1, b1, e1, node2_r, m2, e2);
             } else {
-                index_t m1 = b1 + (e1 - b1) / 2;
-                index_t node1_l = 2 * node1;
-                index_t node1_r = 2 * node1 + 1;
+                GEO::index_t m1 = b1 + (e1 - b1) / 2;
+                GEO::index_t node1_l = 2 * node1;
+                GEO::index_t node1_r = 2 * node1 + 1;
                 intersect_recursive(action, node1_l, b1, m1, node2, b2, e2);
                 intersect_recursive(action, node1_r, m1, e1, node2, b2, e2);
             }
@@ -367,8 +367,8 @@ namespace GEO {
          * \param[out] sq_dist squared distance between p and nearest_point
          */
         void get_nearest_facet_hint(
-            const vec3& p,
-            index_t& nearest_facet, vec3& nearest_point, double& sq_dist
+            const GEO::vec3& p,
+            GEO::index_t& nearest_facet, GEO::vec3& nearest_point, double& sq_dist
         ) const;
 
         /**
@@ -389,9 +389,9 @@ namespace GEO {
          *  subtree under node \p n
          */
         void nearest_facet_recursive(
-            const vec3& p,
-            index_t& nearest_facet, vec3& nearest_point, double& sq_dist,
-            index_t n, index_t b, index_t e
+            const GEO::vec3& p,
+            GEO::index_t& nearest_facet, GEO::vec3& nearest_point, double& sq_dist,
+            GEO::index_t n, GEO::index_t b, GEO::index_t e
         ) const;
 
         /*
@@ -399,9 +399,9 @@ namespace GEO {
          * is found.
          */
         void facet_in_envelope_recursive(
-            const vec3& p, double sq_epsilon,
-            index_t& nearest_facet, vec3& nearest_point, double& sq_dist,
-            index_t n, index_t b, index_t e
+            const GEO::vec3& p, double sq_epsilon,
+            GEO::index_t& nearest_facet, GEO::vec3& nearest_point, double& sq_dist,
+            GEO::index_t n, GEO::index_t b, GEO::index_t e
         ) const;
 
         /**
@@ -414,12 +414,12 @@ namespace GEO {
          *  subtree under node \p n
 	 */
 	bool segment_intersection_recursive(
-	    const vec3& q1, const vec3& q2, index_t n, index_t b, index_t e
+	    const GEO::vec3& q1, const GEO::vec3& q2, GEO::index_t n, GEO::index_t b, GEO::index_t e
 	) const;
 
     protected:
-        vector<Box> bboxes_;
-        const Mesh& mesh_;
+        GEO::vector<GEO::Box> bboxes_;
+        const GEO::Mesh& mesh_;
     };
 
 }

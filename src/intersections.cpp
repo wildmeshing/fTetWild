@@ -477,20 +477,20 @@ int floatTetWild::is_tri_tri_cutted_hint(const Vector3& p1, const Vector3& p2, c
         for(int j=0;j<3;j++)
             cout<<r_2[j]<<" ";
         cout<<endl;
-        pausee();
+        //pausee();
     }
 
     int result = tri_tri_intersection_test_3d(&p_1[0], &q_1[0], &r_1[0], &p_2[0], &q_2[0], &r_2[0], &coplanar, &s[0], &t[0]);
     if (result != 1) {
 //        if (coplanar != 0) {
 //            cout<<"CUT_EMPTY "<<result<<endl;
-//            pausee();
+//            //pausee();
 //        }
         return CUT_EMPTY;
     }
 //    if (coplanar != 0) {
 //        cout<<"NOT CUT_EMPTY "<<coplanar<<" "<<result<<endl;
-//        pausee();
+//        //pausee();
 //    }
 
     if (std::abs(s[0] - t[0]) <= SCALAR_ZERO && std::abs(s[1] - t[1]) <= SCALAR_ZERO && std::abs(s[2] - t[2]) <= SCALAR_ZERO)

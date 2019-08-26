@@ -12,7 +12,7 @@
 #include <igl/writeSTL.h>
 #include <igl/Timer.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
@@ -65,7 +65,7 @@ void floatTetWild::cutting(const std::vector<Vector3>& input_vertices, const std
 
 
     timer.start();
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     int N = std::min((int)mesh.params.num_threads, 4);//tbb::task_scheduler_init::default_num_threads()
     if(cnt_fail < 5000)
         N = std::min((int)mesh.params.num_threads, 2);
@@ -137,7 +137,7 @@ void floatTetWild::cutting(const std::vector<Vector3>& input_vertices, const std
             for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
                 if (mesh.tets[t_id].scalar >= old_partition_t_ids_size || mesh.tets[t_id].scalar < 0) {
                     cout << "t.scalar>=old_partition_t_ids_size || t.scalar<0" << endl;
-                    pausee();
+                    //pausee();
                 }
                 partition_t_ids[mesh.tets[t_id].scalar].push_back(t_id);
             }
@@ -451,7 +451,7 @@ bool floatTetWild::insert_one(const std::vector<Vector3> &input_vertices, const 
 //                    set_intersection(conn_fs[f[j]], conn_fs[f[(j+1)%3]], tmp);
 //                    if(tmp.size()!=2){
 //                        cout<<tmp.size()<<endl;
-//                        pausee();
+//                        //pausee();
 //                    } else {
 //                        cout<<f[j]<<" "<<f[(j+1)%3]<<": "<<tmp[0]<<" "<<tmp[1]<<endl;
 //                    }
@@ -460,7 +460,7 @@ bool floatTetWild::insert_one(const std::vector<Vector3> &input_vertices, const 
 //            cout<<"check done"<<endl;
 
         }
-//        pausee();
+//        //pausee();
         return false;
     }
 
@@ -535,7 +535,7 @@ void floatTetWild::find_tets_for_cut_again(const std::vector<Vector3> &input_ver
 
 //    std::vector<bool> is_visited(tets.size(), false);
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     tbb::concurrent_vector<int> t_id_queue;
     tbb::parallel_for(size_t(0), size_t(tets.size()), [&](size_t t_id) {
         if (tets[t_id].is_removed)
@@ -710,7 +710,7 @@ void floatTetWild::find_tets_for_cut_again(const std::vector<Vector3> &input_ver
 //                cout << tet_vertices[tets[t_id][(j + 3) % 4]].pos.transpose() << endl;
 //            }
 //        }
-//        pausee();
+//        //pausee();
 //    }
 }
 
@@ -928,7 +928,7 @@ void floatTetWild::find_tets_for_cut(const std::vector<Vector3>& input_vertices,
 ////                cout<<is_tri_tri_cutted_hint(p1, p2, p3, tp1, tp2, tp3, CUT_FACE)<<endl;
 ////            }
 //        }
-        pausee();
+        //pausee();
     }
 }
 
@@ -1062,7 +1062,7 @@ void floatTetWild::snapping(const std::vector<Vector3> &input_vertices, const st
         std::sort(intersection_results.begin(), intersection_results.end());//has to be sorted
     } else {
         cout<<"intersection_results empty!!!"<<endl;
-        pausee();
+        //pausee();
     }
 
 //    ///////test
@@ -1070,7 +1070,7 @@ void floatTetWild::snapping(const std::vector<Vector3> &input_vertices, const st
 //        for (int j = 0; j < 4; j++) {
 //            if (oris[tets[t_id][j]] == Predicates::ORI_UNKNOWN) {
 //                cout << "oris[tets[t_id][j]] == Predicates::ORI_UNKNOWN" << endl;
-//                pausee();
+//                //pausee();
 //            }
 //        }
 //    }
@@ -1081,7 +1081,7 @@ void floatTetWild::snapping(const std::vector<Vector3> &input_vertices, const st
 //            if (abs(signed_dist[e[0]]) < mesh.params.eps_coplanar ||
 //                abs(signed_dist[e[1]]) < mesh.params.eps_coplanar) {
 //                cout << "cross edge un-snapped" << endl;
-//                pausee();
+//                //pausee();
 //            }
 //        }
 //    }
@@ -1150,7 +1150,7 @@ int floatTetWild::one_face_cut(const std::vector<Vector3>& input_vertices, const
             cout<<oris[e[1]]<<endl;
             cout<<e[0]<<" "<<e[1]<<endl;
             cout<<mesh.params.eps_coplanar<<endl;
-            pausee();
+            //pausee();
         } else {
             tmp_tet_vertices.emplace_back(p);
             e_p_map[e] = tet_vertices.size() + tmp_tet_vertices.size();
@@ -1255,7 +1255,7 @@ int floatTetWild::tet_subdivision(int f_id,
 ////        for (int t_id: intersection_results_wn)
 ////            cout<<t_id<<" ";
 ////        cout<<endl;
-//        pausee();
+//        //pausee();
 //    }
 
     int i_intersected = 0;
@@ -1472,7 +1472,7 @@ int floatTetWild::tet_subdivision(int f_id,
 //                            cout<<oris[tets[t_id][0]]<<" "<<oris[tets[t_id][1]]<<" "<<oris[tets[t_id][2]]<<" "<<oris[tets[t_id][3]]<<endl;
 //                            cout<<"is_neighbor "<<is_neighbor<<endl;
 //                            cout<<"is found "<<(std::find(intersection_results.begin(), intersection_results.end(), t_id)!=intersection_results.end())<<endl;
-//                            pausee();
+//                            //pausee();
 //                        }
 //                    }
                 }

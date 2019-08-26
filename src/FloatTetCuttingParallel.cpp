@@ -4,7 +4,7 @@
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/MeshImprovement.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -19,7 +19,7 @@ void floatTetWild::generate_coloring_graph(const std::vector<Vector3>& input_ver
     auto &tet_vertices = mesh.tet_vertices;
 
     std::vector<std::array<Vector3, 2>> graph_nodes(input_faces.size());
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     tbb::parallel_for( size_t(0), size_t(input_faces.size()), [&]( size_t f_id ) {
 #else
         for (int f_id = 0; f_id < input_faces.size(); f_id++) {
@@ -89,7 +89,7 @@ void floatTetWild::generate_coloring_graph(const std::vector<Vector3>& input_ver
 
         }
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     });
 #else
     }
@@ -353,7 +353,7 @@ void floatTetWild::merge_meshes(const std::vector<Mesh>& sub_meshes, //const tbb
 
 //    MeshIO::write_mesh("hehehe.msh", mesh);
 //    output_surface(mesh, "hehe_bbox");
-//    pausee();
+//    //pausee();
 
     //update opp_t_ids
     for (auto &t: mesh.tets)
@@ -383,7 +383,7 @@ void floatTetWild::merge_meshes(const std::vector<Mesh>& sub_meshes, //const tbb
 }
 
 bool floatTetWild::is_cutting_cross_partitions(Mesh& sub_mesh, const std::vector<int>& intersection_results_wn) {
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     for (int t_id:intersection_results_wn) {
         for (int j = 0; j < 4; j++) {
             if (sub_mesh.tets[t_id].opp_t_ids[j] == OPP_T_ID_UNKNOWN) {

@@ -348,7 +348,7 @@ namespace {
 
 /****************************************************************************/
 
-namespace GEO {
+namespace floatTetWild {
 
     MeshFacetsAABBWithEps::MeshFacetsAABBWithEps(const Mesh& M)
      : mesh_(M) {

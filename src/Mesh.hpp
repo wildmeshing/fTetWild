@@ -4,7 +4,7 @@
 #include <floattetwild/Types.hpp>
 
 
-// #ifdef USE_TBB
+// #ifdef FLOAT_TETWILD_USE_TBB
 // #include <tbb/concurrent_vector.h>
 // #endif
 
@@ -142,7 +142,7 @@ public:
 
     class Mesh {
     public:
-// #ifdef USE_TBB
+// #ifdef FLOAT_TETWILD_USE_TBB
 //             tbb::concurrent_vector<MeshVertex> tet_vertices;
 //             tbb::concurrent_vector<MeshTet> tets;
 // #else

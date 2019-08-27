@@ -17,7 +17,6 @@ function(float_tetwild_set_source_group)
 	endforeach()
 endfunction()
 
-
 # Add an application from one source
 function(float_tetwild_add_application APP_SOURCE)
 	# Add executable

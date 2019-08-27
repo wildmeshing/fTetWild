@@ -8,28 +8,19 @@ endif()
 
 ################################################################################
 
-if(THIRD_PARTY_DIR)
-	set(GEOGRAM_SEARCH_PATHS ${THIRD_PARTY_DIR})
-else()
-	# set(GEOGRAM_SEARCH_PATHS
-	# 	${GEOGRAM_INSTALL_PREFIX}
-	# 	"$ENV{GEOGRAM_INSTALL_PREFIX}"
-	# 	"/usr/local/"
-	# 	"$ENV{PROGRAMFILES}/Geogram"
-	# 	"$ENV{PROGRAMW6432}/Geogram"
-	# 	"$ENV{HOME}/.local/")
-endif()
+set(GEOGRAM_SEARCH_PATHS ${FLOAT_TETWILD_EXTERNAL}/geogram)
 
 find_path(GEOGRAM_SOURCE_INCLUDE_DIR
 		geogram/basic/common.h
 		PATHS ${GEOGRAM_SEARCH_PATHS}
-		PATH_SUFFIXES geogram/src/lib
+		PATH_SUFFIXES src/lib
 		NO_DEFAULT_PATH
 )
 
 set(GEOGRAM_ROOT ${GEOGRAM_SOURCE_INCLUDE_DIR}/../..)
 
-message("Found Geogram here: ${GEOGRAM_ROOT}")
+message(STATUS "Found Geogram here: ${GEOGRAM_ROOT}")
+
 ################################################################################
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -38,7 +29,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(VORPALINE_BUILD_DYNAMIC false CACHE STRING "" FORCE)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	set(VORPALINE_PLATFORM Linux64-gcc CACHE STRING "" FORCE)
-    set(VORPALINE_BUILD_DYNAMIC false CACHE STRING "" FORCE)
+	set(VORPALINE_BUILD_DYNAMIC false CACHE STRING "" FORCE)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(VORPALINE_PLATFORM Darwin-clang CACHE STRING "" FORCE)
 	set(VORPALINE_BUILD_DYNAMIC false CACHE STRING "" FORCE)
@@ -55,32 +46,31 @@ option(GEOGRAM_LIB_ONLY "Libraries only (no example programs/no viewer)" ON)
 option(GEOGRAM_WITH_FPG "Predicate generator (Sylvain Pion's FPG)" OFF)
 option(GEOGRAM_USE_SYSTEM_GLFW3 "Use the version of GLFW3 installed in the system if found" OFF)
 
-# Workaround CMake limitation with geogram 1.5.4
-if(TARGET glfw AND NOT TARGET glfw3)
-	add_library(glfw3 ALIAS glfw)
-endif()
-
 ################################################################################
 
 add_subdirectory(${GEOGRAM_ROOT} geogram)
 target_include_directories(geogram SYSTEM PUBLIC ${GEOGRAM_SOURCE_INCLUDE_DIR})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	SET_TARGET_PROPERTIES(geogram PROPERTIES COMPILE_FLAGS -fopenmp LINK_FLAGS -fopenmp)
-	target_compile_options(geogram PUBLIC    -fopenmp)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+	set_target_properties(geogram PROPERTIES COMPILE_FLAGS -fopenmp LINK_FLAGS -fopenmp)
+	target_compile_options(geogram PUBLIC -fopenmp)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 	find_package(OpenMP REQUIRED)
 	if(NOT TARGET OpenMP::OpenMP_CXX)
-   		add_library(OpenMP_TARGET INTERFACE)
-    		add_library(OpenMP::OpenMP_CXX ALIAS OpenMP_TARGET)
-    		target_compile_options(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
-    		find_package(Threads REQUIRED)
-    		target_link_libraries(OpenMP_TARGET INTERFACE Threads::Threads)
-    		target_link_libraries(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
+		add_library(OpenMP_TARGET INTERFACE)
+			add_library(OpenMP::OpenMP_CXX ALIAS OpenMP_TARGET)
+			target_compile_options(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
+			find_package(Threads REQUIRED)
+			target_link_libraries(OpenMP_TARGET INTERFACE Threads::Threads)
+			target_link_libraries(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
 	endif()
 
-	target_link_libraries(FloatTetwild PUBLIC OpenMP::OpenMP_CXX)
+	add_library(geogram_wrapper INTERFACE)
+	add_library(geogram::geogram ALIAS geogram_wrapper)
+	target_link_libraries(geogram_wrapper INTERFACE geogram OpenMP::OpenMP_CXX)
+else()
+	add_library(geogram::geogram ALIAS geogram)
 endif()
 
 ################################################################################

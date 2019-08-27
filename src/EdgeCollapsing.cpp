@@ -4,7 +4,7 @@
 #include <floattetwild/MeshImprovement.h> //todo: tmp
 
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
@@ -101,11 +101,11 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
             else {
 //                if(weight<SCALAR_ZERO_2){
 //                    cout<<"len = "<<weight<<" but failed "<<result<<" "<<mesh.is_input_all_inserted<<endl;
-//                    pausee();
+//                    //pausee();
 //                }
 //                if(counter < 25){
 //                    cout<<"len = "<<weight<<" but failed "<<result<<" "<<mesh.is_input_all_inserted<<endl;
-//                    pausee();
+//                    //pausee();
 //                }
                 inf_es.push_back(v_ids);
                 inf_e_tss.push_back(ts);
@@ -172,7 +172,7 @@ void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
 
     std::vector<std::array<int, 2>> edges;
 
-// #ifdef USE_TBB_bug //TODO: remove bug and fix
+// #ifdef FLOAT_TETWILD_USE_TBB_bug //TODO: remove bug and fix
 //     std::vector<std::vector<int>> partition;
 //     int num_partition = tbb::task_scheduler_init::default_num_threads();
 //     partition.clear();
@@ -425,7 +425,7 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
 //                cout << endl;
 //                cout << "******" << endl;
 //                vector_print(pair, " ");
-//                pausee();
+//                //pausee();
 //            }
             if (pair.size() > 1) {
                 int opp_t_id = pair[0] == t_id ? pair[1] : pair[0];

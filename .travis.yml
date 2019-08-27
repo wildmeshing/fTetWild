@@ -1,0 +1,54 @@
+sudo: required
+dist: trusty
+language: cpp
+cache: ccache
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-7
+    - gcc-7
+    - libglu1-mesa-dev
+    - xorg-dev
+  homebrew:
+    packages:
+    - suite-sparse
+    - ccache
+matrix:
+  include:
+  - os: linux
+    compiler: gcc-7
+    env:
+    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
+
+  - os: linux
+    compiler: gcc-7
+    env:
+    - MATRIX_EVAL="export CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
+
+  - os: osx
+    osx_image: xcode10.2
+    compiler: clang
+    env:
+    - MATRIX_EVAL="export CONFIG=Debug"
+
+  - os: osx
+    osx_image: xcode10.2
+    compiler: clang
+    env:
+    - MATRIX_EVAL="export CONFIG=Release"
+
+install:
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
+- eval "${MATRIX_EVAL}"
+- ccache --max-size=5.0G
+- ccache -V && ccache --show-stats && ccache --zero-stats
+
+script:
+- mkdir build
+- cd build
+- cmake -DCMAKE_BUILD_TYPE=$CONFIG ${EXTRA_FLAGS} ..
+- make -j2
+- if [[ "$CONFIG" == "Release" ]]; then make test; fi
+- ccache --show-stats

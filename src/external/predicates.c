@@ -1355,7 +1355,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int compress(elen, e, h)                         /* e and h may be the same. */
+static int compress(elen, e, h)                         /* e and h may be the same. */
 int elen;
 REAL *e;
 REAL *h;
@@ -2329,7 +2329,7 @@ REAL *pd;
   adxbdy = adx * bdy;
   bdxady = bdx * ady;
 
-  det = adz * (bdxcdy - cdxbdy) 
+  det = adz * (bdxcdy - cdxbdy)
       + bdz * (cdxady - adxcdy)
       + cdz * (adxbdy - bdxady);
 

@@ -1,0 +1,14 @@
+bin.nosync/
+bin_rel.nosync/
+*.sublime-project
+3rdparty*
+.idea*
+./*build*
+*build*
+xcode*
+temp-plot.html
+matlab/*.msh
+matlab/*.stl
+__pycache__
+.DS_Store
+/data

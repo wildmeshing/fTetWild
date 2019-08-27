@@ -2,7 +2,7 @@
 #include <floattetwild/LocalOperations.h>
 
 #include <floattetwild/MeshImprovement.h>
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
@@ -12,7 +12,7 @@ void floatTetWild::vertex_smoothing(Mesh& mesh, const AABBWrapper& tree){
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     //TODO atomic<int> conunter
     int counter = 0;
     int suc_counter = 0;
@@ -45,7 +45,7 @@ void floatTetWild::vertex_smoothing(Mesh& mesh, const AABBWrapper& tree){
 //                cout << t_id << endl;
 //                cout<<tet_vertices[v_id].is_on_surface<<endl;
 //                cout<<tet_vertices[v_id].is_on_boundary<<endl;
-//                pausee();
+//                //pausee();
 //
 //
 //                std::vector<std::array<Scalar, 12>> Ts;
@@ -88,7 +88,7 @@ void floatTetWild::vertex_smoothing(Mesh& mesh, const AABBWrapper& tree){
 //                    }
 //                }
 //
-//                pausee();
+//                //pausee();
 //            }
 //        }
 
@@ -126,7 +126,7 @@ void floatTetWild::vertex_smoothing(Mesh& mesh, const AABBWrapper& tree){
         }
     };
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     std::vector<std::vector<int>> concurrent_sets;
     std::vector<int> serial_set;
     // mesh.one_ring_vertex_sets(tbb::task_scheduler_init::default_num_threads()*2, concurrent_sets, serial_set);
@@ -245,7 +245,7 @@ bool floatTetWild::find_new_pos(Mesh& mesh, const int v_id, Vector3& x) {
 //        f_new = f;
 //        it = newton_it;
 //        cout<<it<<": "<<f_old<<" "<<f_new<<endl;
-//        pausee();
+//        //pausee();
 
         //J
         J << 0, 0, 0;

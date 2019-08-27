@@ -14,9 +14,9 @@ namespace floatTetWild {
         GEO::Mesh tmp_b_mesh;
         const GEO::Mesh &sf_mesh;
 
-        std::shared_ptr<GEO::MeshFacetsAABBWithEps> b_tree;
-        std::shared_ptr<GEO::MeshFacetsAABBWithEps> tmp_b_tree;
-        GEO::MeshFacetsAABBWithEps sf_tree;
+        std::shared_ptr<MeshFacetsAABBWithEps> b_tree;
+        std::shared_ptr<MeshFacetsAABBWithEps> tmp_b_tree;
+        MeshFacetsAABBWithEps sf_tree;
 
         void init_b_mesh(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces);
 
@@ -27,7 +27,7 @@ namespace floatTetWild {
 
 		void init_b_mesh_and_tree(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces) {
 			init_b_mesh(input_vertices, input_faces);
-			b_tree = std::make_shared<GEO::MeshFacetsAABBWithEps>(b_mesh);
+			b_tree = std::make_shared<MeshFacetsAABBWithEps>(b_mesh);
 		}
 
 		void init_tmp_b_mesh_and_tree(const Mesh& mesh, const std::vector<std::array<int, 2>>& b_edges);

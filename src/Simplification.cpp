@@ -6,7 +6,7 @@
 #include <igl/writeOFF.h>
 #include <igl/Timer.h>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
@@ -99,7 +99,9 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
         for (int i = 0; i < input_faces.size(); i++) {
             F.row(i) = input_faces[i];
         }
-        igl::writeOFF(params.output_path + "_" + params.postfix + "_simplify.off", V, F);
+        if (!params.output_path.empty()) {
+            igl::writeOFF(params.output_path + "_" + params.postfix + "_simplify.off", V, F);
+        }
     }
 
 //    ////////////////////////
@@ -129,7 +131,7 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
 //               == std::make_tuple(input_vertices[i2][0], input_vertices[i2][1], input_vertices[i2][2]);
 //    }), indices.end());
 
-    Eigen::Matrix<Scalar, Eigen::Dynamic, 3> V_tmp(input_vertices.size(), 3), V_in;
+    MatrixXs V_tmp(input_vertices.size(), 3), V_in;
     Eigen::MatrixXi F_tmp(input_faces.size(), 3), F_in;
     for (int i = 0; i < input_vertices.size(); i++)
         V_tmp.row(i) = input_vertices[i];
@@ -157,7 +159,9 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
         if (F_in(i, 0) == F_in(i, 1) || F_in(i, 0) == F_in(i, 2) || F_in(i, 2) == F_in(i, 1))
             continue;
         //check area
-        Vector3 area = (V_in.row(F_in(i, 1)) - V_in.row(F_in(i, 0))).cross(V_in.row(F_in(i, 2)) - V_in.row(F_in(i, 0)));
+        Vector3 u = V_in.row(F_in(i, 1)) - V_in.row(F_in(i, 0));
+        Vector3 v = V_in.row(F_in(i, 2)) - V_in.row(F_in(i, 0));
+        Vector3 area = u.cross(v);
         if (area.norm() / 2 <= SCALAR_ZERO)
             continue;
         input_faces.push_back(F_in.row(i));
@@ -171,7 +175,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
         const AABBWrapper& tree, const Parameters& params,
         std::vector<bool>& v_is_removed, std::vector<bool>& f_is_removed, std::vector<std::unordered_set<int>>& conn_fs){
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     std::vector<std::array<int, 2>> edges;
     tbb::concurrent_vector<std::array<int, 2>> edges_tbb;
 
@@ -331,7 +335,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
         input_vertices[v2_id] = p;
         for (int f_id:n12_f_ids) {
             f_is_removed[f_id] = true;
-#ifndef USE_TBB
+#ifndef FLOAT_TETWILD_USE_TBB
             for (int j = 0; j < 3; j++) {//rm conn_fs
                 if (input_faces[f_id][j] != v1_id) {
                     conn_fs[input_faces[f_id][j]].erase(f_id);
@@ -349,7 +353,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
             }
         }
 
-#ifndef USE_TBB
+#ifndef FLOAT_TETWILD_USE_TBB
         //push new edges into the queue
         for (int v_id:n_v_ids) {
             double weight = (input_vertices[v2_id] - input_vertices[v_id]).squaredNorm();
@@ -360,7 +364,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
         return SUC;
     };
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     tbb::atomic<int> cnt(0);
     int cnt_suc = 0;
     // tbb::atomic<int> fail_clean(0);
@@ -743,11 +747,11 @@ void floatTetWild::check_surface(std::vector<Vector3>& input_vertices, std::vect
 //            cout<<input_vertices[input_faces[i][2]].transpose()<<endl;
             cout<<input_faces[i][0]<<" "<<input_faces[i][1]<<" "<<input_faces[i][2]<<endl;
             cout<<dist<<endl;
-//            pausee();
+//            //pausee();
         }
     }
-    if(!is_valid)
-        pausee();
+    // if(!is_valid)
+    //     pausee();
 }
 
 

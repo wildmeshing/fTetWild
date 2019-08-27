@@ -1,4 +1,5 @@
 ################################################################################
+
 include(DownloadProject)
 
 # With CMake 3.8 and above, we can hide warnings about git being in a
@@ -30,7 +31,6 @@ function(float_tetwild_download_libigl)
         GIT_TAG        f6b406427400ed7ddb56cfc2577b6af571827c8c
     )
 endfunction()
-
 
 ## Json
 function(float_tetwild_download_json)
@@ -64,7 +64,6 @@ function(float_tetwild_download_tbb)
     )
 endfunction()
 
-
 ## Sanitizers
 function(float_tetwild_download_sanitizers)
     float_tetwild_download_project(sanitizers-cmake
@@ -73,11 +72,19 @@ function(float_tetwild_download_sanitizers)
     )
 endfunction()
 
+## fmt
+function(float_tetwild_download_fmt)
+    float_tetwild_download_project(fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt
+        GIT_TAG 5.3.0
+    )
+endfunction()
+
 ## spdlog
 function(float_tetwild_download_spdlog)
     float_tetwild_download_project(spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG        188cff7d6567b80c6b99bc15899fef9637a8fe52
+        GIT_TAG         v1.3.1
     )
 endfunction()
 
@@ -88,7 +95,6 @@ function(float_tetwild_download_geogram)
         GIT_TAG        v1.6.8
     )
 endfunction()
-
 
 ## aabbcc
 function(float_tetwild_download_aabbcc)

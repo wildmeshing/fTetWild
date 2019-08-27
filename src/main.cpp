@@ -1,6 +1,6 @@
 #include <CLI/CLI.hpp>
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
 #include <thread>
 #endif
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
 #endif
     unsigned int max_threads = std::numeric_limits<unsigned int>::max();
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     command_line.add_option("--max-threads", max_threads, "maximum number of threads used");
 #endif
 
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     }
 
 
-#ifdef USE_TBB
+#ifdef FLOAT_TETWILD_USE_TBB
     const size_t MB = 1024 * 1024;
     const size_t stack_size = 64 * MB;
     unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -313,22 +313,19 @@ int main(int argc, char **argv) {
         igl::copyleft::tetgen::tetrahedralize(tetgen_pts, tetgen_faces, buf.str(), tetgen_generated_points, tetgen_generated_tets, tetgen_generated_faces);
         timer.stop();
         logger().info("Tetgen time {}s", timer.getElapsedTimeInSec());
-        Statistics::stats().states.push_back(StateInfo(StateInfo::tetgen_id, timer.getElapsedTimeInSec(), tetgen_generated_points.rows(), tetgen_generated_tets.rows(), 0, 0));
+        stats().record(StateInfo::tetgen_id, timer.getElapsedTimeInSec(), tetgen_generated_points.rows(), tetgen_generated_tets.rows(), 0, 0);
     }
 #endif
 
-    Statistics::stats().states.push_back(StateInfo(StateInfo::init_id,
-                                                   0, input_vertices.size(), input_faces.size(), -1, -1));
+    stats().record(StateInfo::init_id, 0, input_vertices.size(), input_faces.size(), -1, -1);
 
     timer.start();
     simplify(input_vertices, input_faces, input_tags, tree, params, skip_simplify);
     tree.init_b_mesh_and_tree(input_vertices, input_faces);
     logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    Statistics::stats().states.push_back(StateInfo(StateInfo::preprocessing_id,
-                                                   timer.getElapsedTimeInSec(), input_vertices.size(),
-                                                   input_faces.size(),
-                                                   -1, -1));
+    stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),
+                                                   input_faces.size(), -1, -1);
     if(params.log_level<=1)
         output_component(input_vertices, input_faces, input_tags);
 
@@ -339,9 +336,7 @@ int main(int argc, char **argv) {
     logger().info("#t = {}", mesh.get_t_num());
     logger().info("tetrahedralizing {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    Statistics::stats().states.push_back(StateInfo(StateInfo::tetrahedralization_id,
-                                                   timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   -1, -1));
+    stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
 
     // std::vector<std::vector<int>> tets_id;
     // mesh.partition(8, tets_id);
@@ -373,27 +368,24 @@ int main(int argc, char **argv) {
     cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
     logger().info("cutting {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    Statistics::stats().states.push_back(StateInfo(StateInfo::cutting_id,
-                                                   timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                                                    mesh.get_max_energy(), mesh.get_avg_energy(),
-                                                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false)));
+                                                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
     timer.start();
     optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
     logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    Statistics::stats().states.push_back(StateInfo(StateInfo::optimization_id,
-                                                   timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy()));
+    stats().record(StateInfo::optimization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                                                   mesh.get_max_energy(), mesh.get_avg_energy());
 
     timer.start();
     if(boolean_op<0)
         filter_outside(mesh);
     else
         boolean_operation(mesh, boolean_op);
-    Statistics::stats().states.push_back(StateInfo(StateInfo::wn_id,
-                                                   timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy()));
+    stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                                                   mesh.get_max_energy(), mesh.get_avg_energy());
     logger().info("after winding number");
     logger().info("#v = {}", mesh.get_v_num());
     logger().info("#t = {}", mesh.get_t_num());
@@ -415,7 +407,7 @@ int main(int argc, char **argv) {
 
     std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");
     if (fout.good())
-        fout << Statistics::stats();
+        fout << stats();
     fout.close();
 
     if(!params.envelope_log.empty()) {
@@ -456,5 +448,5 @@ void connect_2_meshes(std::string m1, std::string m2, std::string m) {
         fout << 2 << endl;
     fout.close();
 
-    pausee();
+    //pausee();
 }

@@ -33,6 +33,9 @@ set(SOURCES
 	FloatTetCuttingParallel.h
 	FloatTetCuttingParallel.cpp
 
+		TriangleInsertion.cpp
+		TriangleInsertion.h
+
 	intersections.h
 	intersections.cpp
 

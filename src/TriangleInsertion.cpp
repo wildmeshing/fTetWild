@@ -42,7 +42,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     }
 }
 
-void floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
+bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
 
@@ -64,11 +64,19 @@ void floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         cut_mesh.expand(cut_t_ids);
 
     /////
-    std::vector<std::array<int, 2>> cut_tet_fs;//t_id, local_f_id
-    std::vector<Scalar> cut_v_dists(mesh.tet_vertices.size(), -1);
-    for (int cut_t_id: cut_t_ids) {
+    std::map<std::array<int, 2>, Vector3> map_edge_to_intersecting_point;
+    std::vector<int> subdivide_t_ids;
+    if(cut_mesh.get_intersecting_edges_and_points(map_edge_to_intersecting_point, subdivide_t_ids) == false)
+        return false;
+
+    /////
+    //todo: mark "coplanar" tet faces!!!
+
+    for(int t_id: subdivide_t_ids){
 
     }
+
+    return true;
 }
 
 void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
@@ -133,7 +141,7 @@ bool floatTetWild::CutMesh::snap_to_plane() {
             to_plane_dists[lv_id] = 0;
             continue;
         }
-        to_plane_dists[lv_id] = p_n.dot(mesh.tet_vertices[lv_id].pos - p_vs[0]);
+        to_plane_dists[lv_id] = get_to_plane_dist(mesh.tet_vertices[lv_id].pos);
         if (ori == Predicates::ORI_POSITIVE && to_plane_dists[lv_id] < 0
             || ori == Predicates::ORI_NEGATIVE && to_plane_dists[lv_id] > 0)
             to_plane_dists[lv_id] = -to_plane_dists[lv_id];
@@ -166,6 +174,9 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
             for (int j = 0; j < 4; j++) {
                 if (opp_t_ids[i][j] >= 0)
                     continue;
+                if (!is_snapped[tets[i][(j + 1) % 4]] && !is_snapped[tets[i][(j + 2) % 4]]
+                    && !is_snapped[tets[i][(j + 3) % 4]])
+                    continue;
                 std::vector<int> n_t_ids;
                 set_intersection(mesh.tet_vertices[v_ids[tets[i][(j + 1) % 4]]].conn_tets,
                                  mesh.tet_vertices[v_ids[tets[i][(j + 2) % 4]]].conn_tets,
@@ -189,12 +200,144 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                   [&](const std::array<int, 5> &a, const std::array<int, 5> &b) {
                       return a.back() < b.back();
                   });
-        //todo: remove dup t_ids
+        for (int i = 0; i < new_opp_t_ids.size() - 1; i++) {
+            if (new_opp_t_ids[i].back() == new_opp_t_ids[i + 1].back()) {
+                for (int j = 0; j < 4; j++) {
+                    if (new_opp_t_ids[i][j] >= 0) {
+                        assert(new_opp_t_ids[i + 1][j] < 0);
+                        new_opp_t_ids[i + 1][j] = new_opp_t_ids[i][j];
+                        break;
+                    }
+                }
+                new_opp_t_ids.erase(new_opp_t_ids.begin() + i);
+                i--;
+            }
+        }
 
         //todo: update CutMesh, topo & snapping
+        bool snapped = false;
+        const int old_tets_size = tets.size();
+        for (int i = 0; i < new_opp_t_ids.size(); i++) {
+            ///
+            int cnt_pos = 0;
+            int cnt_neg = 0;
+            for (int j = 0; j < 4; j++) {
+                int ori = Predicates::orient_3d(p_vs[0], p_vs[1], p_vs[2],
+                                                mesh.tet_vertices[mesh.tets[new_opp_t_ids[i].back()][j]].pos);
+                if (ori == Predicates::ORI_POSITIVE)
+                    cnt_pos++;
+                else if (ori == Predicates::ORI_NEGATIVE)
+                    cnt_neg++;
+            }
+            if (cnt_neg == 0 || cnt_pos == 0)
+                continue;
 
-        //do until no more new snapped vertices
+            ///
+            cut_t_ids.push_back(new_opp_t_ids[i].back());
 
-        break;
+            int t_id = tets.size();
+            tets.emplace_back();
+            auto &t = tets.back();
+            for (int j = 0; j < 4; j++) {
+                int v_id = mesh.tets[new_opp_t_ids[i].back()][j];
+                if (map_v_ids.find(v_id) == map_v_ids.end()) {
+                    v_ids.push_back(v_id);
+                    int lv_id = v_ids.size() - 1;
+                    map_v_ids[v_id] = lv_id;
+                    to_plane_dists[lv_id] = get_to_plane_dist(mesh.tet_vertices[lv_id].pos);
+                    if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar) {
+                        is_snapped[lv_id] = true;
+                        snapped = true;
+                    }
+                }
+                t[j] = map_v_ids[v_id];
+            }
+
+            opp_t_ids.emplace_back();
+            auto &opp = opp_t_ids.back();
+            for (int j = 0; j < 4; j++) {
+                opp[j] = new_opp_t_ids[i][j];
+                if (new_opp_t_ids[i][j] < 0)
+                    continue;
+                int opp_t_id = new_opp_t_ids[i][j];
+                for (int k = 0; k < 4; k++) {
+                    if (tets[opp_t_id][k] != t[(j + 1) % 4] && tets[opp_t_id][k] != t[(j + 2) % 4]
+                        && tets[opp_t_id][k] != t[(j + 3) % 4]) {
+                        opp_t_ids[opp_t_id][k] = t_id;
+                        break;
+                    }
+                }
+            }
+        }
+        if (old_tets_size == tets.size())
+            break;
+        if (!snapped)
+            break;
+
+        for (int i = old_tets_size; i < tets.size(); i++) {
+            const auto &t = tets[i];
+            if (is_v_on_plane(t[0]) && is_v_on_plane(t[1]) && is_v_on_plane(t[2]) && is_v_on_plane(t[3])) {
+                auto tmp_t = t;
+                std::sort(tmp_t.begin(), tmp_t.end(), [&](int a, int b) {
+                    return to_plane_dists[a] < to_plane_dists[b];
+                });
+                for (int j = 3; j >= 0; j--) {
+                    if (is_snapped[tmp_t.back()] == true)
+                        is_snapped[tmp_t.back()] = false;
+                }
+            }
+        }
     }
+}
+
+bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::map<std::array<int, 2>, Vector3>& map_edge_to_intersecting_point,
+                                                              std::vector<int>& subdivide_t_ids) {
+    std::vector<std::array<int, 2>> edges;
+    for (auto &t: tets) {
+        for (int j = 0; j < 3; j++) {
+            std::array<int, 2> e;
+            if (e[0] > e[1])
+                e = {{t[0], t[j + 1]}};
+            else
+                e = {{t[j + 1], t[0]}};
+            edges.push_back(e);
+            e = {{t[j + 1], t[mod3(j + 1) + 1]}};
+            if (e[0] > e[1])
+                std::swap(e[0], e[1]);
+            edges.push_back(e);
+        }
+    }
+    vector_unique(edges);
+
+    std::vector<bool> is_intersected(edges.size(), false);
+    for (int i = 0; i < edges.size(); i++) {
+        auto &e = edges[i];
+        if (is_v_on_plane(e[0]) || is_v_on_plane(e[1]))
+            continue;
+        if (to_plane_dists[e[0]] > 0 && to_plane_dists[e[1]] > 0
+            || to_plane_dists[e[0]] < 0 && to_plane_dists[e[1]] < 0)
+            continue;
+
+        Vector3 p;
+        Scalar _;
+        bool is_result = seg_plane_intersection(mesh.tet_vertices[v_ids[e[0]]].pos, mesh.tet_vertices[v_ids[e[1]]].pos,
+                                                p_vs[0], p_n, p, _);
+        if (!is_result) {
+            return false;
+        }
+        map_edge_to_intersecting_point[e] = p;
+    }
+
+
+    for (int i = 0; i < edges.size(); i++) {
+        if (!is_intersected[i])
+            continue;
+        auto &e = edges[i];
+        std::vector<int> tmp;
+        set_intersection(mesh.tet_vertices[v_ids[e[0]]].conn_tets, mesh.tet_vertices[v_ids[e[1]]].conn_tets, tmp);
+        subdivide_t_ids.insert(subdivide_t_ids.end(), tmp.begin(), tmp.end());
+    }
+    vector_unique(subdivide_t_ids);
+
+    return true;
 }

@@ -223,8 +223,8 @@ int tri_tri_intersection_test_3d(real p1[3], real q1[3], real r1[3],
 
 {
     int dp1, dq1, dr1, dp2, dq2, dr2;
-    real v1[3], v2[3], v[3];
-    real N1[3], N2[3], N[3];
+    real v1[3], v2[3];
+    real N1[3], N2[3];
     real alpha;
 
 	SUB(v1,q1,p1)

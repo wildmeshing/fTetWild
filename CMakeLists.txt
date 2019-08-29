@@ -105,6 +105,10 @@ if(FLOAT_TETWILD_WITH_SANITIZERS)
 	add_sanitizers(${PROJECT_NAME})
 endif()
 
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /wd4018 /wd4267 /wd4244 /wd4005)
+endif()
+
 ################################################################################
 # Required libraries
 ################################################################################

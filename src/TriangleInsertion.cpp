@@ -35,16 +35,22 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
     //todo: mark inserted faces on mesh before calling this function!!!
 
+    std::vector<Vector3> new_vertices;
+    std::vector<std::array<int, 4>> new_tets;
     for (int i = 0; i < input_faces.size(); i++) {
         if (is_face_inserted[i])
             continue;
-        insert_one_triangle(i, input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
+        if(insert_one_triangle(i, input_vertices, input_faces, input_tags, mesh, tree, is_again))
+            is_face_inserted[i] = true;
     }
+
+    //todo: preserve boundary
+
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
-        Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
+        Mesh &mesh, AABBWrapper &tree, bool is_again) {
 
     std::array<Vector3, 3> vs = {{input_vertices[input_faces[insert_f_id][0]],
                                          input_vertices[input_faces[insert_f_id][1]],
@@ -72,18 +78,45 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     /////
     //todo: mark "coplanar" tet faces!!!
-    if(!subdivide_tets(mesh, points, map_edge_to_intersecting_point, subdivide_t_ids))
+    std::vector<std::array<int, 4>> new_tets;
+    std::vector<int> modified_t_ids;
+    if(!subdivide_tets(mesh, points, map_edge_to_intersecting_point, subdivide_t_ids, new_tets, modified_t_ids))
         return false;
+
+    if(!is_again){
+        ///vs
+        const int old_v_size = mesh.tet_vertices.size();
+        mesh.tet_vertices.resize(mesh.tet_vertices.size()+points.size());
+        for(int i=0;i<points.size();i++){
+            mesh.tet_vertices[old_v_size+i].pos = points[i];
+            //todo: tags???
+        }
+
+        ///tets
+        mesh.tets.reserve(mesh.tets.size()+new_tets.size());
+        for(int i=0;i<new_tets.size();i++){
+            if(i<modified_t_ids.size())
+                mesh.tets[modified_t_ids[i]].indices << new_tets[i][0], new_tets[i][1], new_tets[i][2], new_tets[i][3];
+            else
+                mesh.tets.push_back(MeshTet(new_tets[i][0], new_tets[i][1], new_tets[i][2], new_tets[i][3]));
+
+            //todo: tags???
+        }
+    } else {
+        //todo
+    }
 
     return true;
 }
 
 bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
                     std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
-                    const std::vector<int>& subdivide_t_ids) {
+                    const std::vector<int>& subdivide_t_ids,
+                    std::vector<std::array<int, 4>>& new_tets, std::vector<int>& modified_t_ids) {
     static const std::array<std::array<int, 2>, 6> t_es = {{{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
     static const std::array<std::array<int, 3>, 4> t_f_es = {{{{1, 5, 4}}, {{5, 3, 2}}, {{3, 0, 4}}, {{0, 1, 2}}}};
     static const std::array<std::array<int, 3>, 4> t_f_vs = {{{{3, 1, 2}}, {{0, 2, 3}}, {{1, 3, 0}}, {{2, 0, 1}}}};
+
     for (int t_id: subdivide_t_ids) {
         /////
         std::bitset<6> config_bit;
@@ -104,6 +137,8 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
             }
         }
         int config_id = config_bit.to_ulong();
+        if (config_id == 0) //no intersection
+            continue;
 
         /////
         std::vector<Vector2i> my_diags;
@@ -146,7 +181,7 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
         }
 
         /////
-        auto check_config = [&](int diag_config_id, std::vector<Vector3> &centroids) {
+        auto check_config = [&](int diag_config_id, std::vector<std::pair<int, Vector3>> &centroids) {
             const std::vector<Vector4i> &config = CutTable::get_tet_conf(config_id, diag_config_id);
             Scalar min_q;
             int cnt = 0;
@@ -154,7 +189,8 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
                 std::array<Vector3, 4> vs;
                 for (int j = 0; j < 4; j++) {
                     if (map_lv_to_v_id.find(tet[j]) == map_lv_to_v_id.end()) {
-                        //todo: compute centroid
+//                        Vector3 c;//todo: compute centroid -> vs[j]
+                        centroids.push_back(std::make_pair(tet[j], vs[j]));
                     } else {
                         int v_id = map_lv_to_v_id[tet[j]];
                         if (v_id < v_size)
@@ -175,22 +211,23 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
         };
 
         int diag_config_id = 0;
+        std::vector<std::pair<int, Vector3>> centroids;
         if (!my_diags.empty()) {
             const auto &all_diags = CutTable::get_diag_confs(config_id);
             std::vector<std::pair<int, Scalar>> min_qualities;
-            std::vector<std::vector<Vector3>> centroids;
+            std::vector<std::vector<std::pair<int, Vector3>>> all_centroids;
 
             for (int i = 0; i < all_diags.size(); i++) {
                 if (my_diags != all_diags[i])
                     continue;
 
                 std::map<int, int> tmp_map;
-                std::vector<Vector3> tmp_centroids;
+                std::vector<std::pair<int, Vector3>> tmp_centroids;
                 Scalar min_q = check_config(i, tmp_centroids);
                 if (min_q < SCALAR_ZERO_3)
                     continue;
                 min_qualities.push_back(std::make_pair(i, min_q));
-                centroids.push_back(tmp_centroids);
+                all_centroids.push_back(tmp_centroids);
             }
             std::sort(min_qualities.begin(), min_qualities.end(),
                       [](const std::pair<int, Scalar> &a, const std::pair<int, Scalar> &b) {
@@ -201,16 +238,25 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
                 return false;
 
             int diag_config_id = min_qualities.back().first;
-
-        } else {
-            //todo
+            centroids = all_centroids[diag_config_id];
         }
 
         const std::vector<Vector4i> &config = CutTable::get_tet_conf(config_id, diag_config_id);
+        std::sort(centroids.begin(), centroids.end(),
+                  [](const std::pair<int, Vector3> &a, const std::pair<int, Vector3> &b) {
+                      return a.first < b.first;
+                  });
+        for (int i = 0; i < centroids.size(); i++) {
+            map_lv_to_v_id[centroids[i].first] = vp_size + i;
+            points.push_back(centroids[i].second);
+        }
 
+        //add new tets
+        for (const auto &t:config) {
+            new_tets.push_back(
+                    {{map_lv_to_v_id[t[0]], map_lv_to_v_id[t[1]], map_lv_to_v_id[t[2]], map_lv_to_v_id[t[3]]}});
+        }
     }
-
-    //todo: add new elements to mesh
 
     return true;
 }

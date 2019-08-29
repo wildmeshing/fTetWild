@@ -20,12 +20,12 @@ namespace floatTetWild {
 
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
                              const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
-                             Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree,
-                             bool is_again);
+                             Mesh &mesh, AABBWrapper &tree, bool is_again);
 
     bool subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
             std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
-            const std::vector<int>& subdivide_t_ids);
+            const std::vector<int>& subdivide_t_ids,
+            std::vector<std::array<int, 4>>& new_tets, std::vector<int>& modified_t_ids);
 
     class CutMesh {
     public:

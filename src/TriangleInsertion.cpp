@@ -77,28 +77,27 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         return false;
 
     /////
-    //todo: mark "coplanar" tet faces!!!
-    std::vector<std::array<int, 4>> new_tets;
+    std::vector<MeshTet> new_tets;
     std::vector<int> modified_t_ids;
-    if(!subdivide_tets(mesh, points, map_edge_to_intersecting_point, subdivide_t_ids, new_tets, modified_t_ids))
+    if (!subdivide_tets(mesh, points, map_edge_to_intersecting_point, subdivide_t_ids, new_tets, modified_t_ids))
         return false;
 
-    if(!is_again){
+    if (!is_again) {
         ///vs
         const int old_v_size = mesh.tet_vertices.size();
-        mesh.tet_vertices.resize(mesh.tet_vertices.size()+points.size());
-        for(int i=0;i<points.size();i++){
-            mesh.tet_vertices[old_v_size+i].pos = points[i];
+        mesh.tet_vertices.resize(mesh.tet_vertices.size() + points.size());
+        for (int i = 0; i < points.size(); i++) {
+            mesh.tet_vertices[old_v_size + i].pos = points[i];
             //todo: tags???
         }
 
         ///tets
-        mesh.tets.reserve(mesh.tets.size()+new_tets.size());
-        for(int i=0;i<new_tets.size();i++){
-            if(i<modified_t_ids.size())
-                mesh.tets[modified_t_ids[i]].indices << new_tets[i][0], new_tets[i][1], new_tets[i][2], new_tets[i][3];
+        mesh.tets.reserve(mesh.tets.size() + new_tets.size());
+        for (int i = 0; i < new_tets.size(); i++) {
+            if (i < modified_t_ids.size())
+                mesh.tets[modified_t_ids[i]] = new_tets[i];
             else
-                mesh.tets.push_back(MeshTet(new_tets[i][0], new_tets[i][1], new_tets[i][2], new_tets[i][3]));
+                mesh.tets.push_back(new_tets[i]);
 
             //todo: tags???
         }
@@ -112,7 +111,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
                     std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
                     const std::vector<int>& subdivide_t_ids,
-                    std::vector<std::array<int, 4>>& new_tets, std::vector<int>& modified_t_ids) {
+                    std::vector<MeshTet>& new_tets, std::vector<int>& modified_t_ids) {
     static const std::array<std::array<int, 2>, 6> t_es = {{{{0, 1}}, {{1, 2}}, {{2, 0}}, {{0, 3}}, {{1, 3}}, {{2, 3}}}};
     static const std::array<std::array<int, 3>, 4> t_f_es = {{{{1, 5, 4}}, {{5, 3, 2}}, {{3, 0, 4}}, {{0, 1, 2}}}};
     static const std::array<std::array<int, 3>, 4> t_f_vs = {{{{3, 1, 2}}, {{0, 2, 3}}, {{1, 3, 0}}, {{2, 0, 1}}}};
@@ -241,7 +240,6 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
             centroids = all_centroids[diag_config_id];
         }
 
-        const std::vector<Vector4i> &config = CutTable::get_tet_conf(config_id, diag_config_id);
         std::sort(centroids.begin(), centroids.end(),
                   [](const std::pair<int, Vector3> &a, const std::pair<int, Vector3> &b) {
                       return a.first < b.first;
@@ -252,9 +250,14 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
         }
 
         //add new tets
+        const auto &config = CutTable::get_tet_conf(config_id, diag_config_id);
+        const auto &new_is_surface_fs = CutTable::get_surface_conf(config_id, diag_config_id);
+        const auto &new_local_f_ids = CutTable::get_face_id_conf(config_id, diag_config_id);
         for (const auto &t:config) {
-            new_tets.push_back(
-                    {{map_lv_to_v_id[t[0]], map_lv_to_v_id[t[1]], map_lv_to_v_id[t[2]], map_lv_to_v_id[t[3]]}});
+            new_tets.push_back(MeshTet(map_lv_to_v_id[t[0]], map_lv_to_v_id[t[1]],
+                                       map_lv_to_v_id[t[2]], map_lv_to_v_id[t[3]]));
+            //todo: mark is_surface_fs and is_bbox_fs
+
         }
     }
 

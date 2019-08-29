@@ -25,7 +25,7 @@ namespace floatTetWild {
     bool subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
             std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
             const std::vector<int>& subdivide_t_ids,
-            std::vector<std::array<int, 4>>& new_tets, std::vector<int>& modified_t_ids);
+            std::vector<MeshTet>& new_tets, std::vector<int>& modified_t_ids);
 
     class CutMesh {
     public:

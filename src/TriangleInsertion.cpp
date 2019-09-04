@@ -180,16 +180,45 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
         }
 
         /////
+        auto get_centroid = [&](const std::vector<Vector4i> &config, int lv_id, Vector3& c) {
+            std::vector<int> n_ids;
+            for (const auto &tet: config) {
+                std::vector<int> tmp;
+                for (int j = 0; j < 4; j++) {
+                    if (tet[j] != lv_id)
+                        tmp.push_back(tet[j]);
+                }
+                if (tmp.size() == 4)
+                    continue;
+                n_ids.insert(n_ids.end(), tmp.begin(), tmp.end());
+            }
+            vector_unique(n_ids);
+            c << 0, 0, 0;
+            for (int n_id:n_ids) {
+                int v_id = map_lv_to_v_id[n_id];
+                if (v_id < v_size)
+                    c += mesh.tet_vertices[v_id].pos;
+                else
+                    c += points[v_id - v_size];
+            }
+            c /= n_ids.size();
+        };
+        
         auto check_config = [&](int diag_config_id, std::vector<std::pair<int, Vector3>> &centroids) {
             const std::vector<Vector4i> &config = CutTable::get_tet_conf(config_id, diag_config_id);
             Scalar min_q;
             int cnt = 0;
+            std::map<int, int> map_lv_to_c;
             for (const auto &tet: config) {
                 std::array<Vector3, 4> vs;
                 for (int j = 0; j < 4; j++) {
                     if (map_lv_to_v_id.find(tet[j]) == map_lv_to_v_id.end()) {
-//                        Vector3 c;//todo: compute centroid -> vs[j]
-                        centroids.push_back(std::make_pair(tet[j], vs[j]));
+                        if(map_lv_to_c.find(tet[j]) == map_lv_to_c.end()) {
+                            get_centroid(config, tet[j], vs[j]);
+                            map_lv_to_c[tet[j]] = centroids.size();
+                            centroids.push_back(std::make_pair(tet[j], vs[j]));
+                        } else
+                            vs[j] = centroids[map_lv_to_c[tet[j]]].second;
                     } else {
                         int v_id = map_lv_to_v_id[tet[j]];
                         if (v_id < v_size)
@@ -240,10 +269,10 @@ bool floatTetWild::subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
             centroids = all_centroids[diag_config_id];
         }
 
-        std::sort(centroids.begin(), centroids.end(),
-                  [](const std::pair<int, Vector3> &a, const std::pair<int, Vector3> &b) {
-                      return a.first < b.first;
-                  });
+//        std::sort(centroids.begin(), centroids.end(),
+//                  [](const std::pair<int, Vector3> &a, const std::pair<int, Vector3> &b) {
+//                      return a.first < b.first;
+//                  });//not necessary
         for (int i = 0; i < centroids.size(); i++) {
             map_lv_to_v_id[centroids[i].first] = vp_size + i;
             points.push_back(centroids[i].second);

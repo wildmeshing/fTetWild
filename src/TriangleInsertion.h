@@ -13,20 +13,6 @@
 #endif
 
 namespace floatTetWild {
-    void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                          const std::vector<int> &input_tags,
-                          Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree,
-                          bool is_again);
-
-    bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
-                             const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
-                             Mesh &mesh, AABBWrapper &tree, bool is_again);
-
-    bool subdivide_tets(Mesh& mesh, std::vector<Vector3>& points,
-            std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
-            const std::vector<int>& subdivide_t_ids,
-            std::vector<MeshTet>& new_tets, std::vector<int>& modified_t_ids);
-
     class CutMesh {
     public:
         std::vector<int> v_ids;
@@ -45,11 +31,16 @@ namespace floatTetWild {
                 mesh(_mesh), p_n(_p_n), p_vs(_p_vs) {}
 
         void construct(const std::vector<int> &cut_t_ids);
+
         bool snap_to_plane();
+
         void expand(std::vector<int> &cut_t_ids);
+
         bool get_intersecting_edges_and_points(std::vector<Vector3> &points,
                                                std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
                                                std::vector<int> &subdivide_t_ids);
+
+        void get_one_ring_t_ids(std::vector<int> &neighbor_t_ids);
 
         inline bool is_v_on_plane(int lv_id) {
             if (is_snapped[lv_id] || to_plane_dists[lv_id] == 0)
@@ -61,6 +52,26 @@ namespace floatTetWild {
             return p_n.dot(p - p_vs[0]);
         }
     };
+
+    void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                          const std::vector<int> &input_tags,
+                          Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree,
+                          bool is_again);
+
+    bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
+                             const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
+                             Mesh &mesh,
+                             std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
+                             AABBWrapper &tree, bool is_again);
+
+    void find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
+                           const std::array<Vector3, 3>& vs, Mesh &mesh, std::vector<int> &result);
+
+    bool subdivide_tets(int insert_f_id, Mesh &mesh, CutMesh& cut_mesh, std::vector<Vector3> &points,
+                        std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
+                        std::vector<int> &subdivide_t_ids,
+                        std::vector<MeshTet> &new_tets, std::vector<int> &modified_t_ids,
+                        std::vector<std::array<std::vector<int>, 4>>& track_surface_fs);
 }
 
 

@@ -56,7 +56,7 @@ namespace floatTetWild {
         v.erase(std::find(v.begin(), v.end(), t));
     }
     template<typename T>
-    void vector_print(std::vector<T>& v, std::string s){
+    void vector_print(std::vector<T>& v, std::string s = " "){
         for(auto i: v)
             cout<<i<<s;
         cout<<endl;

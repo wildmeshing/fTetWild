@@ -54,34 +54,40 @@ namespace floatTetWild {
     };
 
     void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                          const std::vector<int> &input_tags,
-                          Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree,
-                          bool is_again);
+                          const std::vector<int> &input_tags, Mesh &mesh,
+                          std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
 
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
                              const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
-                             Mesh &mesh,
-                             std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
+                             Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                              AABBWrapper &tree, bool is_again);
 
     void find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
-                           const std::array<Vector3, 3>& vs, Mesh &mesh, std::vector<int> &result);
+                           const std::array<Vector3, 3> &vs, Mesh &mesh, std::vector<int> &result);
 
-    bool subdivide_tets(int insert_f_id, Mesh &mesh, CutMesh& cut_mesh, std::vector<Vector3> &points,
+    bool subdivide_tets(int insert_f_id, Mesh &mesh, CutMesh &cut_mesh, std::vector<Vector3> &points,
                         std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
-                        std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
-                        std::vector<int>& subdivide_t_ids,
-                        std::vector<MeshTet>& new_tets, std::vector<std::array<std::vector<int>, 4>>& new_track_surface_fs,
-                        std::vector<int>& modified_t_ids);
+                        std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                        std::vector<int> &subdivide_t_ids,
+                        std::vector<MeshTet> &new_tets,
+                        std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
+                        std::vector<int> &modified_t_ids);
+
+    void mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh);
 
     int get_opp_t_id(int t_id, int j, Mesh &mesh);
 
-    inline int get_local_f_id(int t_id, int v1_id, v2_id, v3_id, Mesh &mesh) {
+    inline int get_local_f_id(int t_id, int v1_id, int v2_id, int v3_id, Mesh &mesh) {
         for (int j = 0; j < 4; j++) {
             if (mesh.tets[t_id][j] != v1_id && mesh.tets[t_id][j] != v2_id && mesh.tets[t_id][j] != v3_id)
                 return j;
         }
+        assert(false);
+        return -1;
     }
+
+    void myassert(bool b);
 }
 
 

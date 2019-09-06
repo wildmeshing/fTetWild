@@ -14,6 +14,7 @@
 #include <floattetwild/Simplification.h>
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/Statistics.h>
+#include <floattetwild/TriangleInsertion.h>
 
 #include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
@@ -338,30 +339,10 @@ int main(int argc, char **argv) {
     logger().info("");
     stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
 
-    // std::vector<std::vector<int>> tets_id;
-    // mesh.partition(8, tets_id);
-    // for(int i = 0; i < tets_id.size(); ++i)
-    // {
-    //     MeshIO::write_mesh("test_" + std::to_string(i) + ".msh", mesh, tets_id[i], false);
-    // }
 
-    // timer.start();
-    // std::vector<Scalar> cols;
-    // std::vector<std::vector<int>> concurrent_sets;
-    // std::vector<int> serial_set;
-    // mesh.one_ring_vertex_sets(8, concurrent_sets, serial_set);
-    // mesh.one_ring_vertex_coloring(cols);
-    // logger().info("one_ring_vertex_coloring {}s", timer.getElapsedTimeInSec());
-    // logger().info("");
-    // MeshIO::write_mesh("delaunay.msh", mesh, false, cols);
+    insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
+    return 0;
 
-    // // for(const auto &p : mesh.tet_vertices)
-    // //     std::cout<<p.pos.transpose()<<std::endl;
-    // // for(const auto c : cols)
-    // //     std::cout<<c<<std::endl;
-    // for(const auto &s : concurrent_sets)
-    //     std::cout<<s.size()<<std::endl;
-    // std::cout<<serial_set.size()<<std::endl;
 
     timer.start();
 //    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);

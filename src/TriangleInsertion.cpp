@@ -77,8 +77,11 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         cout<<"fid "<<i<<endl;
         if (insert_one_triangle(i, input_vertices, input_faces, input_tags, mesh, track_surface_fs, tree, is_again))
             is_face_inserted[i] = true;
+
+        pausee();//fortest
     }
     logger().info("insert_one_triangle * n done, #v = {}, #t = {}", mesh.tet_vertices.size(), mesh.tets.size());
+    logger().info("uninserted #f = {}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
     /////
     //todo: preserve open boundary
@@ -113,8 +116,9 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     CutMesh cut_mesh(mesh, n, vs);
     cut_mesh.construct(cut_t_ids);
     if (cut_mesh.snap_to_plane()) {
+        cout << "cut_t_ids.size() " << cut_t_ids.size() << "->";
         cut_mesh.expand(cut_t_ids);
-        cout << "expanded" << endl;
+        cout << cut_t_ids.size() << " expanded" << endl;
     }
 
     /////
@@ -124,14 +128,16 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     if (!cut_mesh.get_intersecting_edges_and_points(points, map_edge_to_intersecting_point, subdivide_t_ids))
         return false;
     //have to add all cut_t_ids
+    vector_unique(cut_t_ids);
     std::vector<int> tmp;
     std::set_difference(subdivide_t_ids.begin(), subdivide_t_ids.end(), cut_t_ids.begin(), cut_t_ids.end(),
                         std::back_inserter(tmp));
     std::vector<bool> is_mark_surface(cut_t_ids.size(), true);
     cut_t_ids.insert(cut_t_ids.end(), tmp.begin(), tmp.end());
     is_mark_surface.resize(is_mark_surface.size() + tmp.size(), false);
+    vector_print(tmp);
+    vector_print(is_mark_surface);
     cout << "cut_mesh.get_intersecting_edges_and_points OK" << endl;
-    pausee();
 
     /////
     std::vector<MeshTet> new_tets;
@@ -184,35 +190,73 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         //todo
     }
 
-    /////fortest
-    pausee();
-
-    //check connection
-    std::vector<std::vector<int>> conn_tets(mesh.tet_vertices.size());
-    for (int i = 0; i < mesh.tets.size(); i++) {
-        for (int j = 0; j < 4; j++)
-            conn_tets[mesh.tets[i][j]].push_back(i);
-    }
-    for (int i = 0; i < mesh.tet_vertices.size(); i++) {
-        std::sort(mesh.tet_vertices[i].conn_tets.begin(), mesh.tet_vertices[i].conn_tets.end());
-        if (mesh.tet_vertices[i].conn_tets != conn_tets[i]) {
-            cout << "mesh.tet_vertices[i].conn_tets!=conn_tets[i]" << endl;
-            pausee();
-        }
-    }
-    cout<<"check 1 done"<<endl;
-    for (int i = 0; i < mesh.tets.size(); i++) {
-        for (int j = 0; j < 4; j++) {
-            int opp_t_id = get_opp_t_id(i, j, mesh);
-        }
-    }
-    cout<<"check 2 done"<<endl;
+//    /////fortest
+////    pausee();
+//
+//    //check connection
+//    std::vector<std::vector<int>> conn_tets(mesh.tet_vertices.size());
+//    for (int i = 0; i < mesh.tets.size(); i++) {
+//        for (int j = 0; j < 4; j++)
+//            conn_tets[mesh.tets[i][j]].push_back(i);
+//    }
+//    for (int i = 0; i < mesh.tet_vertices.size(); i++) {
+//        std::sort(mesh.tet_vertices[i].conn_tets.begin(), mesh.tet_vertices[i].conn_tets.end());
+//        if (mesh.tet_vertices[i].conn_tets != conn_tets[i]) {
+//            cout << "mesh.tet_vertices[i].conn_tets!=conn_tets[i]" << endl;
+//            pausee();
+//        }
+//    }
+//    cout<<"check 1 done"<<endl;
+//    for (int i = 0; i < mesh.tets.size(); i++) {
+//        for (int j = 0; j < 4; j++) {
+//            int opp_t_id = get_opp_t_id(i, j, mesh);
+//        }
+//    }
+//    cout<<"check 2 done"<<endl;
 
     return true;
 }
 
 void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
                                      const std::array<Vector3, 3>& vs, Mesh &mesh, std::vector<int> &cut_t_ids) {
+    for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+        std::array<int, 4> oris;
+        for (int j = 0; j < 4; j++) {
+            oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
+        }
+
+        for (int j = 0; j < 4; j++) {
+            int cnt_pos = 0;
+            int cnt_neg = 0;
+            int cnt_on = 0;
+            for (int k = 0; k < 3; k++) {
+                if (oris[(j + k) % 4] == Predicates::ORI_ZERO)
+                    cnt_on++;
+                else if (oris[(j + k) % 4] == Predicates::ORI_POSITIVE)
+                    cnt_pos++;
+                else
+                    cnt_neg++;
+            }
+
+            int result = CUT_EMPTY;
+            auto &tp1 = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+            auto &tp2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+            auto &tp3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+            if (cnt_on == 3) {
+                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR);
+            } else if (cnt_pos > 0 && cnt_neg > 0) {
+                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE);
+            }
+            if (result == CUT_EMPTY)
+                continue;
+
+            cut_t_ids.push_back(t_id);
+            break;
+        }
+    }
+
+    return;//fortest
+
     std::vector<int> n_t_ids;
     for (int j = 0; j < 3; j++) {
         n_t_ids.insert(n_t_ids.end(), mesh.tet_vertices[input_faces[f_id][j]].conn_tets.begin(),
@@ -289,8 +333,11 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
 //    subdivide_t_ids.insert(subdivide_t_ids.end(), neighbor_t_ids.begin(), neighbor_t_ids.end());
 //    is_mark_surface.resize(is_mark_surface.size() + neighbor_t_ids.size(), false);
 
-    for(auto m: map_edge_to_intersecting_point)//fortest
-        cout<< (m.first[0])<<" "<<(m.first[1])<<endl;
+    int tmp_cnt = 0;
+    for(auto m: map_edge_to_intersecting_point) {//fortest
+        cout << (m.first[0]) << " " << (m.first[1]) << ": " << mesh.tet_vertices.size() + m.second << endl;
+        tmp_cnt++;
+    }
 
     for (int t_id: subdivide_t_ids) {
         //fortest
@@ -325,8 +372,10 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                     int cnt_on = 0;
                     for (int k = 0; k < 3; k++) {
                         assert(cut_mesh.map_v_ids.find(mesh.tets[t_id][(j + k) % 4]) != cut_mesh.map_v_ids.end());
-                        if (cut_mesh.is_v_on_plane(cut_mesh.map_v_ids[mesh.tets[t_id][(j + k) % 4]]))
+                        if (cut_mesh.is_v_on_plane(cut_mesh.map_v_ids[mesh.tets[t_id][(j + k) % 4]])) {
                             cnt_on++;
+                            cout<<(j + k) % 4<<endl;//fortest
+                        }
                     }
                     cout<<"cnt_on = "<<cnt_on<<endl;//fortest
                     if (cnt_on == 3) {
@@ -391,6 +440,11 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
             cnt++;
         }
 
+        cout<<"my_diags:"<<endl;//fortest
+        for(auto& tmp: my_diags){
+            cout<<tmp[0]<<" "<<tmp[1]<<"/"<<map_lv_to_v_id[tmp[0]]<<" "<<map_lv_to_v_id[tmp[1]]<<endl;
+        }
+
         /////
         auto get_centroid = [&](const std::vector<Vector4i> &config, int lv_id, Vector3 &c) {
             std::vector<int> n_ids;
@@ -440,11 +494,11 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                     }
                 }
 
-                Scalar volumn = Predicates::orient_3d_volume(vs[0], vs[1], vs[2], vs[3]);
+                Scalar volume = Predicates::orient_3d_volume(vs[0], vs[1], vs[2], vs[3]);
                 if (cnt == 0)
-                    min_q = volumn;
-                else if (volumn < min_q)
-                    min_q = volumn;
+                    min_q = volume;
+                else if (volume < min_q)
+                    min_q = volume;
             }
 
             return min_q;
@@ -457,8 +511,12 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
             std::vector<std::pair<int, Scalar>> min_qualities(all_diags.size());
             std::vector<std::vector<std::pair<int, Vector3>>> all_centroids(all_diags.size());
             for (int i = 0; i < all_diags.size(); i++) {
+//                cout << "all_diags " << i << ": "<<endl;//fortest
+//                for(auto& ii: all_diags[i])
+//                    cout << ii[0] <<" " << ii[1] << endl;
+
                 if (my_diags != all_diags[i]) {
-                    min_qualities[i] = std::make_pair(-1, -1);
+                    min_qualities[i] = std::make_pair(i, -1);
                     continue;
                 }
 
@@ -477,7 +535,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
             if (min_qualities.back().second < SCALAR_ZERO_3) // if tet quality is too bad
                 return false;
 
-            int diag_config_id = min_qualities.back().first;
+            diag_config_id = min_qualities.back().first;
             centroids = all_centroids[diag_config_id];
         } else {
             Scalar min_q = check_config(diag_config_id, centroids);
@@ -485,14 +543,12 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                 return false;
         }
 
-//        std::sort(centroids.begin(), centroids.end(),
-//                  [](const std::pair<int, Vector3> &a, const std::pair<int, Vector3> &b) {
-//                      return a.first < b.first;
-//                  });//not necessary
         for (int i = 0; i < centroids.size(); i++) {
             map_lv_to_v_id[centroids[i].first] = vp_size + i;
             points.push_back(centroids[i].second);
         }
+
+        cout<<"diag_config_id = "<<diag_config_id<<endl;//fortest
 
         //add new tets
         const auto &config = CutTable::get_tet_conf(config_id, diag_config_id);
@@ -547,6 +603,10 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 
     for (int t_id = 0; t_id < track_surface_fs.size(); t_id++) {
         for (int j = 0; j < 4; j++) {
+            if (track_surface_fs[t_id][j].size() > 0)//fortest
+                mesh.tets[t_id].is_surface_fs[j] = 1;
+            continue;
+
             auto &f_ids = track_surface_fs[t_id][j];
             auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
             auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
@@ -579,11 +639,16 @@ int floatTetWild::get_opp_t_id(int t_id, int j, Mesh &mesh){
                      mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].conn_tets,
                      tmp);
     //fortest
-    if(tmp.size() != 1 && tmp.size() != 2){
-        cout<<"tmp.size() = "<<tmp.size()<<endl;
+    if(tmp.size() != 1 && tmp.size() != 2) {
+        cout << "tmp.size() = " << tmp.size() << endl;
+        cout << "t_id = " << t_id << ", j = " << j << endl;
         vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].conn_tets);
         vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].conn_tets);
         vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].conn_tets);
+        vector_print(tmp);
+        for(int i: tmp){
+            mesh.tets[i].print();
+        }
         pausee();
     }
     //fortest
@@ -711,6 +776,9 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                 }
             }
         }
+        if(new_opp_t_ids.empty())
+            return;
+
         std::sort(new_opp_t_ids.begin(), new_opp_t_ids.end(),
                   [&](const std::array<int, 5> &a, const std::array<int, 5> &b) {
                       return a.back() < b.back();
@@ -719,7 +787,7 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
             if (new_opp_t_ids[i].back() == new_opp_t_ids[i + 1].back()) {
                 for (int j = 0; j < 4; j++) {
                     if (new_opp_t_ids[i][j] >= 0) {
-                        assert(new_opp_t_ids[i + 1][j] < 0);
+//                        myassert(new_opp_t_ids[i + 1][j] < 0);//fortest
                         new_opp_t_ids[i + 1][j] = new_opp_t_ids[i][j];
                         break;
                     }

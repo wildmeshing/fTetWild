@@ -129,6 +129,10 @@ public:
             return -1;
         }
 
+        inline void print(){
+            cout<<indices[0]<<" "<<indices[1]<<" "<<indices[2]<<" "<<indices[3]<<endl;
+        }
+
         std::array<char, 4> is_surface_fs = {{NOT_SURFACE, NOT_SURFACE, NOT_SURFACE, NOT_SURFACE}};
         std::array<char, 4> is_bbox_fs = {{NOT_BBOX, NOT_BBOX, NOT_BBOX, NOT_BBOX}};
         std::array<int, 4> opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};

@@ -606,8 +606,8 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
     for (int t_id = 0; t_id < track_surface_fs.size(); t_id++) {
         for (int j = 0; j < 4; j++) {
 //            //fortest
-////            if (track_surface_fs[t_id][j].size() > 0)
-//            if (std::find(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(), III) != track_surface_fs[t_id][j].end())
+//            if (track_surface_fs[t_id][j].size() > 0)
+////            if (std::find(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(), III) != track_surface_fs[t_id][j].end())
 //                mesh.tets[t_id].is_surface_fs[j] = 1;
 //            continue;
 //            //fortest
@@ -967,7 +967,6 @@ void floatTetWild::myassert(bool b) {
 }
 
 void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs){
-    return;
     for (int t_id = 0; t_id < track_surface_fs.size(); t_id++) {
         for (int j = 0; j < 4; j++) {
             std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());

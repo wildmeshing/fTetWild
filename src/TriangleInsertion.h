@@ -88,6 +88,8 @@ namespace floatTetWild {
     }
 
     void myassert(bool b);
+
+    void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 }
 
 

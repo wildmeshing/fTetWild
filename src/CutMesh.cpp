@@ -218,7 +218,6 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
 //        pausee();
 //        //fortest
 
-//        bool snapped = false;
         const int old_tets_size = tets.size();
         for (int i = 0; i < new_opp_t_ids.size(); i++) {
             ///
@@ -246,10 +245,6 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
             }
 
             ///
-//            if(std::find(cut_t_ids.begin(), cut_t_ids.end(), new_opp_t_ids[i].back()) != cut_t_ids.end()){//fortest
-//                cout<<"push duplicated t_id "<<new_opp_t_ids[i].back()<<" into cut_t_ids!!"<<endl;
-//                pausee();
-//            }
             cut_t_ids.push_back(new_opp_t_ids[i].back());
 
             int t_id = tets.size();
@@ -284,12 +279,6 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                         std::vector<int> tmp;
                         set_intersection(conn_tets[t[(j + 1) % 4]], conn_tets[t[(j + 2) % 4]],
                                          conn_tets[t[(j + 3) % 4]], tmp);
-//                        //fortest
-//                        if(tmp.size() != 2 && tmp.size() != 1) {
-//                            cout<<"tmp.size() = "<<tmp.size()<<endl;
-//                            pausee();
-//                        }
-//                        //fortest
                         if(tmp.size() == 1)//一个三角形刚好填了一个v字的缺口，所有点都在v_ids中，但三角形不在cut_mesh中
                             continue;
                         opp_t_ids.back()[j] = tmp[0] == t_id ? tmp[1] : tmp[0];

@@ -36,6 +36,9 @@ set(SOURCES
 		TriangleInsertion.cpp
 		TriangleInsertion.h
 
+		CutMesh.cpp
+		CutMesh.h
+
 	intersections.h
 	intersections.cpp
 

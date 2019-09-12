@@ -129,7 +129,7 @@ public:
             return -1;
         }
 
-        inline void print(){
+        inline void print() const {
             cout<<indices[0]<<" "<<indices[1]<<" "<<indices[2]<<" "<<indices[3]<<endl;
         }
 

@@ -67,7 +67,8 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
             break;//fortest
     }
     logger().info("insert_one_triangle * n done, #v = {}, #t = {}", mesh.tet_vertices.size(), mesh.tets.size());
-    logger().info("uninserted #f = {}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
+    logger().info("uninserted #f = {}/{}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false),
+            is_face_inserted.size());
 
     //fortest
     check_track_surface_fs(mesh, track_surface_fs);
@@ -184,43 +185,44 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
 void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
                                      const std::array<Vector3, 3>& vs, Mesh &mesh, std::vector<int> &cut_t_ids) {
-    for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
-        std::array<int, 4> oris;
-        for (int j = 0; j < 4; j++) {
-            oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
-        }
-
-        for (int j = 0; j < 4; j++) {
-            int cnt_pos = 0;
-            int cnt_neg = 0;
-            int cnt_on = 0;
-            for (int k = 0; k < 3; k++) {
-                if (oris[(j + k + 1) % 4] == Predicates::ORI_ZERO)
-                    cnt_on++;
-                else if (oris[(j + k + 1) % 4] == Predicates::ORI_POSITIVE)
-                    cnt_pos++;
-                else
-                    cnt_neg++;
-            }
-
-            int result = CUT_EMPTY;
-            auto &tp1 = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
-            auto &tp2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
-            auto &tp3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
-            if (cnt_on == 3) {
-                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR);
-            } else if (cnt_pos > 0 && cnt_neg > 0) {
-                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE);
-            }
-            if (result == CUT_EMPTY)
-                continue;
-
-            cut_t_ids.push_back(t_id);
-            break;
-        }
-    }
-
-    return;//fortest
+    //todo: double check why different
+//    for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+//        std::array<int, 4> oris;
+//        for (int j = 0; j < 4; j++) {
+//            oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
+//        }
+//
+//        for (int j = 0; j < 4; j++) {
+//            int cnt_pos = 0;
+//            int cnt_neg = 0;
+//            int cnt_on = 0;
+//            for (int k = 0; k < 3; k++) {
+//                if (oris[(j + k + 1) % 4] == Predicates::ORI_ZERO)
+//                    cnt_on++;
+//                else if (oris[(j + k + 1) % 4] == Predicates::ORI_POSITIVE)
+//                    cnt_pos++;
+//                else
+//                    cnt_neg++;
+//            }
+//
+//            int result = CUT_EMPTY;
+//            auto &tp1 = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+//            auto &tp2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+//            auto &tp3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+//            if (cnt_on == 3) {
+//                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR);
+//            } else if (cnt_pos > 0 && cnt_neg > 0) {
+//                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE);
+//            }
+//            if (result == CUT_EMPTY)
+//                continue;
+//
+//            cut_t_ids.push_back(t_id);
+//            break;
+//        }
+//    }
+//
+//    return;//fortest
 
     std::vector<int> n_t_ids;
     for (int j = 0; j < 3; j++) {
@@ -615,26 +617,43 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
     output_surface(mesh, "surface.stl");
 }
 
+void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                        const std::vector<bool> &is_face_inserted,
+                        std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos){
+    std::vector<std::array<int, 2>> edges;
+    for (auto &f: input_faces) {
+        for (int j = 0; j < 3; j++) {
+            std::array<int, 2> e = {{f[j], f[(j + 1)%3]}};
+            if (e[0] > e[1])
+                std::swap(e[0], e[1]);
+            edges.push_back(e);
+        }
+    }
+    vector_unique(edges);
+
+    //todo
+}
+
 int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){
     std::vector<int> tmp;
     set_intersection(mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].conn_tets,
                      mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].conn_tets,
                      mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].conn_tets,
                      tmp);
-    //fortest
-    if(tmp.size() != 1 && tmp.size() != 2) {
-        cout << "tmp.size() = " << tmp.size() << endl;
-        cout << "t_id = " << t_id << ", j = " << j << endl;
-        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].conn_tets);
-        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].conn_tets);
-        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].conn_tets);
-        vector_print(tmp);
-        for(int i: tmp){
-            mesh.tets[i].print();
-        }
-        pausee();
-    }
-    //fortest
+//    //fortest
+//    if(tmp.size() != 1 && tmp.size() != 2) {
+//        cout << "tmp.size() = " << tmp.size() << endl;
+//        cout << "t_id = " << t_id << ", j = " << j << endl;
+//        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].conn_tets);
+//        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].conn_tets);
+//        vector_print(mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].conn_tets);
+//        vector_print(tmp);
+//        for(int i: tmp){
+//            mesh.tets[i].print();
+//        }
+//        pausee();
+//    }
+//    //fortest
     if (tmp.size() == 2)
         return tmp[0] == t_id ? tmp[1] : tmp[0];
     else

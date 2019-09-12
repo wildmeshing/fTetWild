@@ -14,8 +14,6 @@
 #endif
 
 namespace floatTetWild {
-
-
     void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                           const std::vector<int> &input_tags, Mesh &mesh,
                           std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
@@ -27,6 +25,10 @@ namespace floatTetWild {
 
     void find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
                            const std::array<Vector3, 3> &vs, Mesh &mesh, std::vector<int> &result);
+
+    void find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                            const std::vector<bool> &is_face_inserted,
+                            std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos);
 
     bool subdivide_tets(int insert_f_id, Mesh &mesh, CutMesh &cut_mesh, std::vector<Vector3> &points,
                         std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,

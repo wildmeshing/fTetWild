@@ -347,7 +347,7 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
     for (auto &t: tets) {
         for (int j = 0; j < 3; j++) {
             std::array<int, 2> e;
-            if (e[0] > e[1])
+            if (t[0] < t[j + 1])
                 e = {{t[0], t[j + 1]}};
             else
                 e = {{t[j + 1], t[0]}};

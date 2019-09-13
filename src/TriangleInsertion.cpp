@@ -74,7 +74,8 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     check_track_surface_fs(mesh, track_surface_fs);
 
     /////
-    //todo: preserve open boundary
+    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
+    find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
 
     /////
     //todo: update mesh is_surface_fs
@@ -566,6 +567,102 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
     return true;
 }
 
+void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                       const std::vector<bool> &is_face_inserted,
+                                       std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos) {
+    std::vector<std::array<int, 2>> edges;
+    std::vector<std::vector<int>> conn_tris(input_vertices.size());
+    for (int i = 0; i < input_faces.size(); i++) {
+        if(!is_face_inserted[i])///use currently inserted faces as mesh
+            continue;
+        const auto &f = input_faces[i];
+        for (int j = 0; j < 3; j++) {
+            //edges
+            std::array<int, 2> e = {{f[j], f[(j + 1) % 3]}};
+            if (e[0] > e[1])
+                std::swap(e[0], e[1]);
+            edges.push_back(e);
+            //conn_tris
+            conn_tris[input_faces[i][j]].push_back(i);
+        }
+    }
+    vector_unique(edges);
+
+    int cnt1 = 0;
+    int cnt2 = 0;
+    for (const auto &e: edges) {
+        std::vector<int> n12_f_ids;
+        std::set_intersection(conn_tris[e[0]].begin(), conn_tris[e[0]].end(),
+                              conn_tris[e[1]].begin(), conn_tris[e[1]].end(), std::back_inserter(n12_f_ids));
+
+        if (n12_f_ids.size() == 1) {//open boundary
+            b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
+            cnt1++;
+        } else {
+            int f_id = n12_f_ids[0];
+            int j = 0;
+            for (; j < 3; j++) {
+                if ((input_faces[f_id][j] == e[0] && input_faces[f_id][mod3(j + 1)] == e[1])
+                    || (input_faces[f_id][j] == e[1] && input_faces[f_id][mod3(j + 1)] == e[0]))
+                    break;
+            }
+
+            Vector3 n = get_normal(input_vertices[input_faces[f_id][0]], input_vertices[input_faces[f_id][1]],
+                                   input_vertices[input_faces[f_id][2]]);
+            int t = get_t(input_vertices[input_faces[f_id][0]], input_vertices[input_faces[f_id][1]],
+                          input_vertices[input_faces[f_id][2]]);
+
+            bool is_fine = false;
+            for (int k = 0; k < n12_f_ids.size(); k++) {
+                if (n12_f_ids[k] == f_id)
+                    continue;
+                Vector3 n1 = get_normal(input_vertices[input_faces[n12_f_ids[k]][0]],
+                                        input_vertices[input_faces[n12_f_ids[k]][1]],
+                                        input_vertices[input_faces[n12_f_ids[k]][2]]);
+                if (abs(n1.dot(n)) < 1 - SCALAR_ZERO) {
+                    is_fine = true;
+                    break;
+                }
+            }
+            if (is_fine)
+                continue;
+
+            is_fine = false;
+            int ori;
+            for (int k = 0; k < n12_f_ids.size(); k++) {
+                for (int r = 0; r < 3; r++) {
+                    if (input_faces[n12_f_ids[k]][r] != input_faces[f_id][j] &&
+                        input_faces[n12_f_ids[k]][r] != input_faces[f_id][mod3(j + 1)]) {
+                        if (k == 0) {
+                            ori = Predicates::orient_2d(to_2d(input_vertices[input_faces[f_id][j]], t),
+                                                        to_2d(input_vertices[input_faces[f_id][mod3(j + 1)]], t),
+                                                        to_2d(input_vertices[input_faces[n12_f_ids[k]][r]], t));
+                            break;
+                        }
+                        int new_ori = Predicates::orient_2d(to_2d(input_vertices[input_faces[f_id][j]], t),
+                                                            to_2d(input_vertices[input_faces[f_id][mod3(j + 1)]],
+                                                                  t),
+                                                            to_2d(input_vertices[input_faces[n12_f_ids[k]][r]], t));
+                        if (new_ori != ori)
+                            is_fine = true;
+                        break;
+                    }
+                }
+                if (is_fine)
+                    break;
+            }
+            if (is_fine)
+                continue;
+
+            cnt2++;
+            b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
+        }
+    }
+
+    cout << "#boundary_e1 = " << cnt1 << endl;
+    cout << "#boundary_e2 = " << cnt2 << endl;
+}
+
 void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                      std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh) {
     auto is_on_bounded_side = [&](const std::array<Vector2, 3> &ps_2d, const Vector2 &c) {
@@ -615,23 +712,6 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 
     //fortest: output and check
     output_surface(mesh, "surface.stl");
-}
-
-void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                        const std::vector<bool> &is_face_inserted,
-                        std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos){
-    std::vector<std::array<int, 2>> edges;
-    for (auto &f: input_faces) {
-        for (int j = 0; j < 3; j++) {
-            std::array<int, 2> e = {{f[j], f[(j + 1)%3]}};
-            if (e[0] > e[1])
-                std::swap(e[0], e[1]);
-            edges.push_back(e);
-        }
-    }
-    vector_unique(edges);
-
-    //todo
 }
 
 int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){

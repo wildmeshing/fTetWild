@@ -18,17 +18,14 @@ namespace floatTetWild {
                           const std::vector<int> &input_tags, Mesh &mesh,
                           std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
 
+    ///face
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
                              const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
                              Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                              AABBWrapper &tree, bool is_again);
 
     void find_cutting_tets(int f_id, const std::vector<Vector3i> &input_faces,
-                           const std::array<Vector3, 3> &vs, Mesh &mesh, std::vector<int> &result);
-
-    void find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                            const std::vector<bool> &is_face_inserted,
-                            std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos);
+                           const std::array<Vector3, 3> &vs, Mesh &mesh, std::vector<int> &result, bool is_again);
 
     bool subdivide_tets(int insert_f_id, Mesh &mesh, CutMesh &cut_mesh, std::vector<Vector3> &points,
                         std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
@@ -38,6 +35,17 @@ namespace floatTetWild {
                         std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
                         std::vector<int> &modified_t_ids);
 
+    ///edge
+    void find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                             const std::vector<bool> &is_face_inserted,
+                             std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos);
+
+    void insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                               const std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
+                               std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh& mesh,
+                               std::vector<bool> &is_face_inserted, bool is_again);
+
+    ///other
     void mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh);
 

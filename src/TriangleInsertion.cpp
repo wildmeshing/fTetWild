@@ -680,96 +680,161 @@ void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertice
 }
 
 bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                                         const std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
+                                         std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
                                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh& mesh,
                                          std::vector<bool> &is_face_inserted, bool is_again) {
+    bool is_all_inserted = true;
+    for (int I = 0; I < b_edge_infos.size(); I++) {
+        const auto &e = b_edge_infos[I].first;
+        auto &n_f_ids = b_edge_infos[I].second;///it is sorted
+
+        ///double check neighbors
+        for (int i = 0; i < n_f_ids.size(); i++) {
+            if (is_face_inserted[n_f_ids[i]]) {
+                n_f_ids.erase(n_f_ids.begin() + i);
+                i--;
+                break;
+            }
+        }
+        if (n_f_ids.empty())
+            continue;
+
+        ///compute intersection
+        std::vector<Vector3> points;
+        std::map<std::array<int, 2>, int> map_edge_to_intersecting_point;
+        if (!insert_boundary_edges_get_intersecting_edges_and_points(input_vertices, input_faces, e, n_f_ids,
+                                                                     track_surface_fs,
+                                                                     mesh, points, map_edge_to_intersecting_point,
+                                                                     is_again)) {
+            for (int f_id: n_f_ids)
+                is_face_inserted[f_id] = false;
+            is_all_inserted = false;
+            continue;
+        }
+
+        ///subdivision
+        std::vector<int> cut_t_ids;
+        for (const auto &m: map_edge_to_intersecting_point) {
+            const auto &e = m.first;
+            std::vector<int> tmp;
+            set_intersection(mesh.tet_vertices[e[0]].conn_tets, mesh.tet_vertices[e[1]].conn_tets, tmp);
+            cut_t_ids.insert(cut_t_ids.end(), tmp.begin(), tmp.end());
+        }
+        vector_unique(cut_t_ids);
+        std::vector<bool> is_mark_surface(cut_t_ids.size(), false);
+        CutMesh empty_cut_mesh(mesh, Vector3(0, 0, 0), std::array<Vector3, 3>());
+        //
+        std::vector<MeshTet> new_tets;
+        std::vector<std::array<std::vector<int>, 4>> new_track_surface_fs;
+        std::vector<int> modified_t_ids;
+        if (!subdivide_tets(-1, mesh, empty_cut_mesh, points, map_edge_to_intersecting_point, track_surface_fs,
+                            cut_t_ids, is_mark_surface,
+                            new_tets, new_track_surface_fs, modified_t_ids)) {
+            for (int f_id: n_f_ids)
+                is_face_inserted[f_id] = false;
+            is_all_inserted = false;
+            continue;
+        }
+        //
+        push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
+
+        //todo: record boundary edges and return for rebuilding b_tree!!
+    }
+
+    return is_all_inserted;
+}
+
+bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
+        const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+        const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
+        std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
+        std::vector<Vector3>& points, std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
+        bool is_again){
+
     auto is_cross = [](int a, int b) {
-        if (a == Predicates::ORI_POSITIVE && b == Predicates::ORI_NEGATIVE
-            || a == Predicates::ORI_NEGATIVE && b == Predicates::ORI_POSITIVE)
+        if ((a == Predicates::ORI_POSITIVE && b == Predicates::ORI_NEGATIVE)
+            || (a == Predicates::ORI_NEGATIVE && b == Predicates::ORI_POSITIVE))
             return true;
         return false;
     };
 
-    bool is_all_inserted = true;
-    std::vector<bool> is_edge_fail(b_edge_infos.size(), false);
-    for (int I = 0; I < b_edge_infos.size(); I++) {
-        const auto &e = b_edge_infos[I].first;
-        const auto &n_f_ids = b_edge_infos[I].second;///it is sorted
-        //todo: check if all n_fs are rolled back
+    int t = get_t(input_vertices[input_faces[n_f_ids.front()][0]],
+                  input_vertices[input_faces[n_f_ids.front()][1]],
+                  input_vertices[input_faces[n_f_ids.front()][2]]);
+    std::array<Vector2, 2> evs_2d = {{to_2d(input_vertices[e[0]], t), to_2d(input_vertices[e[1]], t)}};
 
-        int t = get_t(input_vertices[input_faces[n_f_ids.front()][0]],
-                      input_vertices[input_faces[n_f_ids.front()][1]],
-                      input_vertices[input_faces[n_f_ids.front()][2]]);
+    std::vector<bool> is_visited(mesh.tets.size(), false);
+    std::queue<int> t_ids_queue;
+    ///find seed t_ids
+    if (!is_again) {
+        std::vector<int> t_ids;
+        for (int v_id: e)
+            t_ids.insert(t_ids.end(), mesh.tet_vertices[v_id].conn_tets.begin(),
+                         mesh.tet_vertices[v_id].conn_tets.end());
+        vector_unique(t_ids);
+        for (int t_id: t_ids)
+            t_ids_queue.push(t_id);
+    } else {
+        //todo
+    }
 
-        std::array<Vector2, 2> evs_2d = {{to_2d(input_vertices[e[0]], t), to_2d(input_vertices[e[1]], t)}};
+    std::vector<std::array<int, 3>> cut_fs;
+    std::vector<std::array<int, 3>> f_oris;
+    while (!t_ids_queue.empty()) {
+        int t_id = t_ids_queue.front();
+        t_ids_queue.pop();
+        if (is_visited[t_id])
+            continue;
+        is_visited[t_id] = true;
 
-        std::vector<bool> is_visited(mesh.tets.size(), false);
-        std::queue<int> t_ids_queue;
-        ///find seed t_ids
-        if (!is_again) {
-            std::vector<int> t_ids;
-            for (int v_id: e)
-                t_ids.insert(t_ids.end(), mesh.tet_vertices[v_id].conn_tets.begin(),
-                             mesh.tet_vertices[v_id].conn_tets.end());
-            vector_unique(t_ids);
-            for (int t_id: t_ids)
-                t_ids_queue.push(t_id);
-        } else {
-            //todo
-        }
-
-        std::vector<Vector3> points;
-        std::map<std::array<int, 2>, int> map_edge_to_intersecting_point;
-        std::vector<std::array<int, 3>> cut_fs;
-        std::vector<std::array<int, 3>> f_oris;
-        while (!t_ids_queue.empty()) {
-            int t_id = t_ids_queue.front();
-            t_ids_queue.pop();
-            if (is_visited[t_id])
+        std::array<bool, 4> is_cut_vs = {{false, false, false, false}};
+        for (int j = 0; j < 4; j++) {
+            ///check if contains
+            std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());
+            std::vector<int> tmp;
+            std::set_intersection(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
+                                  n_f_ids.begin(), n_f_ids.end(), std::back_inserter(tmp));
+            if (tmp.empty())
                 continue;
-            is_visited[t_id] = true;
 
-            std::array<bool, 4> is_cut_vs = {{false, false, false, false}};
-            for (int j = 0; j < 4; j++) {
-                ///check if contains
-                std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());
-                std::vector<int> tmp;
-                std::set_intersection(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
-                                      n_f_ids.begin(), n_f_ids.end(), std::back_inserter(tmp));
-                if (tmp.empty())
-                    continue;
+            ///check if cut through
+            //check tri side of seg
+            std::array<int, 3> f_v_ids = {{mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
+                                                  mesh.tets[t_id][(j + 3) % 4]}};
+            std::array<Vector2, 3> fvs_2d = {{to_2d(mesh.tet_vertices[f_v_ids[0]].pos, t),
+                                                     to_2d(mesh.tet_vertices[f_v_ids[1]].pos, t),
+                                                     to_2d(mesh.tet_vertices[f_v_ids[2]].pos, t)}};
+            int cnt_pos = 0;
+            int cnt_neg = 0;
+            int cnt_on = 0;
+            std::array<int, 3> oris;
+            for (int k = 0; k < 3; k++) {
+                oris[k] = Predicates::orient_2d(evs_2d[0], evs_2d[1], fvs_2d[j]);
+                if (oris[k] == Predicates::ORI_POSITIVE)
+                    cnt_pos++;
+                else if (oris[k] == Predicates::ORI_NEGATIVE)
+                    cnt_neg++;
+                else
+                    cnt_on++;
+            }
+            if (cnt_on == 2) {
+                cut_fs.push_back(f_v_ids);
+                std::sort(cut_fs.back().begin(), cut_fs.back().end());
+                f_oris.push_back(oris);
+                continue;
+            }
+            if (cnt_neg == 0 || cnt_pos == 0)
+                continue;
 
-                ///check if cut through
-                //check tri side of seg
-                std::array<int, 3> f_v_ids = {{mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
-                                                      mesh.tets[t_id][(j + 3) % 4]}};
-                std::array<Vector2, 3> fvs_2d = {{to_2d(mesh.tet_vertices[f_v_ids[0]].pos, t),
-                                                         to_2d(mesh.tet_vertices[f_v_ids[1]].pos, t),
-                                                         to_2d(mesh.tet_vertices[f_v_ids[2]].pos, t)}};
-                int cnt_pos = 0;
-                int cnt_neg = 0;
-                int cnt_on = 0;
-                std::array<int, 3> oris;
-                for (int k = 0; k < 3; k++) {
-                    oris[k] = Predicates::orient_2d(evs_2d[0], evs_2d[1], fvs_2d[j]);
-                    if (oris[k] == Predicates::ORI_POSITIVE)
-                        cnt_pos++;
-                    else if (oris[k] == Predicates::ORI_NEGATIVE)
-                        cnt_neg++;
-                    else
-                        cnt_on++;
+            //check tri edge - seg intersection
+            bool is_intersected = false;
+            for (auto &p: evs_2d) { ///first check if endpoints are contained inside the triangle
+                if (is_p_inside_tri_2d(p, fvs_2d)) {
+                    is_intersected = true;
+                    break;
                 }
-                if (cnt_on == 2) {
-                    cut_fs.push_back(f_v_ids);
-                    std::sort(cut_fs.back().begin(), cut_fs.back().end());
-                    f_oris.push_back(oris);
-                    continue;
-                }
-                if (cnt_neg == 0 || cnt_pos == 0)
-                    continue;
-
-                //check tri edge - seg intersection
-                bool is_intersected = false;
+            }
+            if(!is_intersected) { ///then check if there's intersection
                 for (int k = 0; k < 3; k++) {
                     //if cross
                     if (!is_cross(oris[k], oris[(k + 1) % 3]))
@@ -791,132 +856,76 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                         map_edge_to_intersecting_point[tri_e] = points.size() - 1;
                         is_intersected = true;
                         break;
-                    } else {
-                        for (int f_id: n_f_ids)
-                            is_face_inserted[f_id] = false;
-                        is_edge_fail[I] = true;
-                        break;
                     }
                 }
-                if (is_edge_fail[I])
-                    break;
-                if (!is_intersected) {
-                    //check if tri contains seg endpoints
-                    for (auto &p: evs_2d) {
-                        if (is_p_inside_tri_2d(p, fvs_2d)) {
-                            is_intersected = true;
-                            break;
-                        }
-                    }
-                    if (!is_intersected)
-                        continue;
-                }
-
-                cut_fs.push_back(f_v_ids);
-                std::sort(cut_fs.back().begin(), cut_fs.back().end());
-                f_oris.push_back(oris);
-                is_cut_vs[(j + 1) % 4] = true;
-                is_cut_vs[(j + 2) % 4] = true;
-                is_cut_vs[(j + 3) % 4] = true;
+                if(!is_intersected) // return false if no intersection is found
+                    return false;///
             }
-            for (int j = 0; j < 4; j++) {
-                if (!is_cut_vs[j])
-                    continue;
-                for (int n_t_id: mesh.tet_vertices[mesh.tets[t_id][j]].conn_tets) {
-                    if (!is_visited[n_t_id])
-                        t_ids_queue.push(n_t_id);
-                }
+
+            cut_fs.push_back(f_v_ids);
+            std::sort(cut_fs.back().begin(), cut_fs.back().end());
+            f_oris.push_back(oris);
+            is_cut_vs[(j + 1) % 4] = true;
+            is_cut_vs[(j + 2) % 4] = true;
+            is_cut_vs[(j + 3) % 4] = true;
+        }
+        for (int j = 0; j < 4; j++) {
+            if (!is_cut_vs[j])
+                continue;
+            for (int n_t_id: mesh.tet_vertices[mesh.tets[t_id][j]].conn_tets) {
+                if (!is_visited[n_t_id])
+                    t_ids_queue.push(n_t_id);
             }
         }
-        if (is_edge_fail[I])
-            break;
-        vector_unique(cut_fs);
+    }
+    vector_unique(cut_fs);
 
-        for (int i = 0; i < cut_fs.size(); i++) {
-            std::array<bool, 3> is_e_intersected = {{false, false, false}};
-            int cnt = 0;
-            for (int j = 0; j < 3; j++) {
-                if (f_oris[i][j] == Predicates::ORI_ZERO) {
-                    cnt++;
-                    is_e_intersected[j] = true;
-                    continue;
-                }
+    for (int i = 0; i < cut_fs.size(); i++) {
+        std::array<bool, 3> is_e_intersected = {{false, false, false}};
+        int cnt = 0;
+        for (int j = 0; j < 3; j++) {
+            if (f_oris[i][j] == Predicates::ORI_ZERO) {
+                cnt++;
+                is_e_intersected[j] = true;
+                continue;
+            }
+            std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
+            if (tri_e[0] > tri_e[1])
+                std::swap(tri_e[0], tri_e[1]);
+            if (map_edge_to_intersecting_point.find(tri_e) != map_edge_to_intersecting_point.end()) {
+                cnt++;
+                is_e_intersected[j] = true;
+                continue;
+            }
+
+            if (f_oris[i][(j + 1) % 3] == Predicates::ORI_ZERO)
+                is_e_intersected[j] = true;
+        }
+        if (cnt == 2)
+            continue;
+
+        //line - tri edges intersection
+        for (int j = 0; j < 3; j++) {
+            if (is_e_intersected[j])
+                continue;
+            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
+                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
+            Scalar t_seg = -1;
+            if (seg_line_intersection_2d(tri_evs_2d, evs_2d, t_seg)) {
                 std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
                 if (tri_e[0] > tri_e[1])
                     std::swap(tri_e[0], tri_e[1]);
-                if (map_edge_to_intersecting_point.find(tri_e) != map_edge_to_intersecting_point.end()) {
-                    cnt++;
-                    is_e_intersected[j] = true;
-                    continue;
-                }
-
-                if (f_oris[i][(j + 1) % 3] == Predicates::ORI_ZERO)
-                    is_e_intersected[j] = true;
-            }
-            if (cnt == 2)
-                continue;
-
-            //line - tri edges intersection
-            for (int j = 0; j < 3; j++) {
-                if (is_e_intersected[j])
-                    continue;
-                std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
-                                                             to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
-                Scalar t_seg = -1;
-                if (seg_line_intersection_2d(tri_evs_2d, evs_2d, t_seg)) {
-                    std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
-                    if (tri_e[0] > tri_e[1])
-                        std::swap(tri_e[0], tri_e[1]);
-                    points.push_back((1 - t_seg) * mesh.tet_vertices[cut_fs[i][j]].pos
-                                     + t_seg * mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos);
-                    map_edge_to_intersecting_point[tri_e] = points.size() - 1;
-                    cnt++;
-                }
-            }
-            if (cnt != 2) {
-                is_edge_fail[I] = true;
-                break;
+                points.push_back((1 - t_seg) * mesh.tet_vertices[cut_fs[i][j]].pos
+                                 + t_seg * mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos);
+                map_edge_to_intersecting_point[tri_e] = points.size() - 1;
+                cnt++;
             }
         }
-        //if fail
-        if (is_edge_fail[I]) {
-            for (int f_id: n_f_ids)
-                is_face_inserted[f_id] = false;
-            is_all_inserted = false;
-            continue;
-        }
-
-        ///subdivision
-        std::vector<int> cut_t_ids;
-        for(const auto& m: map_edge_to_intersecting_point){
-            const auto& e = m.first;
-            std::vector<int> tmp;
-            set_intersection(mesh.tet_vertices[e[0]].conn_tets, mesh.tet_vertices[e[1]].conn_tets, tmp);
-            cut_t_ids.insert(cut_t_ids.end(), tmp.begin(), tmp.end());
-        }
-        vector_unique(cut_t_ids);
-        std::vector<bool> is_mark_surface(cut_t_ids.size(), false);
-        CutMesh empty_cut_mesh(mesh, Vector3(0, 0, 0), std::array<Vector3, 3>());
-
-        std::vector<MeshTet> new_tets;
-        std::vector<std::array<std::vector<int>, 4>> new_track_surface_fs;
-        std::vector<int> modified_t_ids;
-        if (!subdivide_tets(-1, mesh, empty_cut_mesh, points, map_edge_to_intersecting_point, track_surface_fs,
-                            cut_t_ids, is_mark_surface,
-                            new_tets, new_track_surface_fs, modified_t_ids)) {
-            is_edge_fail[I] = true;
-            for (int f_id: n_f_ids)
-                is_face_inserted[f_id] = false;
-            is_all_inserted = false;
-            continue;
-        }
-
-        push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
-
-        //todo: record boundary edges and rebuild b_tree!!
+        if (cnt != 2)
+            return false;///
     }
 
-    return is_all_inserted;
+    return true;
 }
 
 void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,

@@ -3,6 +3,37 @@
 #include <floattetwild/Predicates.hpp>
 #include <floattetwild/LocalOperations.h>
 
+bool floatTetWild::seg_line_intersection_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 2> &line, Scalar& t_seg){
+    //assumptions:
+    //segs are not degenerate
+    //not coplanar
+
+    const Scalar& x1 = seg[0][0];
+    const Scalar& y1 = seg[0][1];
+    const Scalar& x2 = seg[1][0];
+    const Scalar& y2 = seg[1][1];
+
+    const Scalar& x3 = line[0][0];
+    const Scalar& y3 = line[0][1];
+    const Scalar& x4 = line[1][0];
+    const Scalar& y4 = line[1][1];
+
+    Scalar n1 = (y3 - y4) * (x1 - x3) + (x4 - x3) * (y1 - y3);
+    Scalar d1 = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
+    if(d1 == 0)
+        return false;
+    t_seg = n1 / d1;
+//    Scalar n2 = (y1 - y2) * (x1 - x3) + (x2 - x1) * (y1 - y3);
+    Scalar d2 = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
+    if(d2 == 0)
+        return false;
+
+    if (t_seg < 0 || t_seg > 1)
+        return false;
+
+    return true;
+}
+
 bool floatTetWild::seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, const std::array<Vector2, 2> &seg2, Scalar& t2){
     //assumptions:
     //segs are not degenerate

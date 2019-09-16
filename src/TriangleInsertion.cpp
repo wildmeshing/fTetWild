@@ -821,10 +821,12 @@ void floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
         vector_unique(cut_fs);
 
         for (int i = 0; i < cut_fs.size(); i++) {
+            std::array<bool, 3> is_e_intersected = {{false, false, false}};
             int cnt = 0;
             for (int j = 0; j < 3; j++) {
                 if (f_oris[i][j] == Predicates::ORI_ZERO) {
                     cnt++;
+                    is_e_intersected[j] = true;
                     continue;
                 }
                 std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
@@ -832,20 +834,42 @@ void floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                     std::swap(tri_e[0], tri_e[1]);
                 if (map_edge_to_intersecting_point.find(tri_e) != map_edge_to_intersecting_point.end()) {
                     cnt++;
+                    is_e_intersected[j] = true;
                     continue;
                 }
+
+                if (f_oris[i][(j + 1) % 3] == Predicates::ORI_ZERO)
+                    is_e_intersected[j] = true;
             }
             if (cnt == 2)
                 continue;
 
             //line - tri edges intersection
-            //todo
+            for (int j = 0; j < 3; j++) {
+                if (is_e_intersected[j])
+                    continue;
+                std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
+                                                             to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
+                double t_seg = -1;
+                if (seg_line_intersection_2d(tri_evs_2d, evs_2d, t_seg)) {
+                    std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
+                    if (tri_e[0] > tri_e[1])
+                        std::swap(tri_e[0], tri_e[1]);
+                    points.push_back((1 - t_seg) * evs_2d[0] + t_seg * evs_2d[1]);
+                    map_edge_to_intersecting_point[tri_e] = points.size() - 1;
+                    cnt++;
+                }
+            }
+            if (cnt != 2) {
+                is_edge_fail[I] = true;
+                break;
+            }
+        }
 
-            //if fail
+        //if fail
+        if(is_edge_fail[I]) {
             for (int f_id: n_f_ids)
                 is_face_inserted[f_id] = false;
-            is_edge_fail[I] = true;
-            break;
         }
     }
 }

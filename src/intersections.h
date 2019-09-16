@@ -21,6 +21,7 @@ namespace floatTetWild {
     bool is_tri_tri_cutted_2d(const std::array<Vector2, 3> &p_tet, const std::array<Vector2, 3> &p_tri);
 
     bool seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, const std::array<Vector2, 2> &seg2, Scalar& t2);
+    bool seg_line_intersection_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 2> &line, Scalar& t_seg);
     bool seg_plane_intersection(const Vector3 &p1, const Vector3 &p2, const Vector3 &a, const Vector3 &n,
                                 Vector3 &p, Scalar &d1);
 

@@ -18,6 +18,11 @@ namespace floatTetWild {
                           const std::vector<int> &input_tags, Mesh &mesh,
                           std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
 
+    void push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                       std::vector<Vector3> &points, std::vector<MeshTet> &new_tets,
+                       std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
+                       std::vector<int> &modified_t_ids, bool is_again);
+
     ///face
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
                              const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
@@ -40,7 +45,7 @@ namespace floatTetWild {
                              const std::vector<bool> &is_face_inserted,
                              std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos);
 
-    void insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+    bool insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                const std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
                                std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh& mesh,
                                std::vector<bool> &is_face_inserted, bool is_again);

@@ -59,7 +59,8 @@ namespace floatTetWild {
 
     ///other
     void mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh);
+                         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                         const std::vector<bool> &is_face_inserted, Mesh &mesh);
 
     int get_opp_t_id(int t_id, int j, const Mesh &mesh);
 

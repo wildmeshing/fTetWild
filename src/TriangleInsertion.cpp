@@ -868,14 +868,28 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             std::array<int, 3> oris;
             for (int k = 0; k < 3; k++) {
                 oris[k] = Predicates::orient_2d(evs_2d[0], evs_2d[1], fvs_2d[k]);
-                if (oris[k] == Predicates::ORI_POSITIVE)
-                    cnt_pos++;
-                else if (oris[k] == Predicates::ORI_NEGATIVE)
-                    cnt_neg++;
-                else
+                if (oris[k] == Predicates::ORI_ZERO){
                     cnt_on++;
+                } else {
+//                    const auto& p = mesh.tet_vertices[f_v_ids[k]].pos;
+//                    const auto& a = input_vertices[e[0]];
+//                    const auto& b = input_vertices[e[1]];
+////                    Scalar dis = (a.cross(b-p)).norm()/a.norm();
+//                    Scalar dis = sqrt((a-p).squaredNorm() - pow((a-p).dot((a-b).normalized()), 2));
+//                    if(dis<mesh.params.eps_coplanar) {
+//                        oris[k] = Predicates::ORI_ZERO;
+//                        cnt_on++;
+//                        cout<<"snapped"<<endl;
+//                        pausee();
+//                        continue;
+//                    }
+                    if (oris[k] == Predicates::ORI_POSITIVE)
+                        cnt_pos++;
+                    else
+                        cnt_neg++;
+                }
             }
-            if (cnt_on == 2) {
+            if (cnt_on >= 2) {
                 cut_fs.push_back(f_v_ids);
                 std::sort(cut_fs.back().begin(), cut_fs.back().end());
                 f_oris.push_back(oris);
@@ -910,6 +924,24 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
                     if (seg_seg_intersection_2d(evs_2d, {{fvs_2d[k], fvs_2d[(k + 1) % 3]}}, t2)) {
                         Vector3 p = (1 - t2) * mesh.tet_vertices[f_v_ids[k]].pos
                                     + t2 * mesh.tet_vertices[f_v_ids[(k + 1) % 3]].pos;
+                        //fortest
+                        double dis1 = (p-mesh.tet_vertices[f_v_ids[k]].pos).norm();
+                        double dis2 = (p-mesh.tet_vertices[f_v_ids[(k + 1) % 3]].pos).norm();
+                        if(dis1<mesh.params.eps_coplanar) {
+//                            cout << dis1 << " "<<SCALAR_ZERO<<endl;
+//                            pausee();
+                            oris[k] = Predicates::ORI_ZERO;
+                            is_intersected = true;
+                            break;
+                        }
+                        if(dis2<mesh.params.eps_coplanar) {
+//                            cout << dis2 << " "<<SCALAR_ZERO<<endl;
+//                            pausee();
+                            oris[k] = Predicates::ORI_ZERO;
+                            is_intersected = true;
+                            break;
+                        }
+                        //fortest
                         //todo: snapping, need extra tags
                         points.push_back(p);
                         map_edge_to_intersecting_point[tri_e] = points.size() - 1;

@@ -813,16 +813,22 @@ void floatTetWild::set_intersection(const std::vector<int>& s11, const std::vect
     std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v));
 }
 
-void floatTetWild::set_intersection(const std::vector<int>& s11, const std::vector<int>& s22, const std::vector<int>& s33, std::vector<int>& v){
+void floatTetWild::set_intersection(const std::vector<int>& s11, const std::vector<int>& s22, const std::vector<int>& s33, std::vector<int>& v) {
     std::vector<int> s1 = s11;
     std::vector<int> s2 = s22;
     std::vector<int> s3 = s33;
-    std::vector<int> tmp;
     std::sort(s1.begin(), s1.end());
     std::sort(s2.begin(), s2.end());
     std::sort(s3.begin(), s3.end());
-    std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(tmp));
-    std::set_intersection(tmp.begin(), tmp.end(), s3.begin(), s3.end(), std::back_inserter(v));
+    std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v));
+    auto it = std::set_intersection(v.begin(), v.end(), s3.begin(), s3.end(), v.begin());
+    v.resize(it - v.begin());
+}
+
+void floatTetWild::set_intersection_sorted(const std::vector<int>& s1, const std::vector<int>& s2, const std::vector<int>& s3, std::vector<int>& v) {
+    std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v));
+    auto it = std::set_intersection(v.begin(), v.end(), s3.begin(), s3.end(), v.begin());
+    v.resize(it - v.begin());
 }
 
 void floatTetWild::pausee() {

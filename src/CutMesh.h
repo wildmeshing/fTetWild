@@ -48,6 +48,10 @@ namespace floatTetWild {
             return p_n.dot(p - p_vs[0]);
         }
     };
+
+    //fortest
+    void print_times1();
+    //fortest
 }
 
 

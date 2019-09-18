@@ -7,8 +7,26 @@
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/Predicates.hpp>
 #include <floattetwild/intersections.h>
+#include <floattetwild/Logger.hpp>
+
+#include <igl/Timer.h>
+
+double time_cut_mesh11 = 0;
+double time_cut_mesh12 = 0;
+double time_cut_mesh13 = 0;
+double time_cut_mesh14 = 0;
+
+void floatTetWild::print_times1(){
+    logger().info("\t\t\t- time_cut_mesh11 = {}s", time_cut_mesh11);
+    logger().info("\t\t\t- time_cut_mesh12 = {}s", time_cut_mesh12);
+    logger().info("\t\t\t- time_cut_mesh13 = {}s", time_cut_mesh13);
+    logger().info("\t\t\t- time_cut_mesh14 = {}s", time_cut_mesh14);
+}
 
 void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
+    igl::Timer timer;
+
+    timer.start();
     v_ids.reserve(cut_t_ids.size() * 4);
     for (int t_id:cut_t_ids) {
         for (int j = 0; j < 4; j++)
@@ -32,19 +50,49 @@ void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
         for (int j = 0; j < 4; j++)
             conn_tets[tets[i][j]].push_back(i);
     }
+    time_cut_mesh11 += timer.getElapsedTime();
 
+    timer.start();
     opp_t_ids.resize(tets.size(), {{-1, -1, -1, -1}});
+    time_cut_mesh12 += timer.getElapsedTime();
+
     for (int i = 0; i < tets.size(); i++) {
         for (int j = 0; j < 4; j++) {
             if (opp_t_ids[i][j] >= 0)
                 continue;
+
+            timer.start();
             std::vector<int> n_t_ids;
-            set_intersection(conn_tets[tets[i][(j + 1) % 4]], conn_tets[tets[i][(j + 2) % 4]],
-                             conn_tets[tets[i][(j + 3) % 4]], n_t_ids);
+            set_intersection_sorted(conn_tets[tets[i][(j + 1) % 4]], conn_tets[tets[i][(j + 2) % 4]],
+                                    conn_tets[tets[i][(j + 3) % 4]], n_t_ids);
+
+//            std::set_intersection(conn_tets[tets[i][(j + 1) % 4]].begin(), conn_tets[tets[i][(j + 1) % 4]].end(),
+//                                  conn_tets[tets[i][(j + 2) % 4]].begin(), conn_tets[tets[i][(j + 2) % 4]].end(),
+//                                  std::back_inserter(n_t_ids));
+//            auto it = std::set_intersection(n_t_ids.begin(), n_t_ids.end(),
+//                                            conn_tets[tets[i][(j + 3) % 4]].begin(),
+//                                            conn_tets[tets[i][(j + 3) % 4]].end(),
+//                                            n_t_ids.begin());
+//            n_t_ids.resize(it - n_t_ids.begin());//best
+
+//            std::vector<int> tmp;
+//            std::set_intersection(conn_tets[tets[i][(j + 1) % 4]].begin(), conn_tets[tets[i][(j + 1) % 4]].end(),
+//                                  conn_tets[tets[i][(j + 2) % 4]].begin(), conn_tets[tets[i][(j + 2) % 4]].end(),
+//                                  std::back_inserter(tmp));
+//            std::set_intersection(tmp.begin(), tmp.end(),
+//                                  conn_tets[tets[i][(j + 3) % 4]].begin(), conn_tets[tets[i][(j + 3) % 4]].end(),
+//                                  std::back_inserter(n_t_ids));//ok
+
+//            set_intersection(conn_tets[tets[i][(j + 1) % 4]], conn_tets[tets[i][(j + 2) % 4]],
+//                             conn_tets[tets[i][(j + 3) % 4]], n_t_ids);//worst
+            //todo: recheck
+
+            time_cut_mesh13 += timer.getElapsedTime();
             assert(!n_t_ids.empty());
             if (n_t_ids.size() < 2)
                 continue;
 
+            timer.start();
             int n_t_id = n_t_ids[0] == i ? n_t_ids[1] : n_t_ids[0];
             opp_t_ids[i][j] = n_t_id;
             for (int k = 0; k < 4; k++) {
@@ -54,6 +102,7 @@ void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
                     break;
                 }
             }
+            time_cut_mesh14 += timer.getElapsedTime();
         }
     }
 }

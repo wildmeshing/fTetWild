@@ -33,15 +33,18 @@
 
 #define III -1
 
+//fortest
 double time_find_cutting_tets = 0;
 double time_cut_mesh = 0;
+double time_cut_mesh1 = 0;
+double time_cut_mesh2 = 0;
 double time_get_intersecting_edges_and_points = 0;
 double time_subdivide_tets = 0;
 double time_push_new_tets = 0;
 double time_push_new_tets1 = 0;
 double time_push_new_tets2 = 0;
 double time_push_new_tets3 = 0;
-double time_push_new_tets4 = 0;
+//fortest
 
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
@@ -70,13 +73,15 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("\t- time_find_cutting_tets = {}s", time_find_cutting_tets);
             logger().info("\t- time_cut_mesh = {}s", time_cut_mesh);
+            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
+            print_times1();
+            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
             logger().info("\t- time_get_intersecting_edges_and_points = {}s", time_get_intersecting_edges_and_points);
             logger().info("\t- time_subdivide_tets = {}s", time_subdivide_tets);
             logger().info("\t- time_push_new_tets = {}s", time_push_new_tets);
-            logger().info("\t\t- time_push_new_tets1 = {}s", time_push_new_tets1);
-            logger().info("\t\t- time_push_new_tets2 = {}s", time_push_new_tets2);
-            logger().info("\t\t- time_push_new_tets3 = {}s", time_push_new_tets3);
-            logger().info("\t\t- time_push_new_tets4 = {}s", time_push_new_tets4);
+//            logger().info("\t\t- time_push_new_tets1 = {}s", time_push_new_tets1);
+//            logger().info("\t\t- time_push_new_tets2 = {}s", time_push_new_tets2);
+//            logger().info("\t\t- time_push_new_tets3 = {}s", time_push_new_tets3);
         }
 
         if (is_face_inserted[i])
@@ -155,8 +160,12 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     /////
     timer.start();
+    igl::Timer timer1;
+    timer1.start();
     CutMesh cut_mesh(mesh, n, vs);
     cut_mesh.construct(cut_t_ids);
+    time_cut_mesh1 += timer1.getElapsedTime();
+    timer1.start();
     if (cut_mesh.snap_to_plane()) {
 //        cout<<"mesh.tets.size() = "<<mesh.tets.size()<<endl;
 //        cout << "cut_t_ids.size() " << cut_t_ids.size() << "->";
@@ -164,6 +173,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //        cout << cut_t_ids.size() << " expanded" << endl;
 //        cout << "snapped #v = " << std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true) << endl;
     }
+    time_cut_mesh2 += timer1.getElapsedTime();
     time_cut_mesh += timer.getElapsedTime();
 
     /////
@@ -218,9 +228,9 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
                                  std::vector<Vector3> &points, std::vector<MeshTet> &new_tets,
                                  std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
                                  std::vector<int> &modified_t_ids, bool is_again) {
-    igl::Timer timer;
+//    igl::Timer timer;
     if (!is_again) {
-        timer.start();
+//        timer.start();
         ///vs
         const int old_v_size = mesh.tet_vertices.size();
         mesh.tet_vertices.resize(mesh.tet_vertices.size() + points.size());
@@ -228,40 +238,34 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
             mesh.tet_vertices[old_v_size + i].pos = points[i];
             //todo: tags???
         }
-        time_push_new_tets1 += timer.getElapsedTime();
+//        time_push_new_tets1 += timer.getElapsedTime();
 
         ///tets
-        timer.start();
-//        mesh.tets.reserve(mesh.tets.size() + new_tets.size());
-        time_push_new_tets2 += timer.getElapsedTime();
+//        timer.start();
+////        mesh.tets.reserve(mesh.tets.size() + new_tets.size());
+//        time_push_new_tets2 += timer.getElapsedTime();
 
-        timer.start();
+//        timer.start();
         for (int i = 0; i < new_tets.size(); i++) {
             if (i < modified_t_ids.size()) {
-//                timer.start();
                 for (int j = 0; j < 4; j++) {
                     vector_erase(mesh.tet_vertices[mesh.tets[modified_t_ids[i]][j]].conn_tets, modified_t_ids[i]);
                 }
-//                time_push_new_tets2 += timer.getElapsedTime();
-//                timer.start();
                 mesh.tets[modified_t_ids[i]] = new_tets[i];
                 track_surface_fs[modified_t_ids[i]] = new_track_surface_fs[i];
                 for (int j = 0; j < 4; j++) {
                     mesh.tet_vertices[mesh.tets[modified_t_ids[i]][j]].conn_tets.push_back(modified_t_ids[i]);
                 }
-//                time_push_new_tets3 += timer.getElapsedTime();
             } else {
-//                timer.start();
                 mesh.tets.push_back(new_tets[i]);
                 track_surface_fs.push_back(new_track_surface_fs[i]);
                 for (int j = 0; j < 4; j++) {
                     mesh.tet_vertices[mesh.tets.back()[j]].conn_tets.push_back(mesh.tets.size() - 1);
                 }
-//                time_push_new_tets4 += timer.getElapsedTime();
             }
             //todo: tags???
         }
-        time_push_new_tets3 += timer.getElapsedTime();
+//        time_push_new_tets3 += timer.getElapsedTime();
     } else {
         //todo
     }
@@ -1017,13 +1021,11 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         indices.erase(std::unique(indices.begin(), indices.end(), [&cut_fs](int i1, int i2) {
             return cut_fs[i1] < cut_fs[i2];
         }), indices.end());
-        std::vector<std::array<int, 3>> new_cut_fs;
-        std::vector<std::array<int, 3>> new_f_oris;
-        new_cut_fs.reserve(indices.size());
-        new_f_oris.reserve(indices.size());
-        for (int i:indices) {
-            new_cut_fs.push_back(cut_fs[i]);
-            new_f_oris.push_back(f_oris[i]);
+        std::vector<std::array<int, 3>> new_cut_fs(indices.size());
+        std::vector<std::array<int, 3>> new_f_oris(indices.size());
+        for (int i = 0; i < indices.size(); i++) {
+            new_cut_fs[i] = cut_fs[indices[i]];
+            new_f_oris[i] = f_oris[indices[i]];
         }
         cut_fs = new_cut_fs;
         f_oris = new_f_oris;

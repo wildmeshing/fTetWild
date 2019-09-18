@@ -67,7 +67,7 @@ namespace floatTetWild {
 
     void set_intersection(const std::vector<int>& s1, const std::vector<int>& s2, std::vector<int>& v);
     void set_intersection(const std::vector<int>& s1, const std::vector<int>& s2, const std::vector<int>& s3, std::vector<int>& v);
-
+    void set_intersection_sorted(const std::vector<int>& s1, const std::vector<int>& s2, const std::vector<int>& s3, std::vector<int>& v);
 
     inline int mod4(int j) {
 //        assert(j >= 0 && j < 7);

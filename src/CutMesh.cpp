@@ -56,7 +56,7 @@ void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
     opp_t_ids.resize(tets.size(), {{-1, -1, -1, -1}});
     time_cut_mesh12 += timer.getElapsedTime();
 
-    for (int i = 0; i < tets.size(); i++) {
+    for (int i = 0; i < tets.size(); i++) {//todo: construct conn_tets/opp_t_ids only when expension is required.
         for (int j = 0; j < 4; j++) {
             if (opp_t_ids[i][j] >= 0)
                 continue;

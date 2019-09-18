@@ -44,6 +44,7 @@ double time_push_new_tets = 0;
 double time_push_new_tets1 = 0;
 double time_push_new_tets2 = 0;
 double time_push_new_tets3 = 0;
+int cnt_snapped = 0;
 //fortest
 
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
@@ -68,9 +69,11 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     std::vector<Vector3> new_vertices;
     std::vector<std::array<int, 4>> new_tets;
     int cnt_fail = 0;
+    int cnt_total = 0;
     for (int i = 0; i < input_faces.size(); i++) {
         if (i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
+            logger().info("snapped {}/{}", cnt_snapped, cnt_total);
             logger().info("\t- time_find_cutting_tets = {}s", time_find_cutting_tets);
             logger().info("\t- time_cut_mesh = {}s", time_cut_mesh);
             logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
@@ -87,6 +90,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         if (is_face_inserted[i])
             continue;
 
+        cnt_total++;
         if (insert_one_triangle(i, input_vertices, input_faces, input_tags, mesh, track_surface_fs, tree, is_again))
             is_face_inserted[i] = true;
         else
@@ -167,6 +171,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     time_cut_mesh1 += timer1.getElapsedTime();
     timer1.start();
     if (cut_mesh.snap_to_plane()) {
+        cnt_snapped++;
 //        cout<<"mesh.tets.size() = "<<mesh.tets.size()<<endl;
 //        cout << "cut_t_ids.size() " << cut_t_ids.size() << "->";
         cut_mesh.expand(cut_t_ids);

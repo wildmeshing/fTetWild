@@ -339,9 +339,20 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
             is_visited[t_id] = true;
 
             std::array<int, 4> oris;
+            int cnt_pos = 0;
+            int cnt_neg = 0;
+            int cnt_on = 0;
             for (int j = 0; j < 4; j++) {
                 oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
+                if (oris[j] == Predicates::ORI_ZERO)
+                    cnt_on++;
+                else if (oris[j] == Predicates::ORI_POSITIVE)
+                    cnt_pos++;
+                else
+                    cnt_neg++;
             }
+            if(cnt_pos == 0 && cnt_neg == 0 && cnt_on < 3)
+                continue;
 
             bool is_cutted = false;
             std::vector<bool> is_cut_vs = {{false, false, false, false}}; /// is v on cut face
@@ -374,6 +385,10 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
                 is_cut_vs[(j + 1) % 4] = true;
                 is_cut_vs[(j + 2) % 4] = true;
                 is_cut_vs[(j + 3) % 4] = true;
+
+                if(is_cut_vs[0] && is_cut_vs[1] && is_cut_vs[2] && is_cut_vs[3])
+                    break;
+
 //                int opp_t_id = get_opp_t_id(t_id, j, mesh);
 //                if (opp_t_id >= 0 && !is_visited[opp_t_id])
 //                    queue_t_ids.push(opp_t_id);

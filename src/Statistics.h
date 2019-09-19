@@ -9,19 +9,21 @@ namespace floatTetWild {
 class StateInfo
 {
   public:
-    static constexpr int tetgen_id = -1;
+    enum OpId {
+        tetgen_id = -1,
 
-    static constexpr int init_id               = 0;
-    static constexpr int preprocessing_id      = 1;
-    static constexpr int tetrahedralization_id = 2;
-    static constexpr int cutting_id            = 3;
-    static constexpr int optimization_id       = 4;
-    static constexpr int wn_id                 = 5;
+        init_id               = 0,
+        preprocessing_id      = 1,
+        tetrahedralization_id = 2,
+        cutting_id            = 3,
+        optimization_id       = 4,
+        wn_id                 = 5,
 
-    static constexpr int splitting_id  = 6;
-    static constexpr int collapsing_id = 7;
-    static constexpr int swapping_id   = 8;
-    static constexpr int smoothing_id  = 9;
+        splitting_id  = 6,
+        collapsing_id = 7,
+        swapping_id   = 8,
+        smoothing_id  = 9
+    };
 
     int    id                     = 0;
     int    v_num                  = 0;

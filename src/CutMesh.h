@@ -38,6 +38,8 @@ namespace floatTetWild {
 
         void get_one_ring_t_ids(std::vector<int> &old_t_ids, std::vector<int> &neighbor_t_ids);
 
+        void revert_totally_snapped_tets(int a, int b);
+
         inline bool is_v_on_plane(int lv_id) {
             if (is_snapped[lv_id] || to_plane_dists[lv_id] == 0)
                 return true;

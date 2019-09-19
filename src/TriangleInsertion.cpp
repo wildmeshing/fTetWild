@@ -75,7 +75,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     int cnt_fail = 0;
     int cnt_total = 0;
     for (int i = 0; i < input_faces.size(); i++) {
-        if (i % 1000 == 0) {
+        if (i > 0 && i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("snapped {}/{}", cnt_snapped, cnt_total);
             logger().info("\t- time_find_cutting_tets = {}s", time_find_cutting_tets);
@@ -84,9 +84,9 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 //            logger().info("\t\t- time_find_cutting_tets3 = {}s", time_find_cutting_tets3);
 //            logger().info("\t\t- time_find_cutting_tets4 = {}s", time_find_cutting_tets4);
             logger().info("\t- time_cut_mesh = {}s", time_cut_mesh);
-//            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
-//            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
-//            print_times1();
+            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
+            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
+            print_times1();
             logger().info("\t- time_get_intersecting_edges_and_points = {}s", time_get_intersecting_edges_and_points);
             logger().info("\t- time_subdivide_tets = {}s", time_subdivide_tets);
             logger().info("\t- time_push_new_tets = {}s", time_push_new_tets);
@@ -178,13 +178,11 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     cut_mesh.construct(cut_t_ids);
     time_cut_mesh1 += timer1.getElapsedTime();
     timer1.start();
+//    bool is_expanded = false;//fortest
     if (cut_mesh.snap_to_plane()) {
         cnt_snapped++;
-//        cout<<"mesh.tets.size() = "<<mesh.tets.size()<<endl;
-//        cout << "cut_t_ids.size() " << cut_t_ids.size() << "->";
         cut_mesh.expand(cut_t_ids);
-//        cout << cut_t_ids.size() << " expanded" << endl;
-//        cout << "snapped #v = " << std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true) << endl;
+//        is_expanded = true;
     }
     time_cut_mesh2 += timer1.getElapsedTime();
     time_cut_mesh += timer.getElapsedTime();
@@ -196,6 +194,9 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     std::vector<int> subdivide_t_ids;
     if (!cut_mesh.get_intersecting_edges_and_points(points, map_edge_to_intersecting_point, subdivide_t_ids)) {
         time_get_intersecting_edges_and_points += timer.getElapsedTime();
+//        cout<<"FAIL get_intersecting_edges_and_points"<<endl;
+//        if(is_expanded)
+//            cout<<"expanded"<<endl;
         return false;
     }
     //have to add all cut_t_ids
@@ -218,6 +219,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
                         cut_t_ids, is_mark_surface,
                         new_tets, new_track_surface_fs, modified_t_ids)) {
         time_subdivide_tets += timer.getElapsedTime();
+//        cout<<"FAIL subdivide_tets"<<endl;
         return false;
     }
     time_subdivide_tets += timer.getElapsedTime();

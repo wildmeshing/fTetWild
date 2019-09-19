@@ -18,6 +18,9 @@ namespace floatTetWild {
                           const std::vector<int> &input_tags, Mesh &mesh,
                           std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
 
+    void sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                          const Mesh &mesh, std::vector<int> &sorted_f_ids);
+
     void push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                        std::vector<Vector3> &points, std::vector<MeshTet> &new_tets,
                        std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
@@ -54,7 +57,7 @@ namespace floatTetWild {
             const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
             const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
-            std::vector<Vector3>& points, std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
+            std::vector<Vector3> &points, std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
             bool is_again);
 
     ///other

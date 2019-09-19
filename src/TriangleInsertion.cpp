@@ -51,13 +51,38 @@ double time_push_new_tets3 = 0;
 int cnt_snapped = 0;
 //fortest
 
+void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                    const Mesh &mesh, std::vector<int> &sorted_f_ids) {///use 38416, 232368 as example //todo: think why
+    std::vector<Scalar> weights(input_faces.size());
+    sorted_f_ids.resize(input_faces.size());
+    for (int i = 0; i < input_faces.size(); i++) {
+        sorted_f_ids[i] = i;
+
+//        Vector3 u = input_vertices[input_faces[i][1]] - input_vertices[input_faces[i][0]];
+//        Vector3 v = input_vertices[input_faces[i][2]] - input_vertices[input_faces[i][0]];
+//        weights[i] = u.cross(v).norm();
+        for (int j = 0; j < 3; j++) {
+            Scalar dis =
+                    (input_vertices[input_faces[i][j]] - input_vertices[input_faces[i][(j + 1) % 3]]).squaredNorm();
+            if (j == 0)
+                weights[i] = dis;
+            else if (dis > weights[i])
+                weights[i] = dis;
+        }
+    }
+
+//    return;
+    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
+        return weights[a] < weights[b];
+    });
+}
+
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
 
     logger().info("triangle insertion start, #f = {}, #v = {}, #t = {}",
                   input_faces.size(), mesh.tet_vertices.size(), mesh.tets.size());
-
     /////
     std::vector<std::array<std::vector<int>, 4 >> track_surface_fs(mesh.tets.size());
     if (!is_again) {
@@ -69,12 +94,17 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     int cnt_matched = std::count(is_face_inserted.begin(), is_face_inserted.end(), true);
     logger().info("matched #f = {}, uninserted #f = {}", cnt_matched, is_face_inserted.size() - cnt_matched);
 
+    std::vector<int> sorted_f_ids;
+    sort_input_faces(input_vertices, input_faces, mesh, sorted_f_ids);
+
     /////
     std::vector<Vector3> new_vertices;
     std::vector<std::array<int, 4>> new_tets;
     int cnt_fail = 0;
     int cnt_total = 0;
-    for (int i = 0; i < input_faces.size(); i++) {
+//    for (int i = 0; i < input_faces.size(); i++) {
+//        int f_id = i;
+    for (int i = 0; i < sorted_f_ids.size(); i++) {
         if (i > 0 && i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("snapped {}/{}", cnt_snapped, cnt_total);
@@ -95,17 +125,18 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 //            logger().info("\t\t- time_push_new_tets3 = {}s", time_push_new_tets3);
         }
 
-        if (is_face_inserted[i])
+        int f_id = sorted_f_ids[i];
+        if (is_face_inserted[f_id])
             continue;
 
         cnt_total++;
-        if (insert_one_triangle(i, input_vertices, input_faces, input_tags, mesh, track_surface_fs, tree, is_again))
-            is_face_inserted[i] = true;
+        if (insert_one_triangle(f_id, input_vertices, input_faces, input_tags, mesh, track_surface_fs, tree, is_again))
+            is_face_inserted[f_id] = true;
         else
             cnt_fail++;
 
 //        pausee();//fortest
-        if (i == III)
+        if (f_id == III)
             break;//fortest
     }
     logger().info("insert_one_triangle * n done, #v = {}, #t = {}", mesh.tet_vertices.size(), mesh.tets.size());
@@ -113,7 +144,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
                   is_face_inserted.size());
 
     //fortest
-    check_track_surface_fs(mesh, track_surface_fs);
+//    check_track_surface_fs(mesh, track_surface_fs);
 
     /////
     while (true) {
@@ -181,7 +212,9 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //    bool is_expanded = false;//fortest
     if (cut_mesh.snap_to_plane()) {
         cnt_snapped++;
+//        cout<<cut_t_ids.size()<<"->";
         cut_mesh.expand(cut_t_ids);
+//        cout<<cut_t_ids.size()<<endl;
 //        is_expanded = true;
     }
     time_cut_mesh2 += timer1.getElapsedTime();

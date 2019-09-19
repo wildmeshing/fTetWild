@@ -235,10 +235,9 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                     lv_id = v_ids.size() - 1;
                     map_v_ids[v_id] = lv_id;
                     to_plane_dists.push_back(get_to_plane_dist(mesh.tet_vertices[v_id].pos));
-                    if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar) {
+                    if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
                         is_snapped.push_back(true);
-//                        snapped = true;
-                    } else
+                    else
                         is_snapped.push_back(false);
                     conn_tets.emplace_back();
                 } else

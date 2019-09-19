@@ -35,6 +35,10 @@
 
 //fortest
 double time_find_cutting_tets = 0;
+double time_find_cutting_tets1 = 0;
+double time_find_cutting_tets2 = 0;
+double time_find_cutting_tets3 = 0;
+double time_find_cutting_tets4 = 0;
 double time_cut_mesh = 0;
 double time_cut_mesh1 = 0;
 double time_cut_mesh2 = 0;
@@ -75,10 +79,14 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("snapped {}/{}", cnt_snapped, cnt_total);
             logger().info("\t- time_find_cutting_tets = {}s", time_find_cutting_tets);
+//            logger().info("\t\t- time_find_cutting_tets1 = {}s", time_find_cutting_tets1);
+//            logger().info("\t\t- time_find_cutting_tets2 = {}s", time_find_cutting_tets2);
+//            logger().info("\t\t- time_find_cutting_tets3 = {}s", time_find_cutting_tets3);
+//            logger().info("\t\t- time_find_cutting_tets4 = {}s", time_find_cutting_tets4);
             logger().info("\t- time_cut_mesh = {}s", time_cut_mesh);
-            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
-            print_times1();
-            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
+//            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
+//            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
+//            print_times1();
             logger().info("\t- time_get_intersecting_edges_and_points = {}s", time_get_intersecting_edges_and_points);
             logger().info("\t- time_subdivide_tets = {}s", time_subdivide_tets);
             logger().info("\t- time_push_new_tets = {}s", time_push_new_tets);
@@ -247,7 +255,7 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
 
         ///tets
 //        timer.start();
-////        mesh.tets.reserve(mesh.tets.size() + new_tets.size());
+//        mesh.tets.reserve(mesh.tets.size() + new_tets.size() - modified_t_ids.size());
 //        time_push_new_tets2 += timer.getElapsedTime();
 
 //        timer.start();
@@ -320,6 +328,9 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
 //    return;//fortest
 
     if (!is_again) {
+//        igl::Timer timer;
+
+//        timer.start();
         std::vector<int> n_t_ids;
         for (int j = 0; j < 3; j++) {
             n_t_ids.insert(n_t_ids.end(), mesh.tet_vertices[input_faces[f_id][j]].conn_tets.begin(),
@@ -329,21 +340,34 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
 
         std::vector<bool> is_visited(mesh.tets.size(), false);
         std::queue<int> queue_t_ids;
-        for (int t_id: n_t_ids)
+        for (int t_id: n_t_ids) {
+            is_visited[t_id] = true;
             queue_t_ids.push(t_id);
+        }
+
+//        std::vector<int> oris_all(mesh.tet_vertices.size(), Predicates::ORI_UNKNOWN);
+//        time_find_cutting_tets1 += timer.getElapsedTime();
         while (!queue_t_ids.empty()) {
+//            timer.start();
             int t_id = queue_t_ids.front();
             queue_t_ids.pop();
-            if (is_visited[t_id])
-                continue;
-            is_visited[t_id] = true;
+//            if (is_visited[t_id]) {
+//                time_find_cutting_tets2 += timer.getElapsedTime();
+//                continue;
+//            }
+//            is_visited[t_id] = true;
+//            time_find_cutting_tets2 += timer.getElapsedTime();
 
+//            timer.start();
             std::array<int, 4> oris;
             int cnt_pos = 0;
             int cnt_neg = 0;
             int cnt_on = 0;
             for (int j = 0; j < 4; j++) {
-                oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
+//                if(oris_all[mesh.tets[t_id][j]] != Predicates::ORI_UNKNOWN)
+//                    oris[j] = oris_all[mesh.tets[t_id][j]];
+//                else
+                    oris[j] = Predicates::orient_3d(vs[0], vs[1], vs[2], mesh.tet_vertices[mesh.tets[t_id][j]].pos);
                 if (oris[j] == Predicates::ORI_ZERO)
                     cnt_on++;
                 else if (oris[j] == Predicates::ORI_POSITIVE)
@@ -351,9 +375,13 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
                 else
                     cnt_neg++;
             }
-            if(cnt_pos == 0 && cnt_neg == 0 && cnt_on < 3)
+            if(cnt_pos == 0 && cnt_neg == 0 && cnt_on < 3) {
+//                time_find_cutting_tets3 += timer.getElapsedTime();
                 continue;
+            }
+//            time_find_cutting_tets3 += timer.getElapsedTime();
 
+//            timer.start();
             bool is_cutted = false;
             std::vector<bool> is_cut_vs = {{false, false, false, false}}; /// is v on cut face
             for (int j = 0; j < 4; j++) {
@@ -388,10 +416,6 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
 
                 if(is_cut_vs[0] && is_cut_vs[1] && is_cut_vs[2] && is_cut_vs[3])
                     break;
-
-//                int opp_t_id = get_opp_t_id(t_id, j, mesh);
-//                if (opp_t_id >= 0 && !is_visited[opp_t_id])
-//                    queue_t_ids.push(opp_t_id);
             }
             if (is_cutted)
                 cut_t_ids.push_back(t_id);
@@ -400,10 +424,13 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3i> &inpu
                 if (!is_cut_vs[j])
                     continue;
                 for (int n_t_id: mesh.tet_vertices[mesh.tets[t_id][j]].conn_tets) {
-                    if (!is_visited[n_t_id])
+                    if (!is_visited[n_t_id]) {
+                        is_visited[n_t_id] = true;
                         queue_t_ids.push(n_t_id);
+                    }
                 }
             }
+//            time_find_cutting_tets4 += timer.getElapsedTime();
         }
     } else {
         //todo

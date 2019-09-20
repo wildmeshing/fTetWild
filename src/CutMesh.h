@@ -14,7 +14,6 @@ namespace floatTetWild {
         std::vector<int> v_ids;
         std::map<int, int> map_v_ids;
         std::vector<std::array<int, 4>> tets;
-        std::vector<std::array<int, 4>> opp_t_ids;
 
         std::vector<Scalar> to_plane_dists;
         std::vector<bool> is_snapped;
@@ -31,6 +30,7 @@ namespace floatTetWild {
         bool snap_to_plane();
 
         void expand(std::vector<int> &cut_t_ids);
+        void expand_new(std::vector<int> &cut_t_ids);
 
         bool get_intersecting_edges_and_points(std::vector<Vector3> &points,
                                                std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,

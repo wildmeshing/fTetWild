@@ -21,6 +21,8 @@ class Parameters
     std::string envelope_log     = "";
     std::string envelope_log_csv = "";
 
+    bool not_sort_input = false;
+
     bool is_quiet  = false;
     int  log_level = 0;
 

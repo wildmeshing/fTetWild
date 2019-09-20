@@ -122,7 +122,7 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
             conn_tets[tets[i][j]].push_back(i);
     }
 
-    opp_t_ids.resize(tets.size(), {{-1, -1, -1, -1}});
+    std::vector<std::array<int, 4>> opp_t_ids(tets.size(), {{-1, -1, -1, -1}});
     for (int i = 0; i < tets.size(); i++) {
         for (int j = 0; j < 4; j++) {
             if (opp_t_ids[i][j] >= 0)
@@ -289,6 +289,63 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
 //        }
 //    }
 //    //fortest
+}
+
+void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids){
+    std::vector<bool> is_visited(mesh.tets.size(), false);
+    for(int t_id:cut_t_ids)
+        is_visited[t_id] = true;
+
+    while(true){
+        int old_cut_t_ids = cut_t_ids.size();
+        for(auto m: map_v_ids) {
+            int gv_id = m.first;
+            int lv_id = m.second;
+
+            if (!is_snapped[lv_id])
+                continue;
+
+            for (int gt_id: mesh.tet_vertices[gv_id].conn_tets) {
+                if (is_visited[gt_id]) ///if v is in the interior, then all it's conn_tets are marked visited
+                    continue;
+                is_visited[gt_id] = true;
+
+                //todo: oriantation check
+                for (int j = 0; j < 4; j++) {
+                    
+                }
+
+                ///
+                cut_t_ids.push_back(gt_id);
+
+                int t_id = tets.size();
+                tets.emplace_back();
+                auto &t = tets.back();
+                const int old_v_ids_size = v_ids.size();
+                for (int j = 0; j < 4; j++) {
+                    int v_id = mesh.tets[gt_id][j];
+                    int lv_id;
+                    if (map_v_ids.find(v_id) == map_v_ids.end()) {
+                        v_ids.push_back(v_id);
+                        lv_id = v_ids.size() - 1;
+                        map_v_ids[v_id] = lv_id;
+                        to_plane_dists.push_back(get_to_plane_dist(mesh.tet_vertices[v_id].pos));//todo: correct dist sign
+                        if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
+                            is_snapped.push_back(true);
+                        else
+                            is_snapped.push_back(false);
+//                            conn_tets.emplace_back();
+                    } else
+                        lv_id = map_v_ids[v_id];
+                    t[j] = map_v_ids[v_id];
+//                        conn_tets[lv_id].push_back(t_id);
+                }
+            }
+        }
+
+        if(cut_t_ids.size() == old_cut_t_ids)
+            break;
+    }
 }
 
 void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {

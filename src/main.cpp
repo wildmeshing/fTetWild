@@ -183,6 +183,7 @@ int main(int argc, char **argv) {
 
     command_line.add_flag("-q,--is-quiet", params.is_quiet, "Mute console output. (optional)");
     command_line.add_flag("--skip-simplify", skip_simplify, "");
+    command_line.add_flag("--not-sort-input", params.not_sort_input, "");
 
     command_line.add_option("--envelope-log", params.envelope_log, "");
 

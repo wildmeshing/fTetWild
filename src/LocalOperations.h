@@ -6,6 +6,7 @@
 
 namespace floatTetWild {
     extern std::string envelope_log_csv;
+    extern int envelope_log_csv_cnt;
 
     // void init_b_tree(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces, GEO::Mesh& b_mesh);
 

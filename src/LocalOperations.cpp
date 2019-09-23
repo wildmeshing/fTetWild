@@ -13,6 +13,7 @@
 
 namespace floatTetWild {
     std::string envelope_log_csv = "";
+    int envelope_log_csv_cnt = 0;
 }
 
 using floatTetWild::Scalar;
@@ -563,7 +564,7 @@ bool floatTetWild::is_out_envelope(const Mesh& mesh, int v_id, const Vector3& ne
                 ps.clear();
                 sample_triangle(vs, ps, mesh.params.dd);
                 bool is_out = tree.is_out_sf_envelope(ps, mesh.params.eps_2, prev_facet);
-                if(!mesh.params.envelope_log.empty()){
+                if(!mesh.params.envelope_log.empty() && envelope_log_csv_cnt < 1e5){
                     std::ostringstream ss;
                     ss<<std::setprecision(17);
                     for(const auto& v: vs) {
@@ -572,6 +573,7 @@ bool floatTetWild::is_out_envelope(const Mesh& mesh, int v_id, const Vector3& ne
                     ss<<is_out<<"\n";
                     std::string tmp = ss.str();
                     envelope_log_csv += tmp;
+                    envelope_log_csv_cnt += 1;
                 }
                 if (is_out)
                     return true;

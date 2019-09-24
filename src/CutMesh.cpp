@@ -434,25 +434,25 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
 }
 
 void floatTetWild::CutMesh::get_one_ring_t_ids(std::vector<int> &old_t_ids, std::vector<int> &neighbor_t_ids) {
-    std::vector<int> tmp_lv_ids;
-    for (int i = 0; i < tets.size(); i++) {
-        for (int j = 0; j < 4; j++) {
-            if (opp_t_ids[i][j] < 0) {
-                tmp_lv_ids.push_back(tets[i][(j + 1) % 4]);
-                tmp_lv_ids.push_back(tets[i][(j + 2) % 4]);
-                tmp_lv_ids.push_back(tets[i][(j + 3) % 4]);
-            }
-        }
-    }
-    vector_unique(tmp_lv_ids);
-
-    std::vector<int> tmp_t_ids;
-    for (int lv_id:tmp_lv_ids) {
-        tmp_t_ids.insert(neighbor_t_ids.end(), mesh.tet_vertices[v_ids[lv_id]].conn_tets.begin(),
-                         mesh.tet_vertices[v_ids[lv_id]].conn_tets.end());
-    }
-    vector_unique(tmp_t_ids);
-
-    std::set_difference(tmp_t_ids.begin(), tmp_t_ids.end(), old_t_ids.begin(), old_t_ids.end(),
-                        std::back_inserter(neighbor_t_ids));
+//    std::vector<int> tmp_lv_ids;
+//    for (int i = 0; i < tets.size(); i++) {
+//        for (int j = 0; j < 4; j++) {
+//            if (opp_t_ids[i][j] < 0) {
+//                tmp_lv_ids.push_back(tets[i][(j + 1) % 4]);
+//                tmp_lv_ids.push_back(tets[i][(j + 2) % 4]);
+//                tmp_lv_ids.push_back(tets[i][(j + 3) % 4]);
+//            }
+//        }
+//    }
+//    vector_unique(tmp_lv_ids);
+//
+//    std::vector<int> tmp_t_ids;
+//    for (int lv_id:tmp_lv_ids) {
+//        tmp_t_ids.insert(neighbor_t_ids.end(), mesh.tet_vertices[v_ids[lv_id]].conn_tets.begin(),
+//                         mesh.tet_vertices[v_ids[lv_id]].conn_tets.end());
+//    }
+//    vector_unique(tmp_t_ids);
+//
+//    std::set_difference(tmp_t_ids.begin(), tmp_t_ids.end(), old_t_ids.begin(), old_t_ids.end(),
+//                        std::back_inserter(neighbor_t_ids));
 }

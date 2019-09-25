@@ -291,59 +291,110 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
 //    //fortest
 }
 
-void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids){
-    std::vector<bool> is_visited(mesh.tets.size(), false);
-    for(int t_id:cut_t_ids)
-        is_visited[t_id] = true;
+void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
+    std::vector<bool> is_in_cutmesh(mesh.tets.size(), false);
+    for (int t_id:cut_t_ids)
+        is_in_cutmesh[t_id] = true;
 
-    while(true){
+    std::vector<bool> is_interior(v_ids.size(), false);
+    while (true) {
+        /////
+        std::vector<bool> is_visited(mesh.tets.size(), false);
+        for (int t_id:cut_t_ids)
+            is_visited[t_id] = true;
+
+        /////
         int old_cut_t_ids = cut_t_ids.size();
-        for(auto m: map_v_ids) {
+        for (auto m: map_v_ids) {
             int gv_id = m.first;
             int lv_id = m.second;
 
+            if (is_interior[lv_id])
+                continue;
             if (!is_snapped[lv_id])
                 continue;
 
+            bool is_in = true;
             for (int gt_id: mesh.tet_vertices[gv_id].conn_tets) {
-                if (is_visited[gt_id]) ///if v is in the interior, then all it's conn_tets are marked visited
+                if (is_in_cutmesh[gt_id]) ///if v is in the interior, then all it's conn_tets are marked visited
+                    continue;
+                if (is_visited[gt_id])
                     continue;
                 is_visited[gt_id] = true;
+                is_in = false;
 
-                //todo: oriantation check
+//                pausee();
+
+                ///
+                int cnt = 0;
+                int cnt_on = 0;
                 for (int j = 0; j < 4; j++) {
-                    
+                    int tmp_gv_id = mesh.tets[gt_id][j];
+                    if (map_v_ids.find(tmp_gv_id) != map_v_ids.end()) {
+                        cnt++;
+                        if (is_v_on_plane(map_v_ids[tmp_gv_id]))
+                            cnt_on++;
+                    }
                 }
+                if (cnt != 3)
+                    continue;
+//                cout<<"ok0"<<endl;
+                if (cnt_on != 3) {
+                    int cnt_pos = 0;
+                    int cnt_neg = 0;
+                    for (int j = 0; j < 4; j++) {
+                        int ori = Predicates::orient_3d(p_vs[0], p_vs[1], p_vs[2],
+                                                        mesh.tet_vertices[mesh.tets[gt_id][j]].pos);
+                        if (ori == Predicates::ORI_POSITIVE)
+                            cnt_pos++;
+                        else if (ori == Predicates::ORI_NEGATIVE)
+                            cnt_neg++;
+                    }
+                    if (cnt_neg == 0 || cnt_pos == 0)
+                        continue;
+                }
+//                cout<<"ok1"<<endl;
 
                 ///
                 cut_t_ids.push_back(gt_id);
+                is_in_cutmesh[gt_id] = true;
 
-                int t_id = tets.size();
+                ///
                 tets.emplace_back();
                 auto &t = tets.back();
-                const int old_v_ids_size = v_ids.size();
                 for (int j = 0; j < 4; j++) {
-                    int v_id = mesh.tets[gt_id][j];
-                    int lv_id;
-                    if (map_v_ids.find(v_id) == map_v_ids.end()) {
-                        v_ids.push_back(v_id);
-                        lv_id = v_ids.size() - 1;
-                        map_v_ids[v_id] = lv_id;
-                        to_plane_dists.push_back(get_to_plane_dist(mesh.tet_vertices[v_id].pos));//todo: correct dist sign
-                        if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
+                    int new_gv_id = mesh.tets[gt_id][j];
+                    int new_lv_id;
+                    if (map_v_ids.find(new_gv_id) == map_v_ids.end()) {
+                        //
+                        v_ids.push_back(new_gv_id);
+                        is_interior.push_back(false);
+                        new_lv_id = v_ids.size() - 1;
+                        map_v_ids[new_gv_id] = new_lv_id;
+                        //
+                        double dist = get_to_plane_dist(mesh.tet_vertices[new_gv_id].pos);
+                        int ori = Predicates::orient_3d(p_vs[0], p_vs[1], p_vs[2], mesh.tet_vertices[new_gv_id].pos);
+                        if ((ori == Predicates::ORI_NEGATIVE && dist > 0)
+                            || (ori == Predicates::ORI_POSITIVE && dist < 0))
+                            dist = -dist;
+                        else if (ori == Predicates::ORI_ZERO)
+                            dist = 0;
+                        to_plane_dists.push_back(dist);
+                        //
+                        if (std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
                             is_snapped.push_back(true);
                         else
                             is_snapped.push_back(false);
-//                            conn_tets.emplace_back();
                     } else
-                        lv_id = map_v_ids[v_id];
-                    t[j] = map_v_ids[v_id];
-//                        conn_tets[lv_id].push_back(t_id);
+                        new_lv_id = map_v_ids[new_gv_id];
+                    t[j] = new_lv_id;
                 }
             }
+            if (is_in)
+                is_interior[lv_id] = true;
         }
 
-        if(cut_t_ids.size() == old_cut_t_ids)
+        if (cut_t_ids.size() == old_cut_t_ids)
             break;
     }
 }
@@ -411,6 +462,7 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
                                                 p_vs[0], p_n, p, _);
         if (!is_result) {
             //fortest
+            cout<<"seg_plane_intersection no result!"<<endl;
             cout<<to_plane_dists[e[0]]<<", "<<to_plane_dists[e[1]]<<endl;
             cout<<get_to_plane_dist(mesh.tet_vertices[v1_id].pos)<<", "<<get_to_plane_dist(mesh.tet_vertices[v2_id].pos)<<endl;
             cout<<"e[0] = "<<e[0]<<endl;

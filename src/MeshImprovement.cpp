@@ -851,8 +851,8 @@ int floatTetWild::get_max_p(const Mesh &mesh)
 #include <floattetwild/Predicates.hpp>
 
 void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
-//#define SF_CONDITION t.is_surface_fs[j]<=0
-#define SF_CONDITION t.is_surface_fs[j]!=NOT_SURFACE
+#define SF_CONDITION t.is_surface_fs[j]<=0
+//#define SF_CONDITION t.is_surface_fs[j]!=NOT_SURFACE
 //#define SF_CONDITION t.is_surface_fs[j]<=0&&t.surface_tags[j]==2
 //#define SF_CONDITION t.is_bbox_fs[j]==2
 //#define SF_CONDITION t.is_bbox_fs[j]!=NOT_BBOX

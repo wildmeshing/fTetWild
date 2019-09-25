@@ -223,8 +223,8 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //        cut_mesh.expand(cut_t_ids);
         cut_mesh.expand_new(cut_t_ids);
         cout<<cut_t_ids.size()<<endl;
-//        is_expanded = true;
-        pausee();
+//        vector_print(cut_t_ids);
+//        pausee();
     }
     time_cut_mesh2 += timer1.getElapsedTime();
     time_cut_mesh += timer.getElapsedTime();

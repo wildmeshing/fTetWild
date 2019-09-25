@@ -234,8 +234,17 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                     v_ids.push_back(v_id);
                     lv_id = v_ids.size() - 1;
                     map_v_ids[v_id] = lv_id;
-                    to_plane_dists.push_back(get_to_plane_dist(mesh.tet_vertices[v_id].pos));
-                    if (std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
+//                    to_plane_dists.push_back(get_to_plane_dist(mesh.tet_vertices[v_id].pos));
+                    double dist = get_to_plane_dist(mesh.tet_vertices[v_id].pos);
+                    int ori = Predicates::orient_3d(p_vs[0], p_vs[1], p_vs[2], mesh.tet_vertices[v_id].pos);
+                    if ((ori == Predicates::ORI_NEGATIVE && dist < 0)//todo: change get_to_plane_dist return value sign
+                        || (ori == Predicates::ORI_POSITIVE && dist > 0))
+                        dist = -dist;
+                    else if (ori == Predicates::ORI_ZERO)
+                        dist = 0;
+                    to_plane_dists.push_back(dist);
+
+                    if (ori != Predicates::ORI_ZERO && std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
                         is_snapped.push_back(true);
                     else
                         is_snapped.push_back(false);
@@ -374,14 +383,14 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                         //
                         double dist = get_to_plane_dist(mesh.tet_vertices[new_gv_id].pos);
                         int ori = Predicates::orient_3d(p_vs[0], p_vs[1], p_vs[2], mesh.tet_vertices[new_gv_id].pos);
-                        if ((ori == Predicates::ORI_NEGATIVE && dist > 0)
-                            || (ori == Predicates::ORI_POSITIVE && dist < 0))
+                        if ((ori == Predicates::ORI_NEGATIVE && dist < 0)
+                            || (ori == Predicates::ORI_POSITIVE && dist > 0))
                             dist = -dist;
                         else if (ori == Predicates::ORI_ZERO)
                             dist = 0;
                         to_plane_dists.push_back(dist);
                         //
-                        if (std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
+                        if (ori != Predicates::ORI_ZERO && std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
                             is_snapped.push_back(true);
                         else
                             is_snapped.push_back(false);

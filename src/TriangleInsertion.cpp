@@ -247,8 +247,8 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     if (cut_mesh.snap_to_plane()) {
         cnt_snapped++;
 //        cout<<cut_t_ids.size()<<"->";
-        cut_mesh.expand(cut_t_ids);
-//        cut_mesh.expand_new(cut_t_ids);
+//        cut_mesh.expand(cut_t_ids);
+        cut_mesh.expand_new(cut_t_ids);
 //        cout<<cut_t_ids.size()<<endl;
 //        vector_print(cut_t_ids);
 //        pausee();

@@ -325,14 +325,13 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 
             bool is_in = true;
             for (int gt_id: mesh.tet_vertices[gv_id].conn_tets) {
-                if (is_in_cutmesh[gt_id]) ///if v is in the interior, then all it's conn_tets are marked visited
+                if (is_in_cutmesh[gt_id])
                     continue;
+                is_in = false;
+
                 if (is_visited[gt_id])
                     continue;
                 is_visited[gt_id] = true;
-                is_in = false;
-
-//                pausee();
 
                 ///
                 int cnt = 0;
@@ -345,10 +344,9 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                             cnt_on++;
                     }
                 }
-                if (cnt != 3)
+                if (cnt < 3)
                     continue;
-//                cout<<"ok0"<<endl;
-                if (cnt_on != 3) {
+                if (cnt_on < 3) {
                     int cnt_pos = 0;
                     int cnt_neg = 0;
                     for (int j = 0; j < 4; j++) {
@@ -362,7 +360,6 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                     if (cnt_neg == 0 || cnt_pos == 0)
                         continue;
                 }
-//                cout<<"ok1"<<endl;
 
                 ///
                 cut_t_ids.push_back(gt_id);
@@ -390,7 +387,8 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                             dist = 0;
                         to_plane_dists.push_back(dist);
                         //
-                        if (ori != Predicates::ORI_ZERO && std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
+                        if (ori != Predicates::ORI_ZERO &&
+                            std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
                             is_snapped.push_back(true);
                         else
                             is_snapped.push_back(false);
@@ -402,10 +400,62 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
             if (is_in)
                 is_interior[lv_id] = true;
         }
-
         if (cut_t_ids.size() == old_cut_t_ids)
             break;
     }
+    revert_totally_snapped_tets(0, tets.size());
+
+//    //fortest
+//    std::vector <std::vector<int>> conn_tets(v_ids.size());
+//    for (int i = 0; i < tets.size(); i++) {
+//        for (int j = 0; j < 4; j++)
+//            conn_tets[tets[i][j]].push_back(i);
+//    }
+//
+//    std::vector <std::array<int, 4>> opp_t_ids(tets.size(), {{-1, -1, -1, -1}});
+//    for (int i = 0; i < tets.size(); i++) {
+//        for (int j = 0; j < 4; j++) {
+//            if (opp_t_ids[i][j] >= 0)
+//                continue;
+//
+//            std::vector<int> n_t_ids;
+//            set_intersection_sorted(conn_tets[tets[i][(j + 1) % 4]], conn_tets[tets[i][(j + 2) % 4]],
+//                                    conn_tets[tets[i][(j + 3) % 4]], n_t_ids);
+//
+//            assert(!n_t_ids.empty());
+//            if (n_t_ids.size() < 2)
+//                continue;
+//
+//            int n_t_id = n_t_ids[0] == i ? n_t_ids[1] : n_t_ids[0];
+//            opp_t_ids[i][j] = n_t_id;
+//            for (int k = 0; k < 4; k++) {
+//                if (tets[n_t_id][k] != tets[i][(j + 1) % 4] && tets[n_t_id][k] != tets[i][(j + 2) % 4]
+//                    && tets[n_t_id][k] != tets[i][(j + 3) % 4]) {
+//                    opp_t_ids[n_t_id][k] = i;
+//                    break;
+//                }
+//            }
+//        }
+//    }
+//    int tmp_cnt = 0;
+//    for (int i = 0; i < cut_t_ids.size(); i++) {
+//        for (int j = 0; j < 4; j++) {
+//            if (opp_t_ids[i][j] < 0
+//                && is_v_on_plane(tets[i][(j + 1) % 4])
+//                && is_v_on_plane(tets[i][(j + 2) % 4])
+//                && is_v_on_plane(tets[i][(j + 3) % 4])) {
+//                tmp_cnt++;
+//                cout << i << " gt_id " << cut_t_ids[i] << " should include the neighbor!!!" << endl;
+//                cout << "opp_t_id = " << get_opp_t_id(cut_t_ids[i], j, mesh) << endl;
+//                cout << is_snapped[tets[i][(j + 1) % 4]] << " "
+//                     << is_snapped[tets[i][(j + 2) % 4]] << " "
+//                     << is_snapped[tets[i][(j + 3) % 4]] << endl;
+//                pausee();
+//            }
+//        }
+//    }
+//    cout<<tmp_cnt<<" tets missing!!"<<endl;
+//    //fortest
 }
 
 void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {

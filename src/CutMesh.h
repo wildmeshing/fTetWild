@@ -49,6 +49,8 @@ namespace floatTetWild {
         inline Scalar get_to_plane_dist(const Vector3 &p) {
             return p_n.dot(p - p_vs[0]);
         }
+
+        bool check();
     };
 
     //fortest

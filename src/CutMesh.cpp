@@ -103,7 +103,7 @@ bool floatTetWild::CutMesh::snap_to_plane() {
             to_plane_dists[lv_id] = -to_plane_dists[lv_id];
         }
 
-        if (std::fabs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar) {
+        if (std::fabs(to_plane_dists[lv_id]) < mesh.params.eps_coplanar) {
             is_snapped[lv_id] = true;
             snapped = true;
         }
@@ -244,7 +244,7 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
                         dist = 0;
                     to_plane_dists.push_back(dist);
 
-                    if (ori != Predicates::ORI_ZERO && std::abs(to_plane_dists[lv_id]) < mesh.params.eps_2_coplanar)
+                    if (ori != Predicates::ORI_ZERO && std::fabs(to_plane_dists[lv_id]) < mesh.params.eps_coplanar)
                         is_snapped.push_back(true);
                     else
                         is_snapped.push_back(false);
@@ -388,7 +388,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                         to_plane_dists.push_back(dist);
                         //
                         if (ori != Predicates::ORI_ZERO &&
-                            std::abs(to_plane_dists[new_lv_id]) < mesh.params.eps_2_coplanar)
+                            std::fabs(to_plane_dists[new_lv_id]) < mesh.params.eps_coplanar)
                             is_snapped.push_back(true);
                         else
                             is_snapped.push_back(false);
@@ -459,6 +459,8 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 }
 
 void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {
+//    return;
+
     for (int i = a; i < b; i++) {
         const auto &t = tets[i];
         if (is_v_on_plane(t[0]) && is_v_on_plane(t[1]) && is_v_on_plane(t[2]) && is_v_on_plane(t[3])) {
@@ -529,6 +531,19 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
             return false;
         }
 
+//        Scalar dist1 = (p-mesh.tet_vertices[v1_id].pos).squaredNorm();
+//        Scalar dist2 = (p-mesh.tet_vertices[v2_id].pos).squaredNorm();
+//        if(dist1 <= SCALAR_ZERO_2){
+//            cout<<"snapped e[0]"<<endl;
+//            is_snapped[e[0]] = true;
+//            continue;
+//        }
+//        if(dist2 <= SCALAR_ZERO_2){
+//            cout<<"snapped e[1]"<<endl;
+//            is_snapped[e[1]] = true;
+//            continue;
+//        }
+
         points.push_back(p);
         if (v1_id < v2_id)
             map_edge_to_intersecting_point[{{v1_id, v2_id}}] = points.size() - 1;
@@ -566,4 +581,24 @@ void floatTetWild::CutMesh::get_one_ring_t_ids(std::vector<int> &old_t_ids, std:
 //
 //    std::set_difference(tmp_t_ids.begin(), tmp_t_ids.end(), old_t_ids.begin(), old_t_ids.end(),
 //                        std::back_inserter(neighbor_t_ids));
+}
+
+bool floatTetWild::CutMesh::check() {
+    return true;
+
+    bool is_good = true;
+    for (auto &m:map_v_ids) {
+        int gv_id = m.first;
+        int lv_id = m.second;
+
+        Scalar dist = get_to_plane_dist(mesh.tet_vertices[gv_id].pos);
+        if (std::fabs(dist) < mesh.params.eps_coplanar && to_plane_dists[lv_id] != 0 && !is_snapped[lv_id]) {
+            cout << "wrong vertex in cut mesh" << endl;
+            cout << dist << endl;
+            cout << to_plane_dists[lv_id] << endl;
+            cout << is_snapped[lv_id] << endl;
+            is_good = false;
+        }
+    }
+    return is_good;
 }

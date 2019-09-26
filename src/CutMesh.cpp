@@ -301,6 +301,9 @@ void floatTetWild::CutMesh::expand(std::vector<int>& cut_t_ids) {
 }
 
 void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
+    const int t = get_t(p_vs[0], p_vs[1], p_vs[2]);
+    const std::array<Vector2, 3> tri_2d = {{to_2d(p_vs[0], t), to_2d(p_vs[1], t), to_2d(p_vs[2], t)}};
+
     std::vector<bool> is_in_cutmesh(mesh.tets.size(), false);
     for (int t_id:cut_t_ids)
         is_in_cutmesh[t_id] = true;
@@ -359,6 +362,19 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                     }
                     if (cnt_neg == 0 || cnt_pos == 0)
                         continue;
+
+                    bool is_overlapped = false;
+                    for (int j = 0; j < 4; j++) {
+                        Scalar dist = get_to_plane_dist(mesh.tet_vertices[mesh.tets[gt_id][j]].pos);
+                        Vector3 proj_p = mesh.tet_vertices[mesh.tets[gt_id][j]].pos - dist * p_n;
+                        Vector2 proj_p_2d = to_2d(proj_p, t);
+                        if(is_p_inside_tri_2d(proj_p_2d, tri_2d)) {
+                            is_overlapped = true;
+                            break;
+                        }
+                    }
+                    if(!is_overlapped)
+                        continue;
                 }
 
                 ///
@@ -404,6 +420,8 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
             break;
     }
     revert_totally_snapped_tets(0, tets.size());
+
+//    cout<<"("<<cnt_loop<<")";
 
 //    //fortest
 //    std::vector <std::vector<int>> conn_tets(v_ids.size());
@@ -454,7 +472,9 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 //            }
 //        }
 //    }
-//    cout<<tmp_cnt<<" tets missing!!"<<endl;
+//    if(tmp_cnt>0) {
+//        cout << tmp_cnt << " tets missing!!" << endl;
+//    }
 //    //fortest
 }
 

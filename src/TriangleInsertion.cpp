@@ -175,7 +175,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
                                        time_subdivide_tets + time_push_new_tets);
 
     //fortest
-//    check_track_surface_fs(mesh, track_surface_fs);
+    check_track_surface_fs(mesh, track_surface_fs);
 
     /////
     while (true) {
@@ -306,14 +306,6 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         return false;
     }
     time_subdivide_tets += timer.getElapsedTime();
-
-    //fortest
-//    cout << "subdivide_tets OK" << endl;
-//    cout << "cut_t_ids.size() = " << cut_t_ids.size() << endl;
-//    cout << "new_tets.size() = " << new_tets.size() << endl;
-//    myassert(new_tets.size() == new_track_surface_fs.size());
-//    cout << "points.size() = " << points.size() << endl;
-    //fortest
 
     timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
@@ -802,7 +794,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                       });
 
             if (min_qualities.back().second < SCALAR_ZERO_3) { // if tet quality is too bad
-                cout<<std::setprecision(16)<<"return 1 "<<min_qualities.back().second<<endl;
+//                cout<<std::setprecision(16)<<"return 1 "<<min_qualities.back().second<<endl;
                 return false;
             }
 
@@ -811,7 +803,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
         } else {
             Scalar min_q = check_config(diag_config_id, centroids);
             if (min_q < SCALAR_ZERO_3) {
-                cout<<std::setprecision(16)<<"return 2 "<<min_q<<endl;
+//                cout<<std::setprecision(16)<<"return 2 "<<min_q<<endl;
                 return false;
             }
         }
@@ -1435,6 +1427,8 @@ void floatTetWild::myassert(bool b) {
 }
 
 void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs){
+    return;
+
 //    //check connection
 //    std::vector<std::vector<int>> conn_tets(mesh.tet_vertices.size());
 //    for (int i = 0; i < mesh.tets.size(); i++) {
@@ -1463,7 +1457,7 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
             int opp_t_id = get_opp_t_id(t_id, j, mesh);
             if (opp_t_id < 0) {
                 if (!track_surface_fs[t_id][j].empty()) {
-                    cout << "bbox face !track_surface_fs[t_id][j].empty()" << endl;
+                    cout << "bbox face but !track_surface_fs[t_id][j].empty()" << endl;
                     pausee();
                 }
                 continue;

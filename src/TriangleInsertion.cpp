@@ -254,10 +254,10 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //        //fortest
 
         cnt_snapped++;
-//        cout<<cut_t_ids.size()<<"->";
+        cout<<cut_t_ids.size()<<"->";
 //        cut_mesh.expand(cut_t_ids);
         cut_mesh.expand_new(cut_t_ids);
-//        cout<<cut_t_ids.size()<<endl;
+        cout<<cut_t_ids.size()<<endl;
 //        vector_print(cut_t_ids);
 //        pausee();
     }
@@ -1305,7 +1305,21 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
             if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE)
                 continue;
 
-            auto &f_ids = track_surface_fs[t_id][j];
+            int opp_t_id = get_opp_t_id(t_id, j, mesh);
+            if (opp_t_id < 0)
+                continue;
+            int k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
+                                   mesh.tets[t_id][(j + 3) % 4], mesh);
+            if (track_surface_fs[t_id][j].empty() && track_surface_fs[opp_t_id][k].empty())
+                continue;
+
+            std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());
+            std::sort(track_surface_fs[opp_t_id][k].begin(), track_surface_fs[opp_t_id][k].end());
+            std::vector<int> f_ids;
+            std::set_union(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
+                           track_surface_fs[opp_t_id][k].begin(), track_surface_fs[opp_t_id][k].end(),
+                           std::back_inserter(f_ids));
+
             auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
             auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
             auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
@@ -1337,9 +1351,6 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
             auto &fv3 = input_vertices[input_faces[ff_id][2]];
             //
             int ori = Predicates::orient_3d(fv1, fv2, fv3, mesh.tet_vertices[mesh.tets[t_id][j]].pos);
-            int opp_t_id = get_opp_t_id(t_id, j, mesh);
-            int k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
-                                   mesh.tets[t_id][(j + 3) % 4], mesh);
             int opp_ori = Predicates::orient_3d(fv1, fv2, fv3, mesh.tet_vertices[mesh.tets[opp_t_id][k]].pos);
             //
             if (ori == Predicates::ORI_POSITIVE && opp_ori == Predicates::ORI_NEGATIVE

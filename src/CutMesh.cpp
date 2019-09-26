@@ -308,8 +308,10 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
     for (int t_id:cut_t_ids)
         is_in_cutmesh[t_id] = true;
 
+    int cnt_loop=0;
     std::vector<bool> is_interior(v_ids.size(), false);
     while (true) {
+        cnt_loop++;
         /////
         std::vector<bool> is_visited(mesh.tets.size(), false);
         for (int t_id:cut_t_ids)
@@ -349,7 +351,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                 }
                 if (cnt < 3)
                     continue;
-                if (cnt_on < 3) {
+//                if (cnt_on < 3) {
                     int cnt_pos = 0;
                     int cnt_neg = 0;
                     for (int j = 0; j < 4; j++) {
@@ -375,7 +377,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                     }
                     if(!is_overlapped)
                         continue;
-                }
+//                }
 
                 ///
                 cut_t_ids.push_back(gt_id);
@@ -421,7 +423,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
     }
     revert_totally_snapped_tets(0, tets.size());
 
-//    cout<<"("<<cnt_loop<<")";
+    cout<<"("<<cnt_loop<<")";
 
 //    //fortest
 //    std::vector <std::vector<int>> conn_tets(v_ids.size());

@@ -1293,6 +1293,7 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
         return true;
     };
 
+    std::vector<std::array<bool, 4>> is_visited(track_surface_fs.size(), {{false, false, false, false}});
     for (int t_id = 0; t_id < track_surface_fs.size(); t_id++) {
         for (int j = 0; j < 4; j++) {
 //            //fortest
@@ -1302,14 +1303,17 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            continue;
 //            //fortest
 
-            if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE)
+            if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
                 continue;
+            is_visited[t_id][j] = true;
 
             int opp_t_id = get_opp_t_id(t_id, j, mesh);
             if (opp_t_id < 0)
                 continue;
             int k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
                                    mesh.tets[t_id][(j + 3) % 4], mesh);
+            is_visited[opp_t_id][k] = true;
+
             if (track_surface_fs[t_id][j].empty() && track_surface_fs[opp_t_id][k].empty())
                 continue;
 

@@ -1310,26 +1310,29 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            continue;
 //            //fortest
 
+            //
             if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
                 continue;
             is_visited[t_id][j] = true;
-
+            if (track_surface_fs[t_id][j].empty())
+                continue;
+            //
             int opp_t_id = get_opp_t_id(t_id, j, mesh);
             if (opp_t_id < 0)
                 continue;
             int k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
                                    mesh.tets[t_id][(j + 3) % 4], mesh);
             is_visited[opp_t_id][k] = true;
-
-            if (track_surface_fs[t_id][j].empty() && track_surface_fs[opp_t_id][k].empty())
-                continue;
-
+            //
             std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());
             std::sort(track_surface_fs[opp_t_id][k].begin(), track_surface_fs[opp_t_id][k].end());
             std::vector<int> f_ids;
-            std::set_union(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
-                           track_surface_fs[opp_t_id][k].begin(), track_surface_fs[opp_t_id][k].end(),
-                           std::back_inserter(f_ids));
+            if (track_surface_fs[t_id][j] != track_surface_fs[opp_t_id][k])
+                std::set_union(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
+                               track_surface_fs[opp_t_id][k].begin(), track_surface_fs[opp_t_id][k].end(),
+                               std::back_inserter(f_ids));
+            else
+                f_ids = track_surface_fs[t_id][j];
 
             auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
             auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;

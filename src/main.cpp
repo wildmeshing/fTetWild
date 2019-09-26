@@ -342,17 +342,15 @@ int main(int argc, char **argv) {
 
 
     insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
-    return 0;
 
-
-    timer.start();
-//    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
-    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
-    logger().info("cutting {}s", timer.getElapsedTimeInSec());
-    logger().info("");
-    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy(),
-                                                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
+//    timer.start();
+////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
+//    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
+//    logger().info("cutting {}s", timer.getElapsedTimeInSec());
+//    logger().info("");
+//    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+//                                                   mesh.get_max_energy(), mesh.get_avg_energy(),
+//                                                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
     timer.start();
     optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});

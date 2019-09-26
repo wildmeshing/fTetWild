@@ -190,25 +190,32 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
                   is_face_inserted.size() - cnt_matched);
 
     /////
-    //todo: update mesh is_surface_fs
     mark_surface_fs(input_vertices, input_faces, track_surface_fs, is_face_inserted, mesh);
     logger().info("mark_surface_fs done");
 
 
-    ///fortest
-    Eigen::MatrixXd V(input_vertices.size(), 3);
-    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-    for (int i = 0; i < input_vertices.size(); i++)
-        V.row(i) = input_vertices[i];
-    int cnt = 0;
-    for (int i = 0; i < input_faces.size(); i++) {
-        if (!is_face_inserted[i])
-            continue;
-        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-        cnt++;
+    /////
+    if(!is_again) {
+        for (auto &t:mesh.tets)
+            t.quality = get_quality(mesh, t);
+    } else {
+        //todo
     }
-    igl::writeSTL("inserted.stl", V, F);
-    ///fortest
+
+//    ///fortest
+//    Eigen::MatrixXd V(input_vertices.size(), 3);
+//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
+//    for (int i = 0; i < input_vertices.size(); i++)
+//        V.row(i) = input_vertices[i];
+//    int cnt = 0;
+//    for (int i = 0; i < input_faces.size(); i++) {
+//        if (!is_face_inserted[i])
+//            continue;
+//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+//        cnt++;
+//    }
+//    igl::writeSTL("inserted.stl", V, F);
+//    ///fortest
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
@@ -254,10 +261,10 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //        //fortest
 
         cnt_snapped++;
-        cout<<cut_t_ids.size()<<"->";
+//        cout<<cut_t_ids.size()<<"->";
 //        cut_mesh.expand(cut_t_ids);
         cut_mesh.expand_new(cut_t_ids);
-        cout<<cut_t_ids.size()<<endl;
+//        cout<<cut_t_ids.size()<<endl;
 //        vector_print(cut_t_ids);
 //        pausee();
     }

@@ -423,7 +423,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
     }
     revert_totally_snapped_tets(0, tets.size());
 
-    cout<<"("<<cnt_loop<<")";
+//    cout<<"("<<cnt_loop<<")";
 
 //    //fortest
 //    std::vector <std::vector<int>> conn_tets(v_ids.size());

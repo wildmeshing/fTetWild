@@ -259,6 +259,9 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     }
 
     if(!mesh.is_input_all_inserted) {
+        mesh.is_input_all_inserted = true;
+        return;
+
         for (int i = 0; i < ops[4]; i++) {
             if(!mesh.is_input_all_inserted) {
                 //check isolate boundary points

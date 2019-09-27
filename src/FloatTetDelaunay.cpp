@@ -131,7 +131,8 @@ namespace floatTetWild {
             voxels.clear();
             voxels.reserve((n_voxels(0) + 1) * (n_voxels(1) + 1) * (n_voxels(2) + 1));
 
-            const double sq_distg = std::max(params.ideal_edge_length / 2, 10 * params.eps);
+//            const double sq_distg = std::min(params.ideal_edge_length / 2, 10 * params.eps);
+            const double sq_distg = 10 * params.eps;
             GEO::vec3 nearest_point;
 
             for (int i = 0; i <= n_voxels(0); ++i) {

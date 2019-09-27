@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
     std::vector<Vector3i> input_faces;
     std::vector<int> input_tags;
 
-    if(!params.tag_path.empty()) {
+    if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
         std::string line;
         std::ifstream fin(params.tag_path);
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
         logger().error("Unable to load mesh at {}", params.input_path);
         MeshIO::write_mesh(output_mesh_name, mesh, false);
         return EXIT_FAILURE;
-    } else if(input_vertices.empty() || input_faces.empty()){
+    } else if (input_vertices.empty() || input_faces.empty()) {
         MeshIO::write_mesh(output_mesh_name, mesh, false);
         return EXIT_FAILURE;
     }
@@ -327,8 +327,8 @@ int main(int argc, char **argv) {
     logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),
-                                                   input_faces.size(), -1, -1);
-    if(params.log_level<=1)
+                   input_faces.size(), -1, -1);
+    if (params.log_level <= 1)
         output_component(input_vertices, input_faces, input_tags);
 
     timer.start();
@@ -338,15 +338,16 @@ int main(int argc, char **argv) {
     logger().info("#t = {}", mesh.get_t_num());
     logger().info("tetrahedralizing {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
+    stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                   -1, -1);
 
     timer.start();
     insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
     logger().info("cutting {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy(),
-
+                   mesh.get_max_energy(), mesh.get_avg_energy(),
+                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 //    timer.start();
 ////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
 //    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
@@ -361,15 +362,15 @@ int main(int argc, char **argv) {
     logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::optimization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy());
+                   mesh.get_max_energy(), mesh.get_avg_energy());
 
     timer.start();
-    if(boolean_op<0)
+    if (boolean_op < 0)
         filter_outside(mesh);
     else
         boolean_operation(mesh, boolean_op);
     stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                                                   mesh.get_max_energy(), mesh.get_avg_energy());
+                   mesh.get_max_energy(), mesh.get_avg_energy());
     logger().info("after winding number");
     logger().info("#v = {}", mesh.get_v_num());
     logger().info("#t = {}", mesh.get_t_num());
@@ -394,9 +395,9 @@ int main(int argc, char **argv) {
         fout << stats();
     fout.close();
 
-    if(!params.envelope_log.empty()) {
+    if (!params.envelope_log.empty()) {
         std::ofstream fout(params.envelope_log);
-        fout<<envelope_log_csv;
+        fout << envelope_log_csv;
     }
 
     return EXIT_SUCCESS;

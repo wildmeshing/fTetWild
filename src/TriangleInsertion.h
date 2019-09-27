@@ -53,7 +53,7 @@ namespace floatTetWild {
     bool insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                std::vector<std::pair<std::array<int, 2>, std::vector<int>>> &b_edge_infos,
                                std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
-                               AABBWrapper &tree,
+                               AABBWrapper &tree, std::vector<std::array<int, 2>>& b_edges,
                                std::vector<bool> &is_face_inserted, bool is_again);
 
     bool insert_boundary_edges_get_intersecting_edges_and_points(
@@ -61,7 +61,7 @@ namespace floatTetWild {
             const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
             std::vector<Vector3> &points, std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
-            std::vector<int>& snapped_v_ids,
+            std::vector<int>& snapped_v_ids, std::vector<std::array<int, 3>>& cut_fs,
             bool is_again);
 
     ///other

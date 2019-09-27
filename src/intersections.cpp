@@ -70,6 +70,10 @@ bool floatTetWild::seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, c
     return true;
 }
 
+floatTetWild::Scalar floatTetWild::p_line_squared_dist_3d(const Vector3 &v, const Vector3 &a, const Vector3 &b) {
+    return ((b - a).cross(a - v)).squaredNorm() / (b - a).squaredNorm();
+}
+
 floatTetWild::Scalar floatTetWild::p_seg_squared_dist_3d(const Vector3 &v, const Vector3 &a, const Vector3 &b){
     Vector3 av = v-a;
     Vector3 ab = b-a;
@@ -79,7 +83,7 @@ floatTetWild::Scalar floatTetWild::p_seg_squared_dist_3d(const Vector3 &v, const
     if(bv.dot(-ab)<0)
         return bv.squaredNorm();
 
-    return (ab.cross(av)).squaredNorm()/ab.squaredNorm();
+    return (ab.cross(-av)).squaredNorm()/ab.squaredNorm();
 }
 
 bool floatTetWild::seg_plane_intersection(const Vector3& p1, const Vector3& p2, const Vector3& a, const Vector3& n,

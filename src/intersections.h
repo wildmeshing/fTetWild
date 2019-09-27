@@ -15,6 +15,7 @@ namespace floatTetWild {
                           const std::array<int, 3>& oris_tri);
 
     Scalar p_seg_squared_dist_3d(const Vector3 &p, const Vector3 &a, const Vector3 &b);
+    Scalar p_line_squared_dist_3d(const Vector3 &p, const Vector3 &a, const Vector3 &b);
 
     bool is_p_inside_tri_2d(const Vector2& p, const std::array<Vector2, 3> &tri);
     bool is_seg_tri_cutted_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 3> &tri);

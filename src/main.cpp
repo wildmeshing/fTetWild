@@ -340,8 +340,12 @@ int main(int argc, char **argv) {
     logger().info("");
     stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(), -1, -1);
 
-
+    timer.start();
     insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
+    logger().info("cutting {}s", timer.getElapsedTimeInSec());
+    logger().info("");
+    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
+                                                   mesh.get_max_energy(), mesh.get_avg_energy(),
 
 //    timer.start();
 ////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);

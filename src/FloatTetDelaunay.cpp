@@ -28,8 +28,7 @@ namespace floatTetWild {
                 }
             }
 
-//            const Scalar dis = (max - min).minCoeff() * params.box_scale;
-
+//            const Scalar dis = std::max((max - min).minCoeff() * params.box_scale, params.eps_input * 2);
             const Scalar dis = std::max(params.ideal_edge_length, params.eps_input * 2);
             for (int j = 0; j < 3; j++) {
                 min[j] -= dis;
@@ -118,38 +117,35 @@ namespace floatTetWild {
             }
         }
 
-        void compute_voxel_points(const Vector3 &min, const Vector3 &max, const Parameters &params, const AABBWrapper &tree, std::vector<Vector3> &voxels) {
+        void
+        compute_voxel_points(const Vector3 &min, const Vector3 &max, const Parameters &params, const AABBWrapper &tree,
+                             std::vector<Vector3> &voxels) {
             const Vector3 diag = max - min;
             Vector3i n_voxels = (diag / (params.bbox_diag_length * params.box_scale)).cast<int>();
 
-            for(int d = 0; d < 3; ++d)
+            for (int d = 0; d < 3; ++d)
                 n_voxels(d) = std::max(n_voxels(d), 1);
 
             const Vector3 delta = diag.array() / n_voxels.array().cast<Scalar>();
 
-
             voxels.clear();
-            voxels.reserve((n_voxels(0)+1)*(n_voxels(1)+1)*(n_voxels(2)+1));
+            voxels.reserve((n_voxels(0) + 1) * (n_voxels(1) + 1) * (n_voxels(2) + 1));
 
-            double sq_distg;
+            const double sq_distg = std::max(params.ideal_edge_length / 2, 10 * params.eps);
             GEO::vec3 nearest_point;
 
-            for(int i = 0; i <= n_voxels(0); ++i)
-            {
-                const Scalar px = (i == n_voxels(0)) ? max(0) : (min(0) + delta(0)*i);
-                for(int j = 0; j <= n_voxels(1); ++j)
-                {
-                    const Scalar py = (j == n_voxels(1)) ? max(1) : (min(1) + delta(1)*j);
-                    for(int k = 0; k <= n_voxels(2); ++k)
-                    {
-                        const Scalar pz = (k == n_voxels(2)) ? max(2) : (min(2) + delta(2)*k);
+            for (int i = 0; i <= n_voxels(0); ++i) {
+                const Scalar px = (i == n_voxels(0)) ? max(0) : (min(0) + delta(0) * i);
+                for (int j = 0; j <= n_voxels(1); ++j) {
+                    const Scalar py = (j == n_voxels(1)) ? max(1) : (min(1) + delta(1) * j);
+                    for (int k = 0; k <= n_voxels(2); ++k) {
+                        const Scalar pz = (k == n_voxels(2)) ? max(2) : (min(2) + delta(2) * k);
 
                         const GEO::vec3 gp(px, py, pz);
                         Scalar dist = sqrt(tree.project_to_sf(gp));
 
-                        if(dist > 2*params.eps){
+                        if (dist > sq_distg)
                             voxels.emplace_back(px, py, pz);
-                        }
                     }
                 }
             }

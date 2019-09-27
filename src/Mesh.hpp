@@ -41,6 +41,7 @@ public:
 };
 
 #define NOT_SURFACE SCHAR_MAX//SHRT_MAX//INT_MAX
+#define NOTNOT_SURFACE INT_MAX//SHRT_MAX//INT_MAX
 #define NO_SURFACE_TAG 0
 #define NOT_BBOX -1
 #define OPP_T_ID_UNKNOWN -2

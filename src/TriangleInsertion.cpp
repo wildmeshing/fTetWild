@@ -1040,6 +1040,8 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
             cout<<"FAIL insert_boundary_edges_get_intersecting_edges_and_points"<<endl;
             continue;
         }
+        if(points.empty()) ///if all snapped
+            continue;
 
         ///subdivision
         std::vector<int> cut_t_ids;
@@ -1095,6 +1097,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
         std::vector<Vector3>& points, std::map<std::array<int, 2>, int>& map_edge_to_intersecting_point,
+        std::vector<int>& snapped_v_ids,
         bool is_again){
 
     auto is_cross = [](int a, int b) {
@@ -1123,7 +1126,23 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             is_visited[t_id] = true;
         }
     } else {
-        //todo
+        Vector3 min_e, max_e;
+        get_bbox_face(input_vertices[e[0]], input_vertices[e[0]], input_vertices[e[1]], min_e, max_e);
+
+        for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+            if (mesh.tets[t_id].is_removed)
+                continue;
+
+            Vector3 min_t, max_t;
+            get_bbox_tet(mesh.tet_vertices[mesh.tets[t_id][0]].pos, mesh.tet_vertices[mesh.tets[t_id][1]].pos,
+                         mesh.tet_vertices[mesh.tets[t_id][2]].pos, mesh.tet_vertices[mesh.tets[t_id][3]].pos,
+                         min_t, max_t);
+            if (!is_bbox_intersected(min_e, max_e, min_t, max_t))
+                continue;
+
+            t_ids_queue.push(t_id);
+            is_visited[t_id] = true;
+        }
     }
 
     std::vector<std::array<int, 3>> cut_fs;
@@ -1138,6 +1157,8 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         std::array<bool, 4> is_cut_vs = {{false, false, false, false}};
         for (int j = 0; j < 4; j++) {
             ///check if contains
+            if(track_surface_fs[t_id][j].empty())
+                continue;
             std::sort(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end());
             std::vector<int> tmp;
             std::set_intersection(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(),
@@ -1165,12 +1186,9 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
                     const auto &a = input_vertices[e[0]];
                     const auto &b = input_vertices[e[1]];
                     Scalar dis = ((b - a).cross(a - p)).norm() / (b - a).norm();
-//                    Scalar dis = sqrt((a-p).squaredNorm() - pow((a-p).dot((a-b).normalized()), 2));
                     if (dis < mesh.params.eps_coplanar) {
                         oris[k] = Predicates::ORI_ZERO;
                         cnt_on++;
-//                        cout << "snapped" << endl;
-//                        pausee();
                         continue;
                     }
                     if (oris[k] == Predicates::ORI_POSITIVE)
@@ -1232,9 +1250,10 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
                         break;
                     }
                 }
-                if (!is_intersected) { // return false if no intersection is found
-                    cout<<"return 1"<<endl;
-                    return false;///
+                if (!is_intersected) { /// no need to return false here
+//                    cout<<"return 1"<<endl;
+//                    return false;///
+                    continue;
                 }
             }
 
@@ -1324,8 +1343,8 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         }
 //        if (cnt != 2) {
         if (cnt < 2) {
-            cout<<"return 2, cnt = "<<cnt<<endl;
-            return false;///
+//            cout<<"return 2, cnt = "<<cnt<<endl;
+            return false;///has to return false here
         }
     }
 
@@ -1518,7 +1537,7 @@ void floatTetWild::myassert(bool b) {
 
 void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs){
     return;
-    
+
 //    //check connection
 //    std::vector<std::vector<int>> conn_tets(mesh.tet_vertices.size());
 //    for (int i = 0; i < mesh.tets.size(); i++) {

@@ -25,11 +25,15 @@ bool floatTetWild::seg_line_intersection_2d(const std::array<Vector2, 2> &seg, c
     t_seg = n1 / d1;
 //    Scalar n2 = (y1 - y2) * (x1 - x3) + (x2 - x1) * (y1 - y3);
     Scalar d2 = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
-    if(d2 == 0)
+    if(d2 == 0) {
+//        cout<<"d2==0"<<endl;
         return false;
+    }
 
-    if (t_seg < 0 || t_seg > 1)
+    if (t_seg < 0 || t_seg > 1){
+//        cout<<"t_seg = "<<t_seg<<endl;
         return false;
+    }
 
     return true;
 }
@@ -637,7 +641,7 @@ bool floatTetWild::is_tri_inside_tet(const std::array<Vector3, 3>& ps,
     return false;
 }
 
-bool floatTetWild::is_point_inside_tet(const Vector3& p, const Vector3& p0t, const Vector3& p1t, const Vector3& p2t, const Vector3& p3t) {
+bool floatTetWild::is_point_inside_tet(const Vector3& p, const Vector3& p0t, const Vector3& p1t, const Vector3& p2t, const Vector3& p3t) {///inside or on
     int cnt_pos = 0;
     int cnt_neg = 0;
 

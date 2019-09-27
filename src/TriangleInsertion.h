@@ -61,6 +61,7 @@ namespace floatTetWild {
             const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
             std::vector<Vector3> &points, std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
+            std::vector<int>& snapped_v_ids,
             bool is_again);
 
     ///other

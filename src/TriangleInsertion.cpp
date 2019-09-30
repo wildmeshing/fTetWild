@@ -242,8 +242,13 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     //fortest
     myassert(!cut_t_ids.empty(), "cut_t_ids.empty()!!!");
-    if(cut_t_ids.empty())
+    if(cut_t_ids.empty()) {
+        cout << get_area(vs[0], vs[1], vs[2]) << endl;
+        cout << "f" << insert_f_id << ": " << input_faces[insert_f_id][0] << " " << input_faces[insert_f_id][1]
+             << " " << input_faces[insert_f_id][2] << endl;
+        pausee();
         return false;
+    }
     //fortest
 
     /////

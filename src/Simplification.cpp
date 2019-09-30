@@ -5,6 +5,7 @@
 #include <igl/remove_duplicate_vertices.h>
 #include <igl/writeOFF.h>
 #include <igl/Timer.h>
+#include <igl/unique_rows.h>
 
 #ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
@@ -138,9 +139,20 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     for (int i = 0; i < input_faces.size(); i++)
         F_tmp.row(i) = input_faces[i];
 
+    //
     Eigen::VectorXi IV, _;
     igl::remove_duplicate_vertices(V_tmp, F_tmp, SCALAR_ZERO, V_in, IV, _, F_in);
-
+    //
+    F_tmp.resize(0, 0);
+    Eigen::VectorXi IF;
+    igl::unique_rows(F_in, F_tmp, IF, _);
+    F_in = F_tmp;
+    std::vector<int> old_input_tags = input_tags;
+    input_tags.clear();
+    for (int i = 0; i < old_input_tags.size(); i++) {
+        input_tags.push_back(old_input_tags[IF[i]]);
+    }
+    //
     if (V_in.rows() == 0 || F_in.rows() == 0)
         return false;
 
@@ -151,7 +163,7 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     input_vertices.resize(V_in.rows());
     input_faces.clear();
     input_faces.reserve(F_in.rows());
-    std::vector<int> old_input_tags = input_tags;
+    old_input_tags = input_tags;
     input_tags.clear();
     for (int i = 0; i < V_in.rows(); i++)
         input_vertices[i] = V_in.row(i);

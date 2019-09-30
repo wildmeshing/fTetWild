@@ -74,14 +74,17 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
 //        }
 //        //fortest
 
-        for (int j = 0; j < 3; j++) {
-            Scalar dis =
-                    (input_vertices[input_faces[i][j]] - input_vertices[input_faces[i][(j + 1) % 3]]).squaredNorm();
-            if (j == 0)
-                weights[i] = dis;
-            else if (dis > weights[i])
-                weights[i] = dis;
-        }
+//        for (int j = 0; j < 3; j++) {
+//            Scalar dis =
+//                    (input_vertices[input_faces[i][j]] - input_vertices[input_faces[i][(j + 1) % 3]]).squaredNorm();
+//            if (j == 0)
+//                weights[i] = dis;
+//            else if (dis > weights[i])
+//                weights[i] = dis;
+//        }
+        Vector3 u = input_vertices[input_faces[i][1]] - input_vertices[input_faces[i][0]];
+        Vector3 v = input_vertices[input_faces[i][2]] - input_vertices[input_faces[i][0]];
+        weights[i] = u.cross(v).squaredNorm();
     }
 
     if(mesh.params.not_sort_input)
@@ -179,10 +182,10 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
     find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
     logger().info("find_boundary_edges done");
-    std::vector<std::array<int, 2>> b_edges;
+    std::vector<std::array<int, 2>> b_edges1;
     std::vector<std::array<int, 3>> known_surface_fs;
     std::vector<std::array<int, 3>> known_not_surface_fs;
-    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges,
+    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges1,
                           is_face_inserted, is_again, known_surface_fs, known_not_surface_fs);
     logger().info("uninserted #f = {}/{}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false),
                   is_face_inserted.size() - cnt_matched);
@@ -192,32 +195,34 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     //fortest
 
     /////
+    std::vector<std::array<int, 2>> b_edges2;
     mark_surface_fs(input_vertices, input_faces, track_surface_fs, is_face_inserted,
-                    known_surface_fs, known_not_surface_fs, b_edges, mesh);
+                    known_surface_fs, known_not_surface_fs, b_edges2, mesh, tree);
     logger().info("mark_surface_fs done");
 
     /////
     //build b_tree using b_edges
-    tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges);
+    tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges1, mesh, b_edges2);
     if (!is_again) {
         for (auto &t:mesh.tets)
             t.quality = get_quality(mesh, t);
     }
+    logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-//    ///fortest
-//    Eigen::MatrixXd V(input_vertices.size(), 3);
-//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-//    for (int i = 0; i < input_vertices.size(); i++)
-//        V.row(i) = input_vertices[i];
-//    int cnt = 0;
-//    for (int i = 0; i < input_faces.size(); i++) {
-//        if (!is_face_inserted[i])
-//            continue;
-//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-//        cnt++;
-//    }
-//    igl::writeSTL("inserted.stl", V, F);
-//    ///fortest
+    ///fortest
+    Eigen::MatrixXd V(input_vertices.size(), 3);
+    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
+    for (int i = 0; i < input_vertices.size(); i++)
+        V.row(i) = input_vertices[i];
+    int cnt = 0;
+    for (int i = 0; i < input_faces.size(); i++) {
+        if (!is_face_inserted[i])
+            continue;
+        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+        cnt++;
+    }
+    igl::writeSTL("inserted.stl", V, F);
+    ///fortest
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
@@ -1410,7 +1415,7 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                                    const std::vector<std::array<int, 3>>& known_surface_fs,
                                    const std::vector<std::array<int, 3>>& known_not_surface_fs,
                                    std::vector<std::array<int, 2>>& b_edges,
-                                   Mesh &mesh) {
+                                   Mesh &mesh, AABBWrapper &tree) {
 
     auto is_on_bounded_side = [&](const std::array<Vector2, 3> &ps_2d, const Vector2 &c) {
         int cnt_pos = 0;
@@ -1434,7 +1439,7 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            //fortest
 //            if (track_surface_fs[t_id][j].size() > 0)
 ////            if (std::find(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(), III) != track_surface_fs[t_id][j].end())
-//                mesh.tets[t_id].is_surface_fs[j] = 1;
+//                mesh.tets[t_id].is_surface_fs[j] = -1;
 //            continue;
 //            //fortest
 
@@ -1513,8 +1518,12 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                     ff_id = f_id;
                     break;
                 }
-                if (ff_id < 0)
-                    continue;
+                if (ff_id < 0) {
+                    std::vector<GEO::vec3> ps;
+                    sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+                    if (tree.is_out_sf_envelope(ps, mesh.params.eps_2))
+                        continue;
+                }
 
                 opp_t_id = get_opp_t_id(t_id, j, mesh);
                 if (opp_t_id < 0) {
@@ -1557,15 +1566,30 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 Scalar dist = n.dot(mesh.tet_vertices[mesh.tets[t_id][j]].pos - fv1);
                 Scalar opp_dist = n.dot(mesh.tet_vertices[mesh.tets[opp_t_id][k]].pos - fv1);
                 if (ori == Predicates::ORI_ZERO) {
-                    cout << "impossible!! " << dist << " " << opp_dist << endl;
-                    cout << (mesh.tet_vertices[mesh.tets[t_id][j]].pos == mesh.tet_vertices[mesh.tets[opp_t_id][k]].pos)
-                         << endl;
-                    cout << t_id << " " << j << " " << mesh.tets[t_id][j] << endl;
-                    cout << opp_t_id << " " << k << " " << mesh.tets[opp_t_id][k] << endl;
-                    cout << "n = " << n << endl;
-                    mesh.tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
-                    mesh.tets[t_id].is_surface_fs[j] = NOT_SURFACE;
-                    pausee();
+//                    cout << "impossible!! " << dist << " " << opp_dist << endl;
+//                    cout << (mesh.tet_vertices[mesh.tets[t_id][j]].pos == mesh.tet_vertices[mesh.tets[opp_t_id][k]].pos)
+//                         << endl;
+//                    cout << t_id << " " << j << " " << mesh.tets[t_id][j] << endl;
+//                    cout << opp_t_id << " " << k << " " << mesh.tets[opp_t_id][k] << endl;
+//                    cout << "n = " << n << endl;
+
+                    auto &tv1 = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+                    auto &tv2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+                    auto &tv3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+                    Vector3 nt;
+                    if (Predicates::orient_3d(tv1, tv2, tv3, mesh.tet_vertices[mesh.tets[t_id][j]].pos)
+                        == Predicates::ORI_POSITIVE)
+                        nt = (tv2 - tv1).cross(tv3 - tv1);
+                    else
+                        nt = (tv3 - tv1).cross(tv2 - tv1);
+                    nt.normalize();
+                    if (n.dot(nt) > 0) {
+                        mesh.tets[opp_t_id].is_surface_fs[k] = 1;
+                        mesh.tets[t_id].is_surface_fs[j] = -1;
+                    } else {
+                        mesh.tets[opp_t_id].is_surface_fs[k] = -1;
+                        mesh.tets[t_id].is_surface_fs[j] = 1;
+                    }
                 } else {
                     if (dist < opp_dist) {
                         mesh.tets[opp_t_id].is_surface_fs[k] = opp_ori;
@@ -1580,6 +1604,11 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
         }
     }
 
+//    fortest: output and check
+    output_surface(mesh, mesh.params.output_path+"surface.stl");
+
+    cout<<"known_surface_fs.size = "<<known_surface_fs.size()<<endl;
+    cout<<"known_not_surface_fs.size = "<<known_not_surface_fs.size()<<endl;
     if(known_surface_fs.empty() && known_not_surface_fs.empty())
         return;
 
@@ -1612,20 +1641,21 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 if (mesh.tets[t_id][j] != e[0] && mesh.tets[t_id][j] != e[1]) {
                     if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE) {
                         cnt++;
-                        if (cnt > 2)
-                            break;
+//                        if (cnt > 2)
+//                            break;
                     }
                 }
-                if (cnt > 2)
-                    break;
+//                if (cnt > 2)
+//                    break;
             }
         }
-        if (cnt == 2)
+        cout<<"cnt = "<<cnt<<endl;
+        if (cnt == 2) {
             b_edges.push_back(e);
+            mesh.tet_vertices[e[0]].is_on_boundary = true;
+            cout<<"b_edges.push_back(e);"<<endl;
+        }
     }
-
-//    fortest: output and check
-//    output_surface(mesh, mesh.params.output_path+"surface.stl");
 }
 
 int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){

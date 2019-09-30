@@ -73,7 +73,7 @@ namespace floatTetWild {
                          const std::vector<std::array<int, 3>>& known_surface_fs,
                          const std::vector<std::array<int, 3>>& known_not_surface_fs,
                          std::vector<std::array<int, 2>>& b_edges,
-                         Mesh &mesh);
+                         Mesh &mesh, AABBWrapper &tree);
 
     int get_opp_t_id(int t_id, int j, const Mesh &mesh);
 

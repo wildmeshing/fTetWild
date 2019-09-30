@@ -348,6 +348,8 @@ int main(int argc, char **argv) {
     stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                    mesh.get_max_energy(), mesh.get_avg_energy(),
                    std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
+    pausee();
+
 //    timer.start();
 ////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
 //    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
@@ -365,6 +367,7 @@ int main(int argc, char **argv) {
                    mesh.get_max_energy(), mesh.get_avg_energy());
 
     timer.start();
+    correct_tracked_surface_orientation(mesh, tree);
     if (boolean_op < 0)
         filter_outside(mesh);
     else

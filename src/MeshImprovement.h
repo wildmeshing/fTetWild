@@ -14,7 +14,8 @@ namespace floatTetWild {
 
     int get_max_p(const Mesh &mesh);
 
-    void get_tracked_surface(const Mesh& mesh, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &V, Eigen::Matrix<int, Eigen::Dynamic, 3> &F, int c_id = 0);
+    void correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree);
+    void get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &V, Eigen::Matrix<int, Eigen::Dynamic, 3> &F, int c_id = 0);
     void boolean_operation(Mesh& mesh, int op);
     void filter_outside(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);

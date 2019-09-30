@@ -9,7 +9,7 @@
 
 namespace floatTetWild {
 	class AABBWrapper {
-    private:
+    public:
         GEO::Mesh b_mesh;
         GEO::Mesh tmp_b_mesh;
         const GEO::Mesh &sf_mesh;
@@ -20,7 +20,6 @@ namespace floatTetWild {
 
         void init_b_mesh(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces);
 
-    public:
 		AABBWrapper(const GEO::Mesh &sf_mesh) : sf_mesh(sf_mesh), sf_tree(sf_mesh) {}
 
 		inline Scalar get_sf_diag() const { return GEO::bbox_diagonal(sf_mesh); }
@@ -34,6 +33,10 @@ namespace floatTetWild {
 		void init_tmp_b_mesh_and_tree(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces,
 				const std::vector<std::array<int, 2>>& b_edges);
 
+        void init_tmp_b_mesh_and_tree(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces,
+                                      const std::vector<std::array<int, 2>>& b_edges1,
+                                      const Mesh& mesh, const std::vector<std::array<int, 2>>& b_edges2);
+
 		inline Scalar project_to_sf(Vector3 &p) const {
 			GEO::vec3 geo_p(p[0], p[1], p[2]);
 			GEO::vec3 nearest_p;
@@ -45,6 +48,13 @@ namespace floatTetWild {
 
 			return sq_dist;
 		}
+
+        inline int get_nearest_face_sf(const Vector3 &p) const {
+            GEO::vec3 geo_p(p[0], p[1], p[2]);
+            GEO::vec3 nearest_p;
+            double sq_dist = std::numeric_limits<double>::max(); //??
+            return sf_tree.nearest_facet(geo_p, nearest_p, sq_dist);
+        }
 
 		inline Scalar project_to_sf(const GEO::vec3 geo_p) const {
 			GEO::vec3 nearest_p;

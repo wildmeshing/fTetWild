@@ -143,6 +143,19 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     Eigen::VectorXi IV, _;
     igl::remove_duplicate_vertices(V_tmp, F_tmp, SCALAR_ZERO, V_in, IV, _, F_in);
     //
+    for (int i = 0; i < F_in.rows(); i++) {
+        int j_min = 0;
+        for (int j = 1; j < 3; j++) {
+            if (F_in(i, j) < F_in(i, j_min))
+                j_min = j;
+        }
+        if (j_min == 0)
+            continue;
+        int v0_id = F_in(i, j_min);
+        int v1_id = F_in(i, (j_min + 1) % 3);
+        int v2_id = F_in(i, (j_min + 2) % 3);
+        F_in.row(i) << v0_id, v1_id, v2_id;
+    }
     F_tmp.resize(0, 0);
     Eigen::VectorXi IF;
     igl::unique_rows(F_in, F_tmp, IF, _);

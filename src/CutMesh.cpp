@@ -366,11 +366,15 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                         continue;
 
                     bool is_overlapped = false;
+                    std::array<Vector2, 4> tet_2d;
                     for (int j = 0; j < 4; j++) {
                         Scalar dist = get_to_plane_dist(mesh.tet_vertices[mesh.tets[gt_id][j]].pos);
                         Vector3 proj_p = mesh.tet_vertices[mesh.tets[gt_id][j]].pos - dist * p_n;
-                        Vector2 proj_p_2d = to_2d(proj_p, t);
-                        if(is_p_inside_tri_2d(proj_p_2d, tri_2d)) {
+                        tet_2d[j] = to_2d(proj_p, t);
+                    }
+                    for(int j=0;j<4;j++) {
+                        if (is_tri_tri_cutted_2d({{tet_2d[(j + 1) % 4], tet_2d[(j + 2) % 4], tet_2d[(j + 3) % 4]}},
+                                                 tri_2d)) {
                             is_overlapped = true;
                             break;
                         }

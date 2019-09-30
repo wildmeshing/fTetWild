@@ -264,8 +264,13 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
             mesh.is_input_all_inserted = true;
         } else {
             for (int i = 0; i < ops[4]; i++) {
-                //todo: check **isolate** boundary points
-
+                //reset boundary points
+                for (auto &v: mesh.tet_vertices) {
+                    if (v.is_removed)
+                        continue;
+                    v.is_on_boundary = false;
+                }
+                //
                 igl_timer.start();
                 insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
                 init(mesh, tree);
@@ -913,7 +918,33 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
     igl::writeSTL(filename + ".stl", Eigen::MatrixXd(V_sf), Eigen::MatrixXi(F_sf));
 }
 
-void floatTetWild::get_tracked_surface(const Mesh& mesh, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &V_sf, Eigen::Matrix<int, Eigen::Dynamic, 3> &F_sf, int c_id){
+#include <igl/bfs_orient.h>
+#include <igl/unique_rows.h>
+#include <igl/remove_duplicate_vertices.h>
+#include <floattetwild/TriangleInsertion.h>
+void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &V_sf, Eigen::Matrix<int, Eigen::Dynamic, 3> &F_sf, int c_id) {
+//    //fortest
+//    for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+//        auto &t = mesh.tets[t_id];
+//        if (t.is_removed)
+//            continue;
+//        for (int j = 0; j < 4; j++) {
+//            if (t.is_surface_fs[j] != 0)
+//                continue;
+//            int opp_t_id = get_opp_t_id(t_id, j, mesh);
+//            if (opp_t_id < 0) {
+//                t.is_surface_fs[j] = NOT_SURFACE;
+//                continue;
+//            }
+//            int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+//
+//            //todo: find closest points on input
+//            t.is_surface_fs[j] = 1;
+//            mesh.tets[opp_t_id].is_surface_fs[k] = -1;
+//        }
+//    }
+//    //fortest
+
 #define SF_CONDITION t.is_surface_fs[j]<=0&&t.surface_tags[j]==c_id
 
     auto &tets = mesh.tets;
@@ -921,7 +952,7 @@ void floatTetWild::get_tracked_surface(const Mesh& mesh, Eigen::Matrix<Scalar, E
 
     int cnt = 0;
     for (auto &t: mesh.tets) {
-        if(t.is_removed)
+        if (t.is_removed)
             continue;
         for (int j = 0; j < 4; j++) {
             if (SF_CONDITION)
@@ -933,14 +964,15 @@ void floatTetWild::get_tracked_surface(const Mesh& mesh, Eigen::Matrix<Scalar, E
     F_sf.resize(cnt, 3);
     cnt = 0;
     for (auto &t: mesh.tets) {
-        if(t.is_removed)
+        if (t.is_removed)
             continue;
         for (int j = 0; j < 4; j++) {
             if (SF_CONDITION) {
                 for (int k = 0; k < 3; k++)
                     V_sf.row(cnt * 3 + k) = tet_vertices[t[mod4(j + k + 1)]].pos;
-                if(Predicates::orient_3d(tet_vertices[t[mod4(j + 1)]].pos, tet_vertices[t[mod4(j + 2)]].pos,
-                                         tet_vertices[t[mod4(j + 3)]].pos, tet_vertices[t[j]].pos) == Predicates::ORI_POSITIVE)
+                if (Predicates::orient_3d(tet_vertices[t[mod4(j + 1)]].pos, tet_vertices[t[mod4(j + 2)]].pos,
+                                          tet_vertices[t[mod4(j + 3)]].pos, tet_vertices[t[j]].pos) ==
+                    Predicates::ORI_POSITIVE)
                     F_sf.row(cnt) << cnt * 3, cnt * 3 + 2, cnt * 3 + 1;
                 else
                     F_sf.row(cnt) << cnt * 3, cnt * 3 + 1, cnt * 3 + 2;
@@ -948,10 +980,65 @@ void floatTetWild::get_tracked_surface(const Mesh& mesh, Eigen::Matrix<Scalar, E
             }
         }
     }
+    igl::writeSTL("testtesttest00.stl", V_sf, F_sf);
+
+//    Eigen::MatrixXd V;
+//    Eigen::VectorXi IV, _;
+//    igl::unique_rows(V_sf, V, IV, _);
+//    for (int i = 0; i < F_sf.rows(); i++) {
+//        for (int j = 0; j < 3; j++)
+//            F_sf(i, j) = IV(F_sf(i, j));
+//    }
+
+    Eigen::MatrixXd V;
+    Eigen::MatrixXi F;
+    Eigen::VectorXi _1, _2;
+    igl::remove_duplicate_vertices(V_sf, F_sf, -1, V, _1, _2, F);
+    V_sf = V;
+    F_sf.resize(0,0);
+    igl::bfs_orient(F, F_sf, _1);
+
+    igl::writeSTL("testtesttest.stl", V_sf, F_sf);
+}
+
+void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree){
+    //fortest
+    for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+        auto &t = mesh.tets[t_id];
+        if (t.is_removed)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            if (t.is_surface_fs[j] != 0)
+                continue;
+            int opp_t_id = get_opp_t_id(t_id, j, mesh);
+            if (opp_t_id < 0) {
+                t.is_surface_fs[j] = NOT_SURFACE;
+                continue;
+            }
+            int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+
+            //todo: find closest points on input
+            Vector3 c = (mesh.tet_vertices[t[(j + 1) % 4]].pos + mesh.tet_vertices[t[(j + 2) % 4]].pos +
+                         mesh.tet_vertices[t[(j + 3) % 4]].pos) / 3;
+            int f_id = tree.get_nearest_face_sf(c);
+            const auto& fv1 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 0));
+            const auto& fv2 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 1));
+            const auto& fv3 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 2));
+            cout<<c[0]<<" "<<c[1]<<" "<<c[2]<<endl;
+            cout<<fv1[0]<<" "<<fv1[1]<<" "<<fv1[2]<<endl;
+            cout<<fv2[0]<<" "<<fv2[1]<<" "<<fv2[2]<<endl;
+            cout<<fv3[0]<<" "<<fv3[1]<<" "<<fv3[2]<<endl;
+
+            pausee();
+
+            t.is_surface_fs[j] = 1;
+            mesh.tets[opp_t_id].is_surface_fs[k] = -1;
+        }
+    }
+    //fortest
 }
 
 #include <igl/winding_number.h>
-
 void floatTetWild::boolean_operation(Mesh& mesh, int op){
     const int OP_UNION = 0;
     const int OP_INTERSECTION = 1;

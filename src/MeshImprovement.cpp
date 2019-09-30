@@ -9,6 +9,7 @@
 #include <floattetwild/MeshIO.hpp>
 
 #include <floattetwild/FloatTetCutting.h>
+#include <floattetwild/TriangleInsertion.h>
 #include <floattetwild/Statistics.h>
 
 #include <floattetwild/Logger.hpp>
@@ -259,79 +260,89 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     }
 
     if(!mesh.is_input_all_inserted) {
-        mesh.is_input_all_inserted = true;
-        return;
-
         for (int i = 0; i < ops[4]; i++) {
-            if(!mesh.is_input_all_inserted) {
-                //check isolate boundary points
-                for (auto &v: mesh.tet_vertices) {
-                    if (v.is_removed || !v.is_on_boundary)
-                        continue;
-                    if (is_point_out_boundary_envelope(mesh, v.pos, tree))
-                        v.is_on_boundary = false;
-                }
-            }
+            //todo: check **isolate** boundary points
 
-//            std::ofstream fout("bp_del.obj");
-//            for(auto& v:mesh.tet_vertices){
-//                if(v.is_removed)
-//                    continue;
-//                if(v.is_on_boundary)
-//                    fout<<"v "<<v.pos.transpose()<<endl;
-//            }
-//            fout.close();
-
-//            pausee();
             igl_timer.start();
+            insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
+            init(mesh, tree);
+            stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
+                           mesh.get_v_num(), mesh.get_t_num(),
+                           mesh.get_max_energy(), mesh.get_avg_energy(),
+                           std::count(is_face_inserted.begin(), is_face_inserted.end(),
+                                      false));
+        }
 
-            mesh.reset_t_empty_start();
-            mesh.reset_v_empty_start();
-
-            for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
-                if (mesh.tets[t_id].is_removed)
-                    continue;
-                mesh.tets[t_id].opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};
-            }
-
-            //todo: keep track of opp_t_ids
-//        for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
-//            if (mesh.tets[t_id].is_removed)
-//                continue;
-//            for (int j = 0; j < 4; j++)
-//                mesh.tets[t_id].opp_t_ids[j] = -1;
-//        }
-//
-//        for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
-//            if (mesh.tets[t_id].is_removed)
-//                continue;
-//
-//            for (int j = 0; j < 4; j++) {
-//                if (mesh.tets[t_id].opp_t_ids[j] >= 0)
-//                    continue;
-//
-//                int opp_t_id = get_opp_t_id(mesh, t_id, j);
-//                if (opp_t_id < 0)
-//                    continue;
-//                mesh.tets[t_id].opp_t_ids[j] = opp_t_id;
-//                for (int k = 0; k < 4; k++) {
-//                    if (mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 1) % 4]
-//                        && mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 2) % 4]
-//                        && mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 3) % 4])
-//                        mesh.tets[opp_t_id].opp_t_ids[k] = t_id;
+//        for (int i = 0; i < ops[4]; i++) {
+//            if(!mesh.is_input_all_inserted) {
+//                //check isolate boundary points
+//                for (auto &v: mesh.tet_vertices) {
+//                    if (v.is_removed || !v.is_on_boundary)
+//                        continue;
+//                    if (is_point_out_boundary_envelope(mesh, v.pos, tree))
+//                        v.is_on_boundary = false;
 //                }
 //            }
+//
+////            std::ofstream fout("bp_del.obj");
+////            for(auto& v:mesh.tet_vertices){
+////                if(v.is_removed)
+////                    continue;
+////                if(v.is_on_boundary)
+////                    fout<<"v "<<v.pos.transpose()<<endl;
+////            }
+////            fout.close();
+//
+////            pausee();
+//            igl_timer.start();
+//
+//            mesh.reset_t_empty_start();
+//            mesh.reset_v_empty_start();
+//
+//            for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+//                if (mesh.tets[t_id].is_removed)
+//                    continue;
+//                mesh.tets[t_id].opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};
+//            }
+//
+//            //todo: keep track of opp_t_ids
+////        for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+////            if (mesh.tets[t_id].is_removed)
+////                continue;
+////            for (int j = 0; j < 4; j++)
+////                mesh.tets[t_id].opp_t_ids[j] = -1;
+////        }
+////
+////        for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
+////            if (mesh.tets[t_id].is_removed)
+////                continue;
+////
+////            for (int j = 0; j < 4; j++) {
+////                if (mesh.tets[t_id].opp_t_ids[j] >= 0)
+////                    continue;
+////
+////                int opp_t_id = get_opp_t_id(mesh, t_id, j);
+////                if (opp_t_id < 0)
+////                    continue;
+////                mesh.tets[t_id].opp_t_ids[j] = opp_t_id;
+////                for (int k = 0; k < 4; k++) {
+////                    if (mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 1) % 4]
+////                        && mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 2) % 4]
+////                        && mesh.tets[opp_t_id][k] != mesh.tets[t_id][(j + 3) % 4])
+////                        mesh.tets[opp_t_id].opp_t_ids[k] = t_id;
+////                }
+////            }
+////        }
+//
+//            cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
+//            init(mesh, tree);
+//
+//            stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
+//                                                           mesh.get_v_num(), mesh.get_t_num(),
+//                                                           mesh.get_max_energy(), mesh.get_avg_energy(),
+//                                                           std::count(is_face_inserted.begin(), is_face_inserted.end(),
+//                                                                      false));
 //        }
-
-            cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
-            init(mesh, tree);
-
-            stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
-                                                           mesh.get_v_num(), mesh.get_t_num(),
-                                                           mesh.get_max_energy(), mesh.get_avg_energy(),
-                                                           std::count(is_face_inserted.begin(), is_face_inserted.end(),
-                                                                      false));
-        }
     }
 }
 

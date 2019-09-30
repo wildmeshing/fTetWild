@@ -54,7 +54,9 @@ namespace floatTetWild {
                                std::vector<std::pair<std::array<int, 2>, std::vector<int>>> &b_edge_infos,
                                std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
                                AABBWrapper &tree, std::vector<std::array<int, 2>>& b_edges,
-                               std::vector<bool> &is_face_inserted, bool is_again);
+                               std::vector<bool> &is_face_inserted, bool is_again,
+                               std::vector<std::array<int, 3>>& known_surface_fs,
+                               std::vector<std::array<int, 3>>& known_not_surface_fs);
 
     bool insert_boundary_edges_get_intersecting_edges_and_points(
             const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
@@ -67,7 +69,11 @@ namespace floatTetWild {
     ///other
     void mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
-                         const std::vector<bool> &is_face_inserted, Mesh &mesh);
+                         const std::vector<bool> &is_face_inserted,
+                         const std::vector<std::array<int, 3>>& known_surface_fs,
+                         const std::vector<std::array<int, 3>>& known_not_surface_fs,
+                         std::vector<std::array<int, 2>>& b_edges,
+                         Mesh &mesh);
 
     int get_opp_t_id(int t_id, int j, const Mesh &mesh);
 

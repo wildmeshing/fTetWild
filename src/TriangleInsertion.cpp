@@ -179,9 +179,10 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
     find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
     std::vector<std::array<int, 2>> b_edges;
+    std::vector<std::array<int, 3>> known_surface_fs;
+    std::vector<std::array<int, 3>> known_not_surface_fs;
     insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges,
-                          is_face_inserted, is_again);
-    //todo: build b_tree
+                          is_face_inserted, is_again, known_surface_fs, known_not_surface_fs);
     logger().info("uninserted #f = {}/{}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false),
                   is_face_inserted.size() - cnt_matched);
 
@@ -190,10 +191,13 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     //fortest
 
     /////
-    mark_surface_fs(input_vertices, input_faces, track_surface_fs, is_face_inserted, mesh);
+    mark_surface_fs(input_vertices, input_faces, track_surface_fs, is_face_inserted,
+                    known_surface_fs, known_not_surface_fs, b_edges, mesh);
     logger().info("mark_surface_fs done");
 
     /////
+    //build b_tree using b_edges
+    tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges);
     if (!is_again) {
         for (auto &t:mesh.tets)
             t.quality = get_quality(mesh, t);
@@ -1004,7 +1008,10 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                                          std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
                                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh& mesh,
                                          AABBWrapper &tree, std::vector<std::array<int, 2>>& b_edges,
-                                         std::vector<bool> &is_face_inserted, bool is_again) {
+                                         std::vector<bool> &is_face_inserted, bool is_again,
+                                         std::vector<std::array<int, 3>>& known_surface_fs,
+                                         std::vector<std::array<int, 3>>& known_not_surface_fs) {
+
     auto mark_known_surface_fs = [&](const std::array<int, 3>& f, int tag){
         std::vector<int> n_t_ids;
         set_intersection(mesh.tet_vertices[f[0]].conn_tets, mesh.tet_vertices[f[1]].conn_tets,
@@ -1107,12 +1114,15 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
             if (!is_inside_envelope) {
                 for (int f_id: n_f_ids)
                     is_face_inserted[f_id] = false;
-                for (auto &f: cut_fs)
+                for (auto &f: cut_fs) {
                     mark_known_surface_fs(f, KNOWN_NOT_SURFACE);
+                }
+                known_not_surface_fs.insert(known_not_surface_fs.end(), cut_fs.begin(), cut_fs.end());
                 cout << "FAIL subdivide_tets" << endl;
             } else {
                 for (auto &f: cut_fs)
                     mark_known_surface_fs(f, KNOWN_SURFACE);
+                known_surface_fs.insert(known_surface_fs.end(), cut_fs.begin(), cut_fs.end());
             }
 
             is_all_inserted = false;//unless now
@@ -1386,7 +1396,13 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
 }
 
 void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-        std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, const std::vector<bool> &is_face_inserted, Mesh &mesh) {
+                                   std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                                   const std::vector<bool> &is_face_inserted,
+                                   const std::vector<std::array<int, 3>>& known_surface_fs,
+                                   const std::vector<std::array<int, 3>>& known_not_surface_fs,
+                                   std::vector<std::array<int, 2>>& b_edges,
+                                   Mesh &mesh) {
+
     auto is_on_bounded_side = [&](const std::array<Vector2, 3> &ps_2d, const Vector2 &c) {
         int cnt_pos = 0;
         int cnt_neg = 0;
@@ -1437,48 +1453,69 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            else
 //                f_ids = track_surface_fs[t_id][j];
 
-            //todo: special treatment for KNOWN_SURFACE and KNOWN_NOT_SURFACE
-
-            if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
-                continue;
-            is_visited[t_id][j] = true;
-            if (track_surface_fs[t_id][j].empty())
-                continue;
-
-            auto &f_ids = track_surface_fs[t_id][j];
-
-            auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
-            auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
-            auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
-            int t = get_t(tp1_3d, tp2_3d, tp3_3d);
-            std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
-            Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
-
-            std::array<Vector2, 3> ps_2d;
             int ff_id = -1;
-            for (int f_id: f_ids) {
-                if (!is_face_inserted[f_id])
+            int opp_t_id = -1;
+            int k = -1;
+            if (mesh.tets[t_id].is_surface_fs[j] == KNOWN_SURFACE
+                || mesh.tets[t_id].is_surface_fs[j] == KNOWN_NOT_SURFACE) {
+                opp_t_id = get_opp_t_id(t_id, j, mesh);
+                if (opp_t_id < 0) {
+                    mesh.tets[t_id].is_surface_fs[j] = NOT_SURFACE;
                     continue;
-
-                ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
-                                 to_2d(input_vertices[input_faces[f_id][1]], t),
-                                 to_2d(input_vertices[input_faces[f_id][2]], t)}};
-                if (!is_on_bounded_side(ps_2d, c))
-                    continue;
-
-//                mesh.tets[t_id].is_surface_fs[j] = true;
-                ff_id = f_id;
-                break;
-            }
-            if (ff_id < 0)
-                continue;
-
-            int opp_t_id = get_opp_t_id(t_id, j, mesh);
-            if (opp_t_id < 0)
-                continue;
-            int k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
+                }
+                k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
                                    mesh.tets[t_id][(j + 3) % 4], mesh);
-            is_visited[opp_t_id][k] = true;
+                is_visited[t_id][j] = true;
+                is_visited[opp_t_id][k] = true;
+                if (mesh.tets[t_id].is_surface_fs[j] == KNOWN_NOT_SURFACE || track_surface_fs[t_id][j].empty()) {
+                    mesh.tets[t_id].is_surface_fs[j] = NOT_SURFACE;
+                    mesh.tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+                    continue;
+                } else {
+                    ff_id = track_surface_fs[t_id][j].front();
+                }
+            } else {
+                if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
+                    continue;
+                is_visited[t_id][j] = true;
+                if (track_surface_fs[t_id][j].empty())
+                    continue;
+
+                auto &f_ids = track_surface_fs[t_id][j];
+
+                auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+                auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+                auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
+                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
+                Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
+
+                std::array<Vector2, 3> ps_2d;
+                for (int f_id: f_ids) {
+                    if (!is_face_inserted[f_id])
+                        continue;
+
+                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
+                                     to_2d(input_vertices[input_faces[f_id][1]], t),
+                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
+                    if (!is_on_bounded_side(ps_2d, c))
+                        continue;
+
+                    ff_id = f_id;
+                    break;
+                }
+                if (ff_id < 0)
+                    continue;
+
+                opp_t_id = get_opp_t_id(t_id, j, mesh);
+                if (opp_t_id < 0) {
+                    mesh.tets[t_id].is_surface_fs[j] = NOT_SURFACE;
+                    continue;
+                }
+                k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
+                                   mesh.tets[t_id][(j + 3) % 4], mesh);
+                is_visited[opp_t_id][k] = true;
+            }
 
             auto &fv1 = input_vertices[input_faces[ff_id][0]];
             auto &fv2 = input_vertices[input_faces[ff_id][1]];
@@ -1532,6 +1569,50 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
             }
             //
         }
+    }
+
+    if(known_surface_fs.empty() && known_not_surface_fs.empty())
+        return;
+
+    //b_edges
+    std::vector<std::array<int, 2>> tmp_edges;
+    for (const auto &f: known_surface_fs) {
+        for (int j = 0; j < 3; j++) {
+            if (f[j] < f[(j + 1) % 3])
+                tmp_edges.push_back({{f[j], f[(j + 1) % 3]}});
+            else
+                tmp_edges.push_back({{f[(j + 1) % 3], f[j]}});
+        }
+    }
+    for (const auto &f: known_not_surface_fs) {
+        for (int j = 0; j < 3; j++) {
+            if (f[j] < f[(j + 1) % 3])
+                tmp_edges.push_back({{f[j], f[(j + 1) % 3]}});
+            else
+                tmp_edges.push_back({{f[(j + 1) % 3], f[j]}});
+        }
+    }
+    vector_unique(tmp_edges);
+
+    for (auto &e: tmp_edges) {
+        int cnt = 0;
+        std::vector<int> n_t_ids;
+        set_intersection(mesh.tet_vertices[e[0]].conn_tets, mesh.tet_vertices[e[1]].conn_tets, n_t_ids);
+        for (int t_id: n_t_ids) {
+            for (int j = 0; j < 4; j++) {
+                if (mesh.tets[t_id][j] != e[0] && mesh.tets[t_id][j] != e[1]) {
+                    if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE) {
+                        cnt++;
+                        if (cnt > 2)
+                            break;
+                    }
+                }
+                if (cnt > 2)
+                    break;
+            }
+        }
+        if (cnt == 2)
+            b_edges.push_back(e);
     }
 
 //    fortest: output and check

@@ -118,7 +118,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 //        int f_id = i;
     for (int i = 0; i < sorted_f_ids.size(); i++) {
         //fortest
-        if (i > 0 && i % 1000 == 0) {
+        if (!is_again && i > 0 && i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("snapped {}/{}", cnt_snapped, cnt_total);
             logger().info("\t- time_find_cutting_tets = {}s (total {}s)",
@@ -178,6 +178,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     /////
     std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
     find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
+    logger().info("find_boundary_edges done");
     std::vector<std::array<int, 2>> b_edges;
     std::vector<std::array<int, 3>> known_surface_fs;
     std::vector<std::array<int, 3>> known_not_surface_fs;
@@ -240,7 +241,9 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     time_find_cutting_tets += timer.getElapsedTime();
 
     //fortest
-    myassert(!cut_t_ids.empty());
+    myassert(!cut_t_ids.empty(), "cut_t_ids.empty()!!!");
+    if(cut_t_ids.empty())
+        return false;
     //fortest
 
     /////
@@ -588,7 +591,8 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                 for (int j = 0; j < 4; j++) {
                     int cnt_on = 0;
                     for (int k = 0; k < 3; k++) {
-                        myassert(cut_mesh.map_v_ids.find(mesh.tets[t_id][(j + k + 1) % 4]) != cut_mesh.map_v_ids.end());//fortest
+                        myassert(cut_mesh.map_v_ids.find(mesh.tets[t_id][(j + k + 1) % 4]) != cut_mesh.map_v_ids.end(),
+                                "cut_mesh.map_v_ids.find(mesh.tets[t_id][(j + k + 1) % 4]) != cut_mesh.map_v_ids.end()!!");//fortest
                         if (cut_mesh.is_v_on_plane(cut_mesh.map_v_ids[mesh.tets[t_id][(j + k + 1) % 4]])) {
                             cnt_on++;
 //                            cout << (j + k + 1) % 4 << endl;//fortest
@@ -1645,9 +1649,9 @@ int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){
         return -1;
 }
 
-void floatTetWild::myassert(bool b) {
+void floatTetWild::myassert(bool b, const std::string& s) {
     if (b == false) {
-        cout<<"myassert fail!"<<endl;
+        cout << "myassert fail: " << s << endl;
         pausee();
     }
 }

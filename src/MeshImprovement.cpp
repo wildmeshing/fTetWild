@@ -260,17 +260,21 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     }
 
     if(!mesh.is_input_all_inserted) {
-        for (int i = 0; i < ops[4]; i++) {
-            //todo: check **isolate** boundary points
+        if(std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0){
+            mesh.is_input_all_inserted = true;
+        } else {
+            for (int i = 0; i < ops[4]; i++) {
+                //todo: check **isolate** boundary points
 
-            igl_timer.start();
-            insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
-            init(mesh, tree);
-            stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
-                           mesh.get_v_num(), mesh.get_t_num(),
-                           mesh.get_max_energy(), mesh.get_avg_energy(),
-                           std::count(is_face_inserted.begin(), is_face_inserted.end(),
-                                      false));
+                igl_timer.start();
+                insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
+                init(mesh, tree);
+                stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
+                               mesh.get_v_num(), mesh.get_t_num(),
+                               mesh.get_max_energy(), mesh.get_avg_energy(),
+                               std::count(is_face_inserted.begin(), is_face_inserted.end(),
+                                          false));
+            }
         }
 
 //        for (int i = 0; i < ops[4]; i++) {

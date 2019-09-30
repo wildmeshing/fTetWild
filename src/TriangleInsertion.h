@@ -86,7 +86,7 @@ namespace floatTetWild {
         return -1;
     }
 
-    void myassert(bool b);
+    void myassert(bool b, const std::string& s);
 
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 }

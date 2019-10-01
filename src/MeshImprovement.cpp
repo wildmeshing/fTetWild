@@ -1002,13 +1002,13 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
 }
 
 void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree){
-    //fortest
     for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
         auto &t = mesh.tets[t_id];
         if (t.is_removed)
             continue;
         for (int j = 0; j < 4; j++) {
-            if (t.is_surface_fs[j] != 0)
+//            if (t.is_surface_fs[j] != 0)
+            if (t.is_surface_fs[j] == NOT_SURFACE)
                 continue;
             int opp_t_id = get_opp_t_id(t_id, j, mesh);
             if (opp_t_id < 0) {
@@ -1016,26 +1016,35 @@ void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& 
                 continue;
             }
             int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
-
-            //todo: find closest points on input
+            //
             Vector3 c = (mesh.tet_vertices[t[(j + 1) % 4]].pos + mesh.tet_vertices[t[(j + 2) % 4]].pos +
                          mesh.tet_vertices[t[(j + 3) % 4]].pos) / 3;
             int f_id = tree.get_nearest_face_sf(c);
-            const auto& fv1 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 0));
-            const auto& fv2 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 1));
-            const auto& fv3 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 2));
-            cout<<c[0]<<" "<<c[1]<<" "<<c[2]<<endl;
-            cout<<fv1[0]<<" "<<fv1[1]<<" "<<fv1[2]<<endl;
-            cout<<fv2[0]<<" "<<fv2[1]<<" "<<fv2[2]<<endl;
-            cout<<fv3[0]<<" "<<fv3[1]<<" "<<fv3[2]<<endl;
-
-            pausee();
-
-            t.is_surface_fs[j] = 1;
-            mesh.tets[opp_t_id].is_surface_fs[k] = -1;
+            const auto &fv1 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 0));
+            const auto &fv2 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 1));
+            const auto &fv3 = tree.sf_mesh.vertices.point(tree.sf_mesh.facets.vertex(f_id, 2));
+            auto nf = GEO::cross((fv2 - fv1), (fv3 - fv1));
+            Vector3 n, nt;
+            n << nf[0], nf[1], nf[2];
+            //
+            auto &tv1 = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+            auto &tv2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+            auto &tv3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+            if (Predicates::orient_3d(tv1, tv2, tv3, mesh.tet_vertices[mesh.tets[t_id][j]].pos)
+                == Predicates::ORI_POSITIVE)
+                nt = (tv2 - tv1).cross(tv3 - tv1);
+            else
+                nt = (tv3 - tv1).cross(tv2 - tv1);
+            //
+            if (nt.dot(n) > 0) {
+                t.is_surface_fs[j] = 1;
+                mesh.tets[opp_t_id].is_surface_fs[k] = -1;
+            } else {
+                t.is_surface_fs[j] = -1;
+                mesh.tets[opp_t_id].is_surface_fs[k] = 1;
+            }
         }
     }
-    //fortest
 }
 
 #include <igl/winding_number.h>

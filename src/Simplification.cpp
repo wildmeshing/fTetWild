@@ -161,9 +161,9 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     igl::unique_rows(F_in, F_tmp, IF, _);
     F_in = F_tmp;
     std::vector<int> old_input_tags = input_tags;
-    input_tags.clear();
-    for (int i = 0; i < old_input_tags.size(); i++) {
-        input_tags.push_back(old_input_tags[IF[i]]);
+    input_tags.resize(IF.rows());
+    for (int i = 0; i < IF.rows(); i++) {
+        input_tags[i] = old_input_tags[IF(i)];
     }
     //
     if (V_in.rows() == 0 || F_in.rows() == 0)

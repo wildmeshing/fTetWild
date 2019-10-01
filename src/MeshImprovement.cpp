@@ -184,7 +184,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         if (is_hit_min_edge_length && it_after_al_inserted > M && it > M + N) {
             bool is_break = true;
             for (int j = 0; j < N; j++) {
-                if (quality_queue[it - j][0] - quality_queue[it - M - j][0] < 0) {
+                if (quality_queue[it - j][0] - quality_queue[it - j - 1][0] < 0) {
                     is_break = false;
                     break;
                 }

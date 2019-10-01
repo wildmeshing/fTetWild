@@ -11,7 +11,7 @@
 #include <Eigen/Sparse>
 #include <queue>
 
-void floatTetWild::bfs_orient(const Eigen::Matrix<int, Eigen::Dynamic, 3> &F, Eigen::Matrix<int, Eigen::Dynamic, 3> &FF, Eigen::VectorXi &C){
+void floatTetWild::bfs_orient(const Eigen::Matrix<int, Eigen::Dynamic, 3> &F, Eigen::Matrix<int, Eigen::Dynamic, 3> &FF, Eigen::VectorXi &C) {
     Eigen::SparseMatrix<int> A;
     igl::orientable_patches(F, C, A);
 
@@ -22,7 +22,9 @@ void floatTetWild::bfs_orient(const Eigen::Matrix<int, Eigen::Dynamic, 3> &F, Ei
     Eigen::VectorXi seen = Eigen::VectorXi::Zero(m);
 
     // Edge sets
-    const int ES[3][2] = {{1, 2}, {2, 0}, {0, 1}};
+    const int ES[3][2] = {{1, 2},
+                          {2, 0},
+                          {0, 1}};
 
     if (((void *) &FF) != ((void *) &F))
         FF = F;
@@ -41,6 +43,8 @@ void floatTetWild::bfs_orient(const Eigen::Matrix<int, Eigen::Dynamic, 3> &F, Ei
 //                break;
             }
         }
+        if (cnt < 5)
+            continue;
 
         int cnt_inverted = 0;
         assert(!Q.empty());

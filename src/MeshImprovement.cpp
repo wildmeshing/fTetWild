@@ -119,7 +119,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
     mesh.is_limit_length = true;
 
     const int M = 5;
-    const int N = 3;
+    const int N = 5;
 
     ////optimization
     int it_after_al_inserted = 0;
@@ -231,8 +231,11 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         cout << "time = " << time << "s" << endl;
         v_num = mesh.get_v_num();
         t_num = mesh.get_t_num();
-        max_energy = mesh.get_max_energy();
-        avg_energy = mesh.get_avg_energy();
+        get_max_avg_energy(mesh, max_energy, avg_energy);
+        cout << "#v = " << v_num << endl;
+        cout << "#t = " << t_num << endl;
+        cout << "max_energy = " << max_energy << endl;
+        cout << "avg_energy = " << avg_energy << endl;
         stats().record(StateInfo::splitting_id, time, v_num, t_num, max_energy, avg_energy);
         output_info(mesh, tree);
     }
@@ -246,8 +249,11 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         cout << "time = " << time << "s" << endl;
         v_num = mesh.get_v_num();
         t_num = mesh.get_t_num();
-        max_energy = mesh.get_max_energy();
-        avg_energy = mesh.get_avg_energy();
+        get_max_avg_energy(mesh, max_energy, avg_energy);
+        cout << "#v = " << v_num << endl;
+        cout << "#t = " << t_num << endl;
+        cout << "max_energy = " << max_energy << endl;
+        cout << "avg_energy = " << avg_energy << endl;
         stats().record(StateInfo::collapsing_id, time, v_num, t_num, max_energy, avg_energy);
         output_info(mesh, tree);
     }
@@ -261,8 +267,11 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         cout << "time = " << time << "s" << endl;
         v_num = mesh.get_v_num();
         t_num = mesh.get_t_num();
-        max_energy = mesh.get_max_energy();
-        avg_energy = mesh.get_avg_energy();
+        get_max_avg_energy(mesh, max_energy, avg_energy);
+        cout << "#v = " << v_num << endl;
+        cout << "#t = " << t_num << endl;
+        cout << "max_energy = " << max_energy << endl;
+        cout << "avg_energy = " << avg_energy << endl;
         stats().record(StateInfo::swapping_id, time, v_num, t_num, max_energy, avg_energy);
         output_info(mesh, tree);
     }
@@ -276,13 +285,16 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         cout << "time = " << time << "s" << endl;
         v_num = mesh.get_v_num();
         t_num = mesh.get_t_num();
-        max_energy = mesh.get_max_energy();
-        avg_energy = mesh.get_avg_energy();
+        get_max_avg_energy(mesh, max_energy, avg_energy);
+        cout << "#v = " << v_num << endl;
+        cout << "#t = " << t_num << endl;
+        cout << "max_energy = " << max_energy << endl;
+        cout << "avg_energy = " << avg_energy << endl;
         stats().record(StateInfo::smoothing_id, time, v_num, t_num, max_energy, avg_energy);
         output_info(mesh, tree);
     }
 
-    if(!mesh.is_input_all_inserted) {
+    if (!mesh.is_input_all_inserted) {
         for (int i = 0; i < ops[4]; i++) {
             //reset boundary points
             for (auto &v: mesh.tet_vertices) {
@@ -510,14 +522,14 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
     //count
     int cnt_v = mesh.get_v_num();
     int cnt_t = mesh.get_t_num();
-    cout << "#v = " << cnt_v << "(" << tet_vertices.size() << ")" << endl;
-    cout << "#t = " << cnt_t << "(" << tets.size() << ")" << endl;
+//    cout << "#v = " << cnt_v << "(" << tet_vertices.size() << ")" << endl;
+//    cout << "#t = " << cnt_t << "(" << tets.size() << ")" << endl;
 
     //quality
-    Scalar max_energy, avg_energy;
-    get_max_avg_energy(mesh, max_energy, avg_energy);
-    cout << "max_energy = " << max_energy << endl;
-    cout << "avg_energy = " << avg_energy << endl;
+//    Scalar max_energy, avg_energy;
+//    get_max_avg_energy(mesh, max_energy, avg_energy);
+//    cout << "max_energy = " << max_energy << endl;
+//    cout << "avg_energy = " << avg_energy << endl;
 
 //    for (int i = 0; i < tets.size(); i++) {
 //        if (tets[i].is_removed)
@@ -781,7 +793,7 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
     }
     cout<<endl;
 
-//    check_envelope(mesh, tree);
+    check_envelope(mesh, tree);
 
 //    MeshIO::write_mesh("test.msh", mesh);
     output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");

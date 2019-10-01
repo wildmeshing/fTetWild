@@ -922,7 +922,7 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
     igl::writeSTL(filename + ".stl", Eigen::MatrixXd(V_sf), Eigen::MatrixXi(F_sf));
 }
 
-#include <igl/bfs_orient.h>
+#include <floattetwild/bfs_orient.h>
 #include <igl/unique_rows.h>
 #include <igl/remove_duplicate_vertices.h>
 #include <floattetwild/TriangleInsertion.h>
@@ -962,25 +962,17 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
             }
         }
     }
-    igl::writeSTL(mesh.params.output_path+"_tracked_surface.stl", V_sf, F_sf);
-//
-////    Eigen::MatrixXd V;
-////    Eigen::VectorXi IV, _;
-////    igl::unique_rows(V_sf, V, IV, _);
-////    for (int i = 0; i < F_sf.rows(); i++) {
-////        for (int j = 0; j < 3; j++)
-////            F_sf(i, j) = IV(F_sf(i, j));
-////    }
-//
-//    Eigen::MatrixXd V;
-//    Eigen::MatrixXi F;
-//    Eigen::VectorXi _1, _2;
-//    igl::remove_duplicate_vertices(V_sf, F_sf, -1, V, _1, _2, F);
-//    V_sf = V;
-//    F_sf.resize(0,0);
-//    igl::bfs_orient(F, F_sf, _1);
-//
-//    igl::writeSTL("testtesttest.stl", V_sf, F_sf);
+    igl::writeSTL("before_bfs.stl", V_sf, F_sf);
+
+    Eigen::MatrixXd V;
+    Eigen::MatrixXi F;
+    Eigen::VectorXi _1, _2;
+    igl::remove_duplicate_vertices(V_sf, F_sf, -1, V, _1, _2, F);
+    V_sf = V;
+    F_sf.resize(0, 0);
+    bfs_orient(F, F_sf, _1);
+
+    igl::writeSTL(mesh.params.output_path + "_tracked_surface.stl", V_sf, F_sf);
 }
 
 void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree){

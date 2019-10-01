@@ -16,6 +16,9 @@ set(SOURCES
 	getRSS.c
 	get_mem.h
 	get_mem.cpp
+
+	bfs_orient.h
+	bfs_orient.cpp
 )
 
 prepend_current_path(SOURCES)

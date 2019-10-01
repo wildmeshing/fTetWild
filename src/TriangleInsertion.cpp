@@ -1488,9 +1488,8 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                     mesh.tets[t_id].is_surface_fs[j] = NOT_SURFACE;
                     mesh.tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
                     continue;
-                } else {
+                } else
                     ff_id = track_surface_fs[t_id][j].front();
-                }
             } else {
                 if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
                     continue;
@@ -1526,6 +1525,8 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                     sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
                     if (tree.is_out_sf_envelope(ps, mesh.params.eps_2))
                         continue;
+                    else
+                        ff_id = track_surface_fs[t_id][j].front();
                 }
 
                 opp_t_id = get_opp_t_id(t_id, j, mesh);
@@ -1537,6 +1538,8 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                                    mesh.tets[t_id][(j + 3) % 4], mesh);
                 is_visited[opp_t_id][k] = true;
             }
+
+            myassert(ff_id>=0, "ff_id<0!!!");//fortest
 
             auto &fv1 = input_vertices[input_faces[ff_id][0]];
             auto &fv2 = input_vertices[input_faces[ff_id][1]];

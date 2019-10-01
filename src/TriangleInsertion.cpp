@@ -210,6 +210,9 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
         for (auto &t:mesh.tets)
             t.quality = get_quality(mesh, t);
     }
+    if(std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0) {
+        mesh.is_input_all_inserted = true;
+    }
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
 //    ///fortest

@@ -119,6 +119,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
     mesh.is_limit_length = true;
 
     const int M = 5;
+    const int N = 3;
 
     ////optimization
     int it_after_al_inserted = 0;
@@ -126,7 +127,6 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
     bool is_hit_min_edge_length = false;
     std::vector<std::array<Scalar, 2>> quality_queue;
     int cnt_increase_epsilon = mesh.params.stage - 1;
-
     for (int it = 0; it < mesh.params.max_its; it++) {
         if (mesh.is_input_all_inserted)
             it_after_al_inserted++;
@@ -157,7 +157,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
                 mesh.params.eps += mesh.params.eps_delta;
                 mesh.params.eps_2 = mesh.params.eps * mesh.params.eps;
                 cnt_increase_epsilon--;
-                cout << "enlarge envelope, eps = "<< mesh.params.eps << endl;
+                cout << "enlarge envelope, eps = " << mesh.params.eps << endl;
 //                pausee();
             }
         }
@@ -173,7 +173,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
                     mesh.params.eps += mesh.params.eps_delta;
                     mesh.params.eps_2 = mesh.params.eps * mesh.params.eps;
                     cnt_increase_epsilon--;
-                    cout << "enlarge envelope, eps = "<< mesh.params.eps << endl;
+                    cout << "enlarge envelope, eps = " << mesh.params.eps << endl;
 //                    pausee();
                 }
             }
@@ -181,9 +181,17 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
             is_just_after_update = false;
 
         quality_queue.push_back(std::array<Scalar, 2>({{new_max_energy, new_avg_energy}}));
-        if (is_hit_min_edge_length && it_after_al_inserted > M /*it > M*/) {
-            if (quality_queue[it][0] - quality_queue[it - M][0] > 0)
+        if (is_hit_min_edge_length && it_after_al_inserted > M && it > M + N) {
+            bool is_break = true;
+            for (int j = 0; j < N; j++) {
+                if (quality_queue[it - j][0] - quality_queue[it - M - j][0] < 0) {
+                    is_break = false;
+                    break;
+                }
+            }
+            if (is_break)
                 break;
+
 //            bool is_loop = true;
 //            for (int i = 0; i < M; i++) {
 //                if (quality_queue[it - i][0] - quality_queue[it - i - 1][0] < -1e-4
@@ -260,26 +268,22 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     }
 
     if(!mesh.is_input_all_inserted) {
-        if(std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0){
-            mesh.is_input_all_inserted = true;
-        } else {
-            for (int i = 0; i < ops[4]; i++) {
-                //reset boundary points
-                for (auto &v: mesh.tet_vertices) {
-                    if (v.is_removed)
-                        continue;
-                    v.is_on_boundary = false;
-                }
-                //
-                igl_timer.start();
-                insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
-                init(mesh, tree);
-                stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
-                               mesh.get_v_num(), mesh.get_t_num(),
-                               mesh.get_max_energy(), mesh.get_avg_energy(),
-                               std::count(is_face_inserted.begin(), is_face_inserted.end(),
-                                          false));
+        for (int i = 0; i < ops[4]; i++) {
+            //reset boundary points
+            for (auto &v: mesh.tet_vertices) {
+                if (v.is_removed)
+                    continue;
+                v.is_on_boundary = false;
             }
+            //
+            igl_timer.start();
+            insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
+            init(mesh, tree);
+            stats().record(StateInfo::cutting_id, igl_timer.getElapsedTimeInSec(),
+                           mesh.get_v_num(), mesh.get_t_num(),
+                           mesh.get_max_energy(), mesh.get_avg_energy(),
+                           std::count(is_face_inserted.begin(), is_face_inserted.end(),
+                                      false));
         }
 
 //        for (int i = 0; i < ops[4]; i++) {

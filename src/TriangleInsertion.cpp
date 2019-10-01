@@ -120,6 +120,9 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 //    for (int i = 0; i < input_faces.size(); i++) {
 //        int f_id = i;
     for (int i = 0; i < sorted_f_ids.size(); i++) {
+//        if(i>30000)
+//            cout << "fid " << sorted_f_ids[i] << endl;
+
         //fortest
         if (!is_again && i > 0 && i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
@@ -209,27 +212,26 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     }
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-    ///fortest
-    Eigen::MatrixXd V(input_vertices.size(), 3);
-    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-    for (int i = 0; i < input_vertices.size(); i++)
-        V.row(i) = input_vertices[i];
-    int cnt = 0;
-    for (int i = 0; i < input_faces.size(); i++) {
-        if (!is_face_inserted[i])
-            continue;
-        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-        cnt++;
-    }
-    igl::writeSTL("inserted.stl", V, F);
-    ///fortest
+//    ///fortest
+//    Eigen::MatrixXd V(input_vertices.size(), 3);
+//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
+//    for (int i = 0; i < input_vertices.size(); i++)
+//        V.row(i) = input_vertices[i];
+//    int cnt = 0;
+//    for (int i = 0; i < input_faces.size(); i++) {
+//        if (!is_face_inserted[i])
+//            continue;
+//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+//        cnt++;
+//    }
+//    igl::writeSTL("inserted.stl", V, F);
+//    ///fortest
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
         AABBWrapper &tree, bool is_again) {
-//    cout << endl << "fid " << i << endl;
 
     igl::Timer timer;
     std::array<Vector3, 3> vs = {{input_vertices[input_faces[insert_f_id][0]],
@@ -723,8 +725,8 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                             get_centroid(config, tet[j], vs[j]);
                             map_lv_to_c[tet[j]] = centroids.size();
                             centroids.push_back(std::make_pair(tet[j], vs[j]));
-                        } else
-                            vs[j] = centroids[map_lv_to_c[tet[j]]].second;
+                        }
+                        vs[j] = centroids[map_lv_to_c[tet[j]]].second;
                     } else {
                         int v_id = map_lv_to_v_id[tet[j]];
                         if (v_id < v_size)
@@ -787,6 +789,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                     min_q = volume;
                 else if (volume < min_q)
                     min_q = volume;
+                cnt++;
             }
 
             return min_q;
@@ -1605,7 +1608,7 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
     }
 
 //    fortest: output and check
-    output_surface(mesh, mesh.params.output_path+"surface.stl");
+//    output_surface(mesh, mesh.params.output_path+"surface.stl");
 
     cout<<"known_surface_fs.size = "<<known_surface_fs.size()<<endl;
     cout<<"known_not_surface_fs.size = "<<known_not_surface_fs.size()<<endl;
@@ -1641,19 +1644,19 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 if (mesh.tets[t_id][j] != e[0] && mesh.tets[t_id][j] != e[1]) {
                     if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE) {
                         cnt++;
-//                        if (cnt > 2)
-//                            break;
+                        if (cnt > 2)
+                            break;
                     }
                 }
-//                if (cnt > 2)
-//                    break;
+                if (cnt > 2)
+                    break;
             }
         }
-        cout<<"cnt = "<<cnt<<endl;
+//        cout<<"cnt = "<<cnt<<endl;
         if (cnt == 2) {
             b_edges.push_back(e);
             mesh.tet_vertices[e[0]].is_on_boundary = true;
-            cout<<"b_edges.push_back(e);"<<endl;
+//            cout<<"b_edges.push_back(e);"<<endl;
         }
     }
 }

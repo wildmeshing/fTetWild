@@ -368,6 +368,7 @@ int main(int argc, char **argv) {
 
     timer.start();
     correct_tracked_surface_orientation(mesh, tree);
+    logger().info("correct_tracked_surface_orientation done");
     if (boolean_op < 0)
         filter_outside(mesh);
     else

@@ -1473,9 +1473,28 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            else
 //                f_ids = track_surface_fs[t_id][j];
 
+//            //fortest
+//            if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE) {
+//                auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
+//                auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
+//                auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
+//                std::vector<GEO::vec3> ps;
+//                sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+//                if (tree.is_out_sf_envelope(ps, mesh.params.eps_2)) {
+//                    cout << "tree.is_out_sf_envelope(ps, mesh.params.eps_2)" << endl;
+//                    cout << "mesh.tets[t_id].is_surface_fs[j] = " << (int) mesh.tets[t_id].is_surface_fs[j] << endl;
+//                    cout << "t_id = " << t_id << endl;
+//                    cout << "j = " << j << endl;
+//                    cout<<"is_visited[t_id][j] = "<<is_visited[t_id][j]<<endl;
+//                    pausee();
+//                }
+//            }
+//            //fortest
+
             int ff_id = -1;
             int opp_t_id = -1;
             int k = -1;
+            int case_id = 0;
             if (mesh.tets[t_id].is_surface_fs[j] == KNOWN_SURFACE
                 || mesh.tets[t_id].is_surface_fs[j] == KNOWN_NOT_SURFACE) {
                 opp_t_id = get_opp_t_id(t_id, j, mesh);
@@ -1493,6 +1512,7 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                     continue;
                 } else
                     ff_id = track_surface_fs[t_id][j].front();
+                case_id = 1;
             } else {
                 if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
                     continue;
@@ -1505,32 +1525,42 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 auto &tp1_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 1) % 4]].pos;
                 auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
                 auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
-                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
-                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
-                Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
 
-                std::array<Vector2, 3> ps_2d;
-                for (int f_id: f_ids) {
-                    if (!is_face_inserted[f_id])
-                        continue;
+                std::vector<GEO::vec3> ps;
+                sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+                double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
+                eps *= eps;//fortest: use a smaller eps here
+                if (tree.is_out_sf_envelope(ps, eps))
+                    continue;
+                else
+                    ff_id = track_surface_fs[t_id][j].front();
 
-                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
-                                     to_2d(input_vertices[input_faces[f_id][1]], t),
-                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
-                    if (!is_on_bounded_side(ps_2d, c))
-                        continue;
-
-                    ff_id = f_id;
-                    break;
-                }
-                if (ff_id < 0) {
-                    std::vector<GEO::vec3> ps;
-                    sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
-                    if (tree.is_out_sf_envelope(ps, mesh.params.eps_2))
-                        continue;
-                    else
-                        ff_id = track_surface_fs[t_id][j].front();
-                }
+//                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
+//                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
+//                Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
+//
+//                std::array<Vector2, 3> ps_2d;
+//                for (int f_id: f_ids) {
+//                    if (!is_face_inserted[f_id])
+//                        continue;
+//
+//                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][1]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
+//                    if (!is_on_bounded_side(ps_2d, c))
+//                        continue;
+//
+//                    ff_id = f_id;
+//                    break;
+//                }
+//                if (ff_id < 0) {
+//                    std::vector<GEO::vec3> ps;
+//                    sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+//                    if (tree.is_out_sf_envelope(ps, mesh.params.eps_2))
+//                        continue;
+//                    else
+//                        ff_id = track_surface_fs[t_id][j].front();
+//                }
 
                 opp_t_id = get_opp_t_id(t_id, j, mesh);
                 if (opp_t_id < 0) {
@@ -1540,7 +1570,30 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 k = get_local_f_id(opp_t_id, mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
                                    mesh.tets[t_id][(j + 3) % 4], mesh);
                 is_visited[opp_t_id][k] = true;
+
+                case_id = 2;
             }
+
+//            //fortest
+//            auto &tp1_3d = mesh.tet_vertices[mesh.tets[opp_t_id][(k + 1) % 4]].pos;
+//            auto &tp2_3d = mesh.tet_vertices[mesh.tets[opp_t_id][(k + 2) % 4]].pos;
+//            auto &tp3_3d = mesh.tet_vertices[mesh.tets[opp_t_id][(k + 3) % 4]].pos;
+//            std::vector<GEO::vec3> ps;
+//            sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+//            if (tree.is_out_sf_envelope(ps, mesh.params.eps_2)) {
+//                cout << "OPP tree.is_out_sf_envelope(ps, mesh.params.eps_2)" << endl;
+//                cout << "mesh.tets[t_id].is_surface_fs[j] = " << (int) mesh.tets[t_id].is_surface_fs[j] << endl;
+//                cout << "t_id = " << t_id << endl;
+//                cout << "j = " << j << endl;
+//                cout << mesh.tets[opp_t_id][(k + 1) % 4] << " "
+//                     << mesh.tets[opp_t_id][(k + 2) % 4] << " "
+//                     << mesh.tets[opp_t_id][(k + 3) % 4] << endl;
+//                cout << mesh.tets[t_id][(j + 1) % 4] << " "
+//                     << mesh.tets[t_id][(j + 2) % 4] << " "
+//                     << mesh.tets[t_id][(j + 3) % 4] << endl;
+//                pausee();
+//            }
+//            //fortest
 
             myassert(ff_id>=0, "ff_id<0!!!");//fortest
 

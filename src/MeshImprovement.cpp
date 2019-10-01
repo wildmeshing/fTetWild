@@ -817,10 +817,11 @@ void floatTetWild::check_envelope(Mesh& mesh, const AABBWrapper& tree) {
                 std::vector<GEO::vec3> ps;
                 sample_triangle({{mesh.tet_vertices[t[(j + 1) % 4]].pos, mesh.tet_vertices[t[(j + 2) % 4]].pos,
                                          mesh.tet_vertices[t[(j + 3) % 4]].pos}}, ps, mesh.params.dd);
-                Scalar d = tree.dist_sf_envelope(ps, check_eps);
-                if (d > mesh.params.eps_2) {
+                if(tree.is_out_sf_envelope(ps, mesh.params.eps_2)){
+//                Scalar d = tree.dist_sf_envelope(ps, check_eps);
+//                if (d > mesh.params.eps_2) {
                     cout << "out of envelope!" << endl;
-                    cout << d << ", eps_input = " << check_eps << endl;
+//                    cout << d << ", eps_input = " << check_eps << endl;
 //                    //pausee();
                 }
             }

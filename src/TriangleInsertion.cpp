@@ -56,6 +56,8 @@ double old_time_get_intersecting_edges_and_points = 0;
 double old_time_subdivide_tets = 0;
 double old_time_push_new_tets = 0;
 
+int global_i = 0;
+std::vector<std::array<int, 3>> coplanar_fs;//fortest
 //fortest
 
 void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
@@ -124,6 +126,7 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 //            cout << "fid " << sorted_f_ids[i] << endl;
 
         //fortest
+        global_i = i;
         if (!is_again && i > 0 && i % 1000 == 0) {
             logger().info("inserting f{}... {} failed", i, cnt_fail);
             logger().info("snapped {}/{}", cnt_snapped, cnt_total);
@@ -215,20 +218,20 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     }
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-//    ///fortest
-//    Eigen::MatrixXd V(input_vertices.size(), 3);
-//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-//    for (int i = 0; i < input_vertices.size(); i++)
-//        V.row(i) = input_vertices[i];
-//    int cnt = 0;
-//    for (int i = 0; i < input_faces.size(); i++) {
-//        if (!is_face_inserted[i])
-//            continue;
-//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-//        cnt++;
-//    }
-//    igl::writeSTL("inserted.stl", V, F);
-//    ///fortest
+    ///fortest
+    Eigen::MatrixXd V(input_vertices.size(), 3);
+    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
+    for (int i = 0; i < input_vertices.size(); i++)
+        V.row(i) = input_vertices[i];
+    int cnt = 0;
+    for (int i = 0; i < input_faces.size(); i++) {
+        if (!is_face_inserted[i])
+            continue;
+        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+        cnt++;
+    }
+    igl::writeSTL("inserted.stl", V, F);
+    ///fortest
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
@@ -336,6 +339,8 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
     time_push_new_tets += timer.getElapsedTime();
+
+    check_is_input_face_covered(vs, mesh, coplanar_fs);//fortest
 
     return true;
 }
@@ -569,6 +574,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
 //        cout << (m.first[0]) << " " << (m.first[1]) << ": " << mesh.tet_vertices.size() + m.second << endl;
     //fortest
 
+    coplanar_fs.clear();
     for (int I = 0; I < subdivide_t_ids.size(); I++) {
         int t_id = subdivide_t_ids[I];
         bool is_mark_sf = is_mark_surface[I];
@@ -625,6 +631,9 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                         new_track_surface_fs.push_back(track_surface_fs[t_id]);
                         (new_track_surface_fs.back())[j].push_back(insert_f_id);
                         modified_t_ids.push_back(t_id);
+
+                        coplanar_fs.push_back({{mesh.tets[t_id][(j+1)%4],mesh.tets[t_id][(j+2)%4],
+                                                mesh.tets[t_id][(j+3)%4]}});
 
 //                        //fortest
 //                        int opp_t_id = get_opp_t_id(t_id, j, mesh);
@@ -859,6 +868,8 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
             for (int j = 0; j < 4; j++) {
                 if (new_is_surface_fs[i][j] && is_mark_sf) {
                     (new_track_surface_fs.back())[j].push_back(insert_f_id);
+
+                    coplanar_fs.push_back({{new_tets.back()[(j+1)%4], new_tets.back()[(j+3)%4], new_tets.back()[(j+2)%4]}});
 
 //                    //fortest
 //                    cout << "sf " << i << " " << j << endl;
@@ -1526,41 +1537,42 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 auto &tp2_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
                 auto &tp3_3d = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
 
-                std::vector<GEO::vec3> ps;
-                sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
-                double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
-                eps *= eps;//fortest: use a smaller eps here
-                if (tree.is_out_sf_envelope(ps, eps))
-                    continue;
-                else
-                    ff_id = track_surface_fs[t_id][j].front();
+//                std::vector<GEO::vec3> ps;
+//                sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
+//                double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
+//                eps *= eps;//fortest: use a smaller eps here
+//                if (tree.is_out_sf_envelope(ps, eps))
+//                    continue;
+//                else
+//                    ff_id = track_surface_fs[t_id][j].front();
 
-//                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
-//                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
-//                Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
-//
-//                std::array<Vector2, 3> ps_2d;
-//                for (int f_id: f_ids) {
-//                    if (!is_face_inserted[f_id])
-//                        continue;
-//
-//                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
-//                                     to_2d(input_vertices[input_faces[f_id][1]], t),
-//                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
-//                    if (!is_on_bounded_side(ps_2d, c))
-//                        continue;
-//
-//                    ff_id = f_id;
-//                    break;
-//                }
-//                if (ff_id < 0) {
+                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
+                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
+                Vector2 c = (tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3;
+
+                std::array<Vector2, 3> ps_2d;
+                for (int f_id: f_ids) {
+                    if (!is_face_inserted[f_id])
+                        continue;
+
+                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
+                                     to_2d(input_vertices[input_faces[f_id][1]], t),
+                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
+                    if (!is_on_bounded_side(ps_2d, c))
+                        continue;
+
+                    ff_id = f_id;
+                    break;
+                }
+                if (ff_id < 0) {
+                    continue;
 //                    std::vector<GEO::vec3> ps;
 //                    sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, mesh.params.dd);
 //                    if (tree.is_out_sf_envelope(ps, mesh.params.eps_2))
 //                        continue;
 //                    else
 //                        ff_id = track_surface_fs[t_id][j].front();
-//                }
+                }
 
                 opp_t_id = get_opp_t_id(t_id, j, mesh);
                 if (opp_t_id < 0) {
@@ -1808,4 +1820,82 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
         }
     }
     cout<<"check 3 done"<<endl;
+}
+
+#include <igl/writeOFF.h>
+void floatTetWild::check_is_input_face_covered(const std::array<Vector3, 3> f_vs,
+        const Mesh& mesh, const std::vector<std::array<int, 3>>& t_fs) {
+    return;
+
+    //
+    std::vector<GEO::vec3> ps;
+    sample_triangle(f_vs, ps, mesh.params.dd);
+    //
+    double eps = mesh.params.eps_coplanar * mesh.params.eps_coplanar;
+    //
+    if (ps.size() < 4) {
+        cout << "ps.size() < 4!!" << endl;
+        ps.clear();
+        sample_triangle(f_vs, ps, mesh.params.dd / 4);
+    }
+    for (const auto &p: ps) {
+        bool is_inside = false;
+        for (const auto &f: t_fs) {
+            std::array<GEO::vec3, 3> vs;
+            for (int k = 0; k < 3; k++) {
+                vs[k] = GEO::vec3(mesh.tet_vertices[f[k]].pos[0], mesh.tet_vertices[f[k]].pos[1],
+                                  mesh.tet_vertices[f[k]].pos[2]);
+            }
+            double dis_2 = GEO::Geom::point_triangle_squared_distance(p, vs[0], vs[1], vs[2]);
+            if (dis_2 <= eps) {
+                is_inside = true;
+                break;
+            }
+        }
+        if (!is_inside) {
+            cout << "check is_input_face_covered fail!!" << endl;
+            pausee();
+            break;
+        }
+    }
+
+    if (global_i > 2700) {
+        cout << global_i << " covered" << endl;
+        //output input/tet triangles in different colors
+        {
+            Eigen::MatrixXd V(t_fs.size() * 3, 3), C(t_fs.size() * 3, 3);
+            Eigen::MatrixXi F(t_fs.size(), 3);
+            for (int i = 0; i < t_fs.size(); i++) {
+                for (int j = 0; j < 3; j++) {
+                    V.row(i * 3 + j) = mesh.tet_vertices[t_fs[i][j]].pos;
+                    C.row(i * 3 + j) << 0, 0, 255;
+                }
+                F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
+            }
+            igl::writeOFF("covered_tet_fs_" + std::to_string(global_i) + ".off", V, F, C);
+        }
+        {
+            Eigen::MatrixXd V(1 * 3, 3), C(1 * 3, 3);
+            Eigen::MatrixXi F(1, 3);
+            int i = 0;
+            for (int j = 0; j < 3; j++) {
+                V.row(i * 3 + j) = f_vs[j];
+                C.row(i * 3 + j) << 255, 0, 0;
+            }
+            F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
+            igl::writeOFF("covered_input_f_" + std::to_string(global_i) + ".off", V, F, C);
+        }
+    }
+}
+
+void floatTetWild::check_edge_preservation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                             const std::vector<int> &sorted_f_ids, const Mesh &mesh,
+                             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs) {
+    for (int i = sorted_f_ids.size() * 0.8; i < sorted_f_ids.size(); i++) {
+        std::array<Vector3, 3> f_vs({{input_vertices[input_faces[sorted_f_ids[i]][0]],
+                                             input_vertices[input_faces[sorted_f_ids[i]][1]],
+                                             input_vertices[input_faces[sorted_f_ids[i]][2]]}});
+        std::vector<std::array<int, 3>> t_fs;
+        //todo
+    }
 }

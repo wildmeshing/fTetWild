@@ -61,6 +61,12 @@ namespace floatTetWild {
             cout<<i<<s;
         cout<<endl;
     }
+    template<typename T>
+    bool vector_contains(const std::vector<T>& v, const T& t){
+        if(std::find(v.begin(), v.end(), t)!=v.end())
+            return true;
+        return false;
+    }
     void set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, std::vector<int>& v);
     void set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, std::unordered_set<int>& v);
     void set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, const std::unordered_set<int>& s3, std::vector<int>& v);

@@ -183,6 +183,8 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     for (int i = 0; i < F_in.rows(); i++) {
         if (F_in(i, 0) == F_in(i, 1) || F_in(i, 0) == F_in(i, 2) || F_in(i, 2) == F_in(i, 1))
             continue;
+        if (i > 0 && (F_in(i, 0) == F_in(i - 1, 0) && F_in(i, 1) == F_in(i - 1, 2) && F_in(i, 2) == F_in(i - 1, 1)))
+            continue;
         //check area
         Vector3 u = V_in.row(F_in(i, 1)) - V_in.row(F_in(i, 0));
         Vector3 v = V_in.row(F_in(i, 2)) - V_in.row(F_in(i, 0));

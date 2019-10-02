@@ -88,7 +88,14 @@ namespace floatTetWild {
 
     void myassert(bool b, const std::string& s);
 
+    void preserve_edges();
+
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
+    void check_is_input_face_covered(const std::array<Vector3, 3> f_vs,
+                                    const Mesh& mesh, const std::vector<std::array<int, 3>>& t_fs);
+    void check_edge_preservation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                 const std::vector<int> &sorted_f_ids, const Mesh &mesh,
+                                 std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 }
 
 

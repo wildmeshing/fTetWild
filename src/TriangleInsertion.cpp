@@ -1758,6 +1758,57 @@ int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){
         return -1;
 }
 
+void floatTetWild::maintain_covered_region(const std::vector<std::pair<int, int>> &old_covered_tet_fs,
+                                           const std::vector<int> &cut_t_ids,
+                                           std::vector<std::pair<int, int>> &new_covered_tet_fs) {
+    std::unordered_set<int> set_cut_t_ids(cut_t_ids.begin(), cut_t_ids.end());
+    for (const auto &f: old_covered_tet_fs) {
+        if (set_cut_t_ids.find(f.first) != set_cut_t_ids.end())
+            continue;
+        new_covered_tet_fs.push_back(f);
+    }
+}
+
+void floatTetWild::preserve_edges(const Mesh& mesh, const std::array<Vector3, 3> f_vs, int e_id,
+        std::vector<std::pair<int, int>> &covered_tet_fs) {
+    std::vector<std::array<int, 2>> edges;
+    for (const auto &f: covered_tet_fs) {
+        int t_id = f.first;
+        int j = f.second;
+        std::array<int, 3> v_ids(
+                {{mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4], mesh.tets[t_id][(j + 3) % 4]}});
+        for (int k = 0; k < 3; k++) {
+            if (v_ids[k] < v_ids[(k + 1) % 3])
+                edges.push_back({{v_ids[k], v_ids[(k + 1) % 3]}});
+            else
+                edges.push_back({{v_ids[(k + 1) % 3], v_ids[k]}});
+        }
+    }
+    vector_unique(edges);
+
+    std::vector<int> v_ids;
+    for(const auto& e: edges){
+        v_ids.push_back(e[0]);
+        v_ids.push_back(e[1]);
+    }
+    vector_unique(v_ids);
+
+    std::map<int, int> map_v_ids;
+    for(int i=0;i<v_ids.size();i++)
+        map_v_ids[v_ids[i]] = i;
+    std::vector<Vector2> vs_2d;
+    //todo
+    std::vector<int> oris;
+    //todo
+
+    std::vector<int> cut_t_ids;
+
+
+    std::vector<std::pair<int, int>> new_covered_tet_fs;
+    maintain_covered_region(covered_tet_fs, cut_t_ids, new_covered_tet_fs);
+    covered_tet_fs = new_covered_tet_fs;
+}
+
 void floatTetWild::myassert(bool b, const std::string& s) {
     if (b == false) {
         cout << "myassert fail: " << s << endl;

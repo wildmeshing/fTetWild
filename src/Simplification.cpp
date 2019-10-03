@@ -784,6 +784,8 @@ void floatTetWild::check_surface(std::vector<Vector3>& input_vertices, std::vect
 
 void floatTetWild::output_component(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces,
         const std::vector<int>& input_tags){
+    return;
+
     Eigen::MatrixXd V(input_vertices.size(), 3);
     for(int i=0;i<input_vertices.size();i++)
         V.row(i) = input_vertices[i];

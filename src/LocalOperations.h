@@ -52,8 +52,12 @@ namespace floatTetWild {
         v.erase(std::unique(v.begin(), v.end()), v.end());
     }
     template<typename T>
-    void vector_erase(std::vector<T>& v, const T& t){
-        v.erase(std::find(v.begin(), v.end(), t));
+    bool vector_erase(std::vector<T>& v, const T& t){
+        auto it = std::find(v.begin(), v.end(), t);
+        if(it == v.end())
+            return false;
+        v.erase(it);
+        return true;
     }
     template<typename T>
     void vector_print(const std::vector<T>& v, std::string s = " "){

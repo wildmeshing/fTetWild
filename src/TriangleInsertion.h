@@ -21,10 +21,10 @@ namespace floatTetWild {
     void sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                           const Mesh &mesh, std::vector<int> &sorted_f_ids);
 
-    void push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
-                       std::vector<Vector3> &points, std::vector<MeshTet> &new_tets,
-                       std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
-                       std::vector<int> &modified_t_ids, bool is_again);
+    std::map<int, int> push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                                     std::vector<Vector3> &points, std::vector<MeshTet> &new_tets,
+                                     std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
+                                     std::vector<int> &modified_t_ids, bool is_again);
 
     ///face
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,
@@ -42,7 +42,18 @@ namespace floatTetWild {
                         std::vector<int> &subdivide_t_ids, std::vector<bool> &is_mark_surface,
                         std::vector<MeshTet> &new_tets,
                         std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
-                        std::vector<int> &modified_t_ids);
+                        std::vector<int> &modified_t_ids,
+                        std::vector<std::pair<int, int>>& new_covered_tet_fs,
+                        bool is_track_covered_tet_fs = false);
+
+    bool subdivide_tets_edge(int insert_f_id, Mesh &mesh, std::vector<Vector3> &points,
+                             std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,
+                             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                             std::vector<int> &subdivide_t_ids,
+                             std::vector<MeshTet> &new_tets,
+                             std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
+                             std::vector<int> &modified_t_ids,
+                             std::vector<std::pair<int, int>>& new_covered_tet_fs);
 
     void pair_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 
@@ -93,13 +104,14 @@ namespace floatTetWild {
                                  const std::vector<int> &cut_t_ids,
                                  std::vector<std::pair<int, int>> &new_covered_tet_fs);
 
-    void preserve_edges(const Mesh& mesh, const std::array<Vector3, 3> f_vs, int e_id,
-                        std::vector<std::pair<int, int>> &covered_tet_fs);
+    bool preserve_edges(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
+                        int insert_f_id, const std::array<Vector3, 3> &f_vs, const Vector3 &n, int t,
+                        int e_id, std::vector<std::pair<int, int>> &covered_tet_fs);
 
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 
     void check_is_input_face_covered(const std::array<Vector3, 3> f_vs,
-                                     const Mesh &mesh, const std::vector<std::array<int, 3>> &t_fs);
+                                     const Mesh &mesh, const std::vector<std::pair<int, int>> &t_fs);
 
     void check_edge_preservation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                  const std::vector<int> &sorted_f_ids, const Mesh &mesh,

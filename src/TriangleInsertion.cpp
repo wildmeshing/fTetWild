@@ -591,18 +591,38 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
             auto &tp2 = mesh.tet_vertices[mesh.tets[t_id][(j + 2) % 4]].pos;
             auto &tp3 = mesh.tet_vertices[mesh.tets[t_id][(j + 3) % 4]].pos;
             if (cnt_on == 3) {
-                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR);
+                if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR) == CUT_COPLANAR) {
+                    is_cutted = true;
+                    is_cut_vs[(j + 1) % 4] = true;
+                    is_cut_vs[(j + 2) % 4] = true;
+                    is_cut_vs[(j + 3) % 4] = true;
+                }
             } else if (cnt_pos > 0 && cnt_neg > 0) {
-                result = is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE);
+                if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE) == CUT_FACE) {
+                    is_cutted = true;
+                    is_cut_vs[(j + 1) % 4] = true;
+                    is_cut_vs[(j + 2) % 4] = true;
+                    is_cut_vs[(j + 3) % 4] = true;
+                }
+            } else if (cnt_on == 2 && oris[(j + 1) % 4] == Predicates::ORI_ZERO
+                       && oris[(j + 2) % 4] == Predicates::ORI_ZERO) {
+                if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_EDGE_0) == CUT_EDGE_0) {
+                    is_cut_vs[(j + 1) % 4] = true;
+                    is_cut_vs[(j + 2) % 4] = true;
+                }
+            } else if (cnt_on == 2 && oris[(j + 2) % 4] == Predicates::ORI_ZERO
+                       && oris[(j + 3) % 4] == Predicates::ORI_ZERO) {
+                if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_EDGE_1) == CUT_EDGE_1) {
+                    is_cut_vs[(j + 2) % 4] = true;
+                    is_cut_vs[(j + 3) % 4] = true;
+                }
+            } else if (cnt_on == 2 && oris[(j + 3) % 4] == Predicates::ORI_ZERO
+                       && oris[(j + 1) % 4] == Predicates::ORI_ZERO) {
+                if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_EDGE_2) == CUT_EDGE_2) {
+                    is_cut_vs[(j + 3) % 4] = true;
+                    is_cut_vs[(j + 1) % 4] = true;
+                }
             }
-            if (result == CUT_EMPTY)
-                continue;
-
-            is_cutted = true;
-            is_cut_vs[(j + 1) % 4] = true;
-            is_cut_vs[(j + 2) % 4] = true;
-            is_cut_vs[(j + 3) % 4] = true;
-
             if (is_cut_vs[0] && is_cut_vs[1] && is_cut_vs[2] && is_cut_vs[3])
                 break;
         }

@@ -15,13 +15,21 @@ double time_cut_mesh11 = 0;
 double time_cut_mesh12 = 0;
 double time_cut_mesh13 = 0;
 double time_cut_mesh14 = 0;
+double time_get_intersecting_edges_and_points1 = 0;
+double time_get_intersecting_edges_and_points2 = 0;
+double time_get_intersecting_edges_and_points3 = 0;
+double time_get_intersecting_edges_and_points4 = 0;
 igl::Timer timer;
 
 void floatTetWild::print_times1(){
-    logger().info("\t\t\t- time_cut_mesh11 = {}s", time_cut_mesh11);
-    logger().info("\t\t\t- time_cut_mesh12 = {}s", time_cut_mesh12);
-    logger().info("\t\t\t- time_cut_mesh13 = {}s", time_cut_mesh13);
-    logger().info("\t\t\t- time_cut_mesh14 = {}s", time_cut_mesh14);
+//    logger().info("\t\t\t- time_cut_mesh11 = {}s", time_cut_mesh11);
+//    logger().info("\t\t\t- time_cut_mesh12 = {}s", time_cut_mesh12);
+//    logger().info("\t\t\t- time_cut_mesh13 = {}s", time_cut_mesh13);
+//    logger().info("\t\t\t- time_cut_mesh14 = {}s", time_cut_mesh14);
+    logger().info("\t\t- time_get_intersecting_edges_and_points1 = {}s", time_get_intersecting_edges_and_points1);
+    logger().info("\t\t- time_get_intersecting_edges_and_points2 = {}s", time_get_intersecting_edges_and_points2);
+    logger().info("\t\t- time_get_intersecting_edges_and_points3 = {}s", time_get_intersecting_edges_and_points3);
+    logger().info("\t\t- time_get_intersecting_edges_and_points4 = {}s", time_get_intersecting_edges_and_points4);
 }
 
 void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
@@ -530,6 +538,7 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
     }
     vector_unique(edges);
 
+    std::vector<int> e_v_ids;
     for (int i = 0; i < edges.size(); i++) {
         const auto &e = edges[i];
         if (is_v_on_plane(e[0]) || is_v_on_plane(e[1]))
@@ -541,18 +550,21 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
 //            || to_plane_dists[e[0]] < 0 && to_plane_dists[e[1]] < 0)
 //            continue;
 
+        timer.start();
         int v1_id = v_ids[e[0]];
         int v2_id = v_ids[e[1]];
         Vector3 p;
         Scalar _;
         bool is_result = seg_plane_intersection(mesh.tet_vertices[v1_id].pos, mesh.tet_vertices[v2_id].pos,
                                                 p_vs[0], p_n, p, _);
+        time_get_intersecting_edges_and_points2 += timer.getElapsedTime();
         if (!is_result) {
             //fortest
-            cout<<"seg_plane_intersection no result!"<<endl;
-            cout<<to_plane_dists[e[0]]<<", "<<to_plane_dists[e[1]]<<endl;
-            cout<<get_to_plane_dist(mesh.tet_vertices[v1_id].pos)<<", "<<get_to_plane_dist(mesh.tet_vertices[v2_id].pos)<<endl;
-            cout<<"e[0] = "<<e[0]<<endl;
+            cout << "seg_plane_intersection no result!" << endl;
+            cout << to_plane_dists[e[0]] << ", " << to_plane_dists[e[1]] << endl;
+            cout << get_to_plane_dist(mesh.tet_vertices[v1_id].pos) << ", "
+                 << get_to_plane_dist(mesh.tet_vertices[v2_id].pos) << endl;
+            cout << "e[0] = " << e[0] << endl;
             //fortest
             return false;
         }
@@ -570,17 +582,29 @@ bool floatTetWild::CutMesh::get_intersecting_edges_and_points(std::vector<Vector
 //            continue;
 //        }
 
+        timer.start();
         points.push_back(p);
         if (v1_id < v2_id)
             map_edge_to_intersecting_point[{{v1_id, v2_id}}] = points.size() - 1;
         else
             map_edge_to_intersecting_point[{{v2_id, v1_id}}] = points.size() - 1;
+        time_get_intersecting_edges_and_points3 += timer.getElapsedTime();
 
-        std::vector<int> tmp;
-        set_intersection(mesh.tet_vertices[v1_id].conn_tets, mesh.tet_vertices[v2_id].conn_tets, tmp);
-        subdivide_t_ids.insert(subdivide_t_ids.end(), tmp.begin(), tmp.end());
+        timer.start();
+//        std::vector<int> tmp;
+//        set_intersection(mesh.tet_vertices[v1_id].conn_tets, mesh.tet_vertices[v2_id].conn_tets, tmp);
+//        subdivide_t_ids.insert(subdivide_t_ids.end(), tmp.begin(), tmp.end());
+        e_v_ids.push_back(v1_id);
+        e_v_ids.push_back(v2_id);
+        time_get_intersecting_edges_and_points4 += timer.getElapsedTime();
     }
+    timer.start();
+    vector_unique(e_v_ids);
+    for (int v_id: e_v_ids)
+        subdivide_t_ids.insert(subdivide_t_ids.end(), mesh.tet_vertices[v_id].conn_tets.begin(),
+                               mesh.tet_vertices[v_id].conn_tets.end());
     vector_unique(subdivide_t_ids);
+    time_get_intersecting_edges_and_points1 += timer.getElapsedTime();
 
     return true;
 }

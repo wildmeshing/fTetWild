@@ -182,19 +182,19 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
 
 
     /////
-//    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
-//    find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
-//    logger().info("find_boundary_edges done");
+    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
+    find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
+    logger().info("find_boundary_edges done");
     std::vector<std::array<int, 2>> b_edges1;
     std::vector<std::array<int, 3>> known_surface_fs;
     std::vector<std::array<int, 3>> known_not_surface_fs;
-//    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges1,
-//                          is_face_inserted, is_again, known_surface_fs, known_not_surface_fs);
+    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges1,
+                          is_face_inserted, is_again, known_surface_fs, known_not_surface_fs);
     logger().info("uninserted #f = {}/{}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false),
                   is_face_inserted.size() - cnt_matched);
 
     //fortest
-    check_track_surface_fs(mesh, track_surface_fs, input_vertices, input_faces, sorted_f_ids);
+//    check_track_surface_fs(mesh, track_surface_fs, input_vertices, input_faces, sorted_f_ids);
     //fortest
 
     /////
@@ -308,6 +308,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //            cout<<"expanded"<<endl;
         return false;
     }
+    time_get_intersecting_edges_and_points += timer.getElapsedTime();
     //have to add all cut_t_ids
     vector_unique(cut_t_ids);
     std::vector<int> tmp;
@@ -317,7 +318,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     cut_t_ids.insert(cut_t_ids.end(), tmp.begin(), tmp.end());
     is_mark_surface.resize(is_mark_surface.size() + tmp.size(), false);
 //    cout << "cut_mesh.get_intersecting_edges_and_points OK" << endl;
-    time_get_intersecting_edges_and_points += timer.getElapsedTime();
+//    time_get_intersecting_edges_and_points += timer.getElapsedTime();
 
     /////
     timer.start();
@@ -1442,12 +1443,12 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
     std::vector<std::array<bool, 4>> is_visited(track_surface_fs.size(), {{false, false, false, false}});
     for (int t_id = 0; t_id < track_surface_fs.size(); t_id++) {
         for (int j = 0; j < 4; j++) {
-            //fortest
-            if (track_surface_fs[t_id][j].size() > 0)
-//            if (std::find(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(), III) != track_surface_fs[t_id][j].end())
-                mesh.tets[t_id].is_surface_fs[j] = -1;
-            continue;
-            //fortest
+//            //fortest
+//            if (track_surface_fs[t_id][j].size() > 0)
+////            if (std::find(track_surface_fs[t_id][j].begin(), track_surface_fs[t_id][j].end(), III) != track_surface_fs[t_id][j].end())
+//                mesh.tets[t_id].is_surface_fs[j] = -1;
+//            continue;
+//            //fortest
 
             //
 //            if (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || is_visited[t_id][j])
@@ -1788,7 +1789,7 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
                                                   to_2d(input_vertices[input_faces[f_id][1]], t),
                                                   to_2d(input_vertices[input_faces[f_id][2]], t)}};
         //
-        cout<<"covered_fs_infos[f_id].size = "<<covered_fs_infos[f_id].size()<<"->";
+//        cout<<"covered_fs_infos[f_id].size = "<<covered_fs_infos[f_id].size()<<"->";
 //        cout<<"f_id = "<<f_id<<endl;
         for (int n = 0; n < covered_fs_infos[f_id].size(); n++) {
             int t_id = covered_fs_infos[f_id][n].first;
@@ -1873,7 +1874,7 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
             pausee();
             continue;
         }
-        cout<<covered_fs_infos[f_id].size()<<endl;
+//        cout<<covered_fs_infos[f_id].size()<<endl;
         //
         std::vector<GEO::vec3> ps;
         sample_triangle(f_vs, ps, mesh.params.dd);

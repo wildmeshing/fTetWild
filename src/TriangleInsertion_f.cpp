@@ -57,7 +57,6 @@ double old_time_subdivide_tets = 0;
 double old_time_push_new_tets = 0;
 
 //fortest
-
 void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                     const Mesh &mesh, std::vector<int> &sorted_f_ids) {///use 38416, 232368 as example //todo: think why
     std::vector<Scalar> weights(input_faces.size());
@@ -87,12 +86,13 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
         weights[i] = u.cross(v).squaredNorm();
     }
 
-    if(mesh.params.not_sort_input)
+    if (mesh.params.not_sort_input)
         return;
 
-    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
-        return weights[a] < weights[b];
-    });
+    std::random_shuffle(sorted_f_ids.begin(), sorted_f_ids.end());
+//    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
+//        return weights[a] < weights[b];
+//    });
 }
 
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
@@ -578,8 +578,8 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
         }
     }
     cout<<f_id<<" cut_t_ids.size() = "<<cut_t_ids.size()<<endl;
-    if(f_id>200)
-        pausee();
+//    if(f_id>200)
+//        pausee();
 
 //    //fortest
 //    std::sort(cut_t_ids.begin(), cut_t_ids.end());

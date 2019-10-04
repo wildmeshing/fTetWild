@@ -192,10 +192,6 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     std::vector<std::array<int, 2>> b_edges1;
     std::vector<std::array<int, 3>> known_surface_fs;
     std::vector<std::array<int, 3>> known_not_surface_fs;
-    //void mark_boundary_vs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-    //                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
-    //                          const std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
-    //                          Mesh &mesh, std::vector<std::array<int, 2>> &b_edges);
     mark_boundary_vs(input_vertices, input_faces, track_surface_fs, b_edge_infos, mesh, b_edges1);
 
 //    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges1,
@@ -1879,8 +1875,10 @@ void floatTetWild::mark_boundary_vs(const std::vector<Vector3> &input_vertices, 
             for (int j = 0; j < 3; j++) {
                 double dist_2 = p_line_squared_dist_3d(mesh.tet_vertices[v_id].pos,
                                                        input_vertices[e[0]], input_vertices[e[1]]);
-                if (dist_2 <= mesh.params.eps_2_coplanar * 1.1)
+                if (dist_2 <= mesh.params.eps_2_coplanar * 1.1) {
                     mesh.tet_vertices[v_id].is_on_boundary = true;
+                    mesh.tet_vertices[v_id].on_boundary_e_id = i;
+                }
             }
         }
     }

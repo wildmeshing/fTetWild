@@ -36,7 +36,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
     std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
     for (auto &e:edges) {
         Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
-        if (is_collapsable_length(mesh, e[0], e[1], l_2)) {
+        if (is_collapsable_length(mesh, e[0], e[1], l_2) && is_collapsable_boundary(mesh, e[0], e[1])) {
             ec_queue.push(ElementInQueue(e, l_2));
             ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
         }
@@ -70,6 +70,9 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
                 continue;
 
             if (!is_valid_edge(mesh, v_ids[0], v_ids[1]))
+                continue;
+
+            if(! is_collapsable_boundary(mesh, v_ids[0], v_ids[1]))
                 continue;
 
             Scalar weight = get_edge_length_2(mesh, v_ids[0], v_ids[1]);
@@ -312,6 +315,8 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
     tet_vertices[v2_id].is_on_bbox = tet_vertices[v1_id].is_on_bbox || tet_vertices[v2_id].is_on_bbox;
     tet_vertices[v2_id].is_on_surface = tet_vertices[v1_id].is_on_surface || tet_vertices[v2_id].is_on_surface;
     tet_vertices[v2_id].is_on_boundary = tet_vertices[v1_id].is_on_boundary || tet_vertices[v2_id].is_on_boundary;
+    if(tet_vertices[v1_id].on_boundary_e_id >= 0)
+        tet_vertices[v2_id].on_boundary_e_id = tet_vertices[v1_id].on_boundary_e_id;
 
     //tets
     //update quality
@@ -535,4 +540,11 @@ bool floatTetWild::is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scala
     if (l_2 <= mesh.params.collapse_threshold_2 * sizing_scalar * sizing_scalar)
         return true;
     return false;
+}
+
+bool floatTetWild::is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id) {
+    if (mesh.tet_vertices[v1_id].on_boundary_e_id >= 0 && mesh.tet_vertices[v2_id].on_boundary_e_id
+        && mesh.tet_vertices[v1_id].on_boundary_e_id != mesh.tet_vertices[v2_id].on_boundary_e_id)
+        return false;
+    return true;
 }

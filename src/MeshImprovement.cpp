@@ -106,6 +106,15 @@ void floatTetWild::init(Mesh &mesh, AABBWrapper& tree) {
         output_surface(mesh, mesh.params.output_path + "_" + mesh.params.postfix + "_cutting");
         output_info(mesh, tree);
         //pausee();
+        int v_num, t_num;
+        double max_energy, avg_energy;
+        v_num = mesh.get_v_num();
+        t_num = mesh.get_t_num();
+        get_max_avg_energy(mesh, max_energy, avg_energy);
+        cout << "#v = " << v_num << endl;
+        cout << "#t = " << t_num << endl;
+        cout << "max_energy = " << max_energy << endl;
+        cout << "avg_energy = " << avg_energy << endl;
     }
 }
 
@@ -295,12 +304,15 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     }
 
     if (!mesh.is_input_all_inserted) {
+        pausee();
+
         for (int i = 0; i < ops[4]; i++) {
             //reset boundary points
             for (auto &v: mesh.tet_vertices) {
                 if (v.is_removed)
                     continue;
                 v.is_on_boundary = false;
+                v.on_boundary_e_id = -1;
             }
             //
             igl_timer.start();

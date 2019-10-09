@@ -498,7 +498,7 @@ int floatTetWild::CutMesh::project_to_plane() {
         if(!is_snapped[i])
             continue;
         Scalar dist = get_to_plane_dist(mesh.tet_vertices[v_ids[i]].pos);
-        if(std::abs(dist) <= 1e-15) {
+        if(std::abs(dist) <= 1e-10) {
             cnt++;
             continue;
         }

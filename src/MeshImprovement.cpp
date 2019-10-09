@@ -720,12 +720,12 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
                         cout<<"is_bbox_fs error"<<endl;
                         cout << "t " << i << ": " << tets[i][0] << " " << tets[i][1] << " " << tets[i][2] << " "
                              << tets[i][3] << endl;
-                        cout << tets[i].is_bbox_fs[0] << " " << tets[i].is_bbox_fs[1] << " "
-                             << tets[i].is_bbox_fs[2] << " " << tets[i].is_bbox_fs[3] << endl;
+                        cout << (int)tets[i].is_bbox_fs[0] << " " << (int)tets[i].is_bbox_fs[1] << " "
+                             << (int)tets[i].is_bbox_fs[2] << " " << (int)tets[i].is_bbox_fs[3] << endl;
                         cout << tet_vertices[tets[i][0]].is_on_bbox << " " << tet_vertices[tets[i][1]].is_on_bbox << " "
                              << tet_vertices[tets[i][2]].is_on_bbox << " " << tet_vertices[tets[i][3]].is_on_bbox
                              << endl;
-                        //pausee();
+                        pausee();
                     }
                 }
                 if(get_opp_t_id(mesh, i, j) != OPP_T_ID_BOUNDARY){

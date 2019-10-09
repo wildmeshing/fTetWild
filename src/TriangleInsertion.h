@@ -26,7 +26,8 @@ namespace floatTetWild {
                        std::vector<std::array<std::vector<int>, 4>> &new_track_surface_fs,
                        std::vector<int> &modified_t_ids, bool is_again);
 
-//    void simplify_subdivision_result();
+    void simplify_subdivision_result(int insert_f_id, Mesh &mesh, AABBWrapper &tree,
+            std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
 
     ///face
     bool insert_one_triangle(int f_id, const std::vector<Vector3> &input_vertices,

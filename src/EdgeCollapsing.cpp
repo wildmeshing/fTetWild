@@ -236,7 +236,8 @@ void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
 }
 
 int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree,
-        std::vector<std::array<int, 2>>& new_edges, int ts, std::vector<int>& tet_tss) {
+        std::vector<std::array<int, 2>>& new_edges, int ts, std::vector<int>& tet_tss,
+        bool is_check_quality) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -282,15 +283,17 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
     std::vector<Scalar> new_qs;
     new_qs.reserve(tet_vertices[v1_id].conn_tets.size());
     int ii = 0;
-    for (int t_id:tet_vertices[v1_id].conn_tets) {
-        if (tets[t_id].quality > old_max_quality)
-            old_max_quality = tets[t_id].quality;
+    if(is_check_quality) {
+        for (int t_id:tet_vertices[v1_id].conn_tets) {
+            if (tets[t_id].quality > old_max_quality)
+                old_max_quality = tets[t_id].quality;
+        }
     }
     for (int t_id:n1_t_ids) {
         int j = js_n1_t_ids[ii++];
         Scalar new_q = get_quality(tet_vertices[v2_id], tet_vertices[tets[t_id][mod4(j + 1)]],
                                    tet_vertices[tets[t_id][mod4(j + 2)]], tet_vertices[tets[t_id][mod4(j + 3)]]);
-        if (new_q > old_max_quality)
+        if (is_check_quality && new_q > old_max_quality)
             return EC_FAIL_QUALITY;
         new_qs.push_back(new_q);
     }

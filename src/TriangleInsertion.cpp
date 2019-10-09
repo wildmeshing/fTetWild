@@ -57,6 +57,7 @@ double old_time_get_intersecting_edges_and_points = 0;
 double old_time_subdivide_tets = 0;
 double old_time_push_new_tets = 0;
 
+std::vector<std::array<int, 3>> covered_tet_fs;//fortest
 //fortest
 void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                     const Mesh &mesh, std::vector<int> &sorted_f_ids) {///use 38416, 232368 as example //todo: think why
@@ -209,8 +210,10 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     //build b_tree using b_edges
     tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges1, mesh, b_edges2);
     if (!is_again) {
-        for (auto &t:mesh.tets)
-            t.quality = get_quality(mesh, t);
+        for (auto &t:mesh.tets) {
+            if(t.quality == 0)
+                t.quality = get_quality(mesh, t);
+        }
     }
     if(std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0) {
         mesh.is_input_all_inserted = true;
@@ -401,6 +404,97 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
     track_surface_fs.insert(track_surface_fs.end(), new_track_surface_fs.begin() + modified_t_ids.size(),
                             new_track_surface_fs.end());
 //    time_push_new_tets3 += timer.getElapsedTime();
+
+
+    //////////////////cleanup//////////////////
+
+    std::vector<std::array<int, 3>> edges;
+    for (int i = 0; i < covered_tet_fs.size(); i++) {
+        const auto f = covered_tet_fs[i];
+        for (int j = 0; j < 3; j++) {
+            if (f[j] < f[(j + 1) % 3])
+                edges.push_back({{f[j], f[(j + 1) % 3], i}});
+            else
+                edges.push_back({{f[(j + 1) % 3], f[j], i}});
+        }
+    }
+    std::sort(edges.begin(), edges.end(), [](const std::array<int, 3> &a, const std::array<int, 3> &b) {
+        return std::make_tuple(a[0], a[1]) < std::make_tuple(b[0], b[1]);
+    });
+    //
+    std::unordered_set<int> freezed_v_ids;
+    bool is_duplicated = false;
+    for (int i = 0; i < edges.size() - 1; i++) {//todo: test correctness
+        if (edges[i][0] == edges[i + 1][0] && edges[i][1] == edges[i + 1][1]) {
+            is_duplicated = true;
+            edges.erase(edges.begin() + i);
+            i--;
+        } else {
+            if (!is_duplicated) {///boundary edges
+                freezed_v_ids.insert(edges[i][0]);
+                freezed_v_ids.insert(edges[i][1]);
+            }
+            is_duplicated = false;
+        }
+    }
+
+    std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
+    for (auto &e:edges) {
+        Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
+        if (freezed_v_ids.find(e[0]) == freezed_v_ids.end())
+            ec_queue.push(ElementInQueue({{e[0], e[1]}}, l_2));
+        if (freezed_v_ids.find(e[1]) == freezed_v_ids.end())
+            ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
+    }
+    //
+    int _ts = 0;
+    std::vector<int> _tet_tss;
+    _tet_tss.assign(mesh.tets.size(), 0);
+    int cnt_suc = 0;
+    while (!ec_queue.empty()) {
+        std::array<int, 2> v_ids = ec_queue.top().v_ids;
+        Scalar old_weight = ec_queue.top().weight;
+        ec_queue.pop();
+
+        while (!ec_queue.empty()) {
+            if (ec_queue.top().v_ids == v_ids)
+                ec_queue.pop();
+            else
+                break;
+        }
+
+        if (!is_valid_edge(mesh, v_ids[0], v_ids[1]))
+            continue;
+        if (freezed_v_ids.find(v_ids[0]) != freezed_v_ids.end())
+            continue;
+        Scalar weight = get_edge_length_2(mesh, v_ids[0], v_ids[1]);
+        if (weight != old_weight)
+            continue;
+
+        //check track_surface_fs
+        int v1_id = v_ids[0];
+        int insert_f_id = -1;//todo: add as input
+        bool is_valid = true;
+        for (int t_id: mesh.tet_vertices[v1_id].conn_tets) {
+            for (int j = 0; j < 4; j++) {
+                if (!track_surface_fs[t_id][j].empty() && !vector_contains(track_surface_fs[t_id][j], insert_f_id)) {
+                    is_valid = false;
+                    break;
+                }
+            }
+            if (!is_valid)
+                break;
+        }
+        if (!is_valid)
+            continue;
+
+        std::vector<std::array<int, 2>> new_edges;
+        static const bool is_check_quality = false;
+//        int result = collapse_an_edge(mesh, v_ids[0], v_ids[1], tree, new_edges, _ts, _tet_tss, is_check_quality);//todo: add tree as input
+//        if(result>0)
+//            cnt_suc++;
+        ///tracked_surface_fs will be paired in the end
+    }
 }
 
 void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
@@ -619,6 +713,7 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
 //        cout << (m.first[0]) << " " << (m.first[1]) << ": " << mesh.tet_vertices.size() + m.second << endl;
     //fortest
 
+    covered_tet_fs.clear();
     for (int I = 0; I < subdivide_t_ids.size(); I++) {
         int t_id = subdivide_t_ids[I];
         bool is_mark_sf = is_mark_surface[I];
@@ -675,6 +770,9 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                         new_track_surface_fs.push_back(track_surface_fs[t_id]);
                         (new_track_surface_fs.back())[j].push_back(insert_f_id);
                         modified_t_ids.push_back(t_id);
+
+                        covered_tet_fs.push_back({{mesh.tets[t_id][(j+1)%4],mesh.tets[t_id][(j+2)%4],
+                                                          mesh.tets[t_id][(j+3)%4]}});
 
 //                        //fortest
 //                        int opp_t_id = get_opp_t_id(t_id, j, mesh);
@@ -910,6 +1008,8 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
                 if (new_is_surface_fs[i][j] && is_mark_sf) {
                     (new_track_surface_fs.back())[j].push_back(insert_f_id);
 
+                    covered_tet_fs.push_back({{new_tets.back()[(j + 1) % 4], new_tets.back()[(j + 3) % 4],
+                                                      new_tets.back()[(j + 2) % 4]}});
 //                    //fortest
 //                    cout << "sf " << i << " " << j << endl;
 //                    for (int k = 0; k < 3; k++) {

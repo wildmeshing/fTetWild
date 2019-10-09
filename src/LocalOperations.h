@@ -67,6 +67,8 @@ namespace floatTetWild {
     }
     template<typename T>
     bool vector_contains(const std::vector<T>& v, const T& t){
+        if(v.empty())
+            return false;
         if(std::find(v.begin(), v.end(), t)!=v.end())
             return true;
         return false;

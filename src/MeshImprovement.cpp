@@ -413,11 +413,11 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
 //    if(filter_energy > 1e3)
 //        filter_energy = 1e3;
 
-    if (filter_energy > 2e2) {
+    if (filter_energy > 100) {
 //        filter_energy = get_mid_energy(mesh);
 //        if (filter_energy < stop_filter_energy)
 //            filter_energy = stop_filter_energy;
-        filter_energy = 2e2;
+        filter_energy = 100;
     }
 
     cout << "filter_energy = " << filter_energy << endl;

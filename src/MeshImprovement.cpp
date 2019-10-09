@@ -125,6 +125,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
     ////pre-processing
     mesh.is_limit_length = false;
     operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 1}}));
+    cleanup_empty_slots(mesh);
     mesh.is_limit_length = true;
 
     const int M = 5;
@@ -222,6 +223,60 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         v.sizing_scalar = 1;
     }
     operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 1}}));
+}
+
+void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {
+    if (mesh.tets.size() < 9e5)
+        return;
+    cout<<mesh.tets.size()<<" ==> ";
+    ///
+    const int v_end_id = mesh.tet_vertices.size() * percentage;
+    const int t_end_id = mesh.tets.size() * percentage;
+    //
+    std::vector<int> map_v_ids(mesh.tet_vertices.size(), -1);
+    int cnt = 0;
+    for (int i = 0; i < v_end_id; i++) {
+        if (mesh.tet_vertices[i].is_removed)
+            continue;
+        map_v_ids[i] = cnt++;
+    }
+    for (int i = v_end_id; i < mesh.tet_vertices.size(); i++) {
+        map_v_ids[i] = cnt++;
+    }
+    //
+    std::vector<int> map_t_ids(mesh.tets.size(), -1);
+    cnt = 0;
+    for (int i = 0; i < t_end_id; i++) {
+        if (mesh.tets[i].is_removed)
+            continue;
+        map_t_ids[i] = cnt++;
+    }
+    for (int i = t_end_id; i < mesh.tets.size(); i++) {
+        map_t_ids[i] = cnt++;
+    }
+
+    ///
+    mesh.tet_vertices.erase(std::remove_if(mesh.tet_vertices.begin(), mesh.tet_vertices.begin() + v_end_id,
+                                           [](const MeshVertex &v) { return v.is_removed; }),
+                            mesh.tet_vertices.begin() + v_end_id);
+    mesh.tets.erase(std::remove_if(mesh.tets.begin(), mesh.tets.begin() + t_end_id,
+                                   [](const MeshTet &t) { return t.is_removed; }),
+                    mesh.tets.begin() + t_end_id);
+
+    ///
+    for (auto &v: mesh.tet_vertices) {
+        if (v.is_removed)
+            continue;
+        for (auto &t_id: v.conn_tets)
+            t_id = map_t_ids[t_id];
+    }
+    for (auto &t: mesh.tets) {
+        if (t.is_removed)
+            continue;
+        for (int j = 0; j < 4; j++)
+            t[j] = map_v_ids[t[j]];
+    }
+    cout<<mesh.tets.size()<<endl;
 }
 
 void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags, std::vector<bool> &is_face_inserted,

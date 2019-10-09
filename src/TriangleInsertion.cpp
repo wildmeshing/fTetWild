@@ -408,6 +408,9 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
 #include <floattetwild/EdgeCollapsing.h>
 void floatTetWild::simplify_subdivision_result(int insert_f_id, Mesh &mesh, AABBWrapper &tree,
         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, std::vector<int>& modified_t_ids) {
+    if(covered_tet_fs.empty())
+        return;
+    
     for (int i = 0; i < covered_tet_fs.size(); i++)
         std::sort(covered_tet_fs[i].begin(), covered_tet_fs[i].end());
     vector_unique(covered_tet_fs);

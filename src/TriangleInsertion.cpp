@@ -559,8 +559,8 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, Mesh &mesh, AABB
 //
 //        cnt_suc++;
     }
-    if (cnt_suc > 0)
-        cout << "cnt_suc = " << cnt_suc << endl;
+//    if (cnt_suc > 0)
+//        cout << "cnt_suc = " << cnt_suc << endl;
 }
 
 void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,

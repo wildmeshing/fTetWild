@@ -492,6 +492,34 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 //    //fortest
 }
 
+int floatTetWild::CutMesh::project_to_plane() {
+    int cnt = 0;
+    for (int i = 0; i < is_snapped.size(); i++) {
+        if(!is_snapped[i])
+            continue;
+        Scalar dist = get_to_plane_dist(mesh.tet_vertices[v_ids[i]].pos);
+        if(std::abs(dist) <= 1e-15) {
+            cnt++;
+            continue;
+        }
+        Vector3 proj_p = mesh.tet_vertices[v_ids[i]].pos - p_n * dist;
+//        cout << get_to_plane_dist(proj_p) << endl;
+        bool is_snappable = true;
+        for (int t_id: mesh.tet_vertices[v_ids[i]].conn_tets) {
+            int j = mesh.tets[t_id].find(v_ids[i]);
+            if (is_inverted(mesh, t_id, j, proj_p)) {
+                is_snappable = false;
+                break;
+            }
+        }
+        if (is_snappable) {
+            mesh.tet_vertices[v_ids[i]].pos = proj_p;
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
 void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {
 //    return;
 

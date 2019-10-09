@@ -18,11 +18,11 @@ namespace floatTetWild {
         std::vector<Scalar> to_plane_dists;
         std::vector<bool> is_snapped;
 
-        const Mesh &mesh;
+        Mesh &mesh;
         const Vector3 &p_n;
         const std::array<Vector3, 3> &p_vs;
 
-        CutMesh(const Mesh &_mesh, const Vector3 &_p_n, const std::array<Vector3, 3> &_p_vs) :
+        CutMesh(Mesh &_mesh, const Vector3 &_p_n, const std::array<Vector3, 3> &_p_vs) :
                 mesh(_mesh), p_n(_p_n), p_vs(_p_vs) {}
 
         void construct(const std::vector<int> &cut_t_ids);
@@ -31,6 +31,8 @@ namespace floatTetWild {
 
         void expand(std::vector<int> &cut_t_ids);
         void expand_new(std::vector<int> &cut_t_ids);
+
+        int project_to_plane();
 
         bool get_intersecting_edges_and_points(std::vector<Vector3> &points,
                                                std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,

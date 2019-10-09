@@ -285,6 +285,14 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //        cout<<cut_t_ids.size()<<"->";
 //        cut_mesh.expand(cut_t_ids);
         cut_mesh.expand_new(cut_t_ids);
+        //fortest
+        int cnt_proj = cut_mesh.project_to_plane();
+        int cnt_all = std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true);
+        if(cnt_proj != cnt_all)
+            cout<<cnt_proj<<"/"<<cnt_all<<endl;
+        //fortest
+//        logger().info("#v_snapped = {}/{}", cnt_proj,
+//                      std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true));
 //        cout<<cut_t_ids.size()<<endl;
 //        vector_print(cut_t_ids);
 //        pausee();
@@ -578,7 +586,7 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
             }
         }
     }
-    cout<<f_id<<" cut_t_ids.size() = "<<cut_t_ids.size()<<endl;
+//    cout<<f_id<<" cut_t_ids.size() = "<<cut_t_ids.size()<<endl;
 //    if(f_id>200)
 //        pausee();
 

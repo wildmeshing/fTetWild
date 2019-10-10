@@ -98,6 +98,50 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
 }
 
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
+                                    const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
+                                    Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
+    insert_triangles_aux(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
+    return;
+
+    if (mesh.is_input_all_inserted)
+        return;
+
+    for (auto &v: mesh.tet_vertices) {
+        if (v.is_removed)
+            continue;
+        v.is_on_surface = false;
+        v.is_on_bbox = false;
+    }
+    //
+    for (auto &t: mesh.tets) {
+        if (t.is_removed)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            if (t.is_surface_fs[j] <= 0) {
+                for (int k = 0; k < 3; k++) {
+                    mesh.tet_vertices[t[(j + 1 + k) % 4]].is_on_surface = true;
+                    mesh.tet_vertices[t[(j + 1 + k) % 4]].is_freezed = true;
+                }
+            }
+            if (t.is_bbox_fs[j] != NOT_BBOX) {
+                mesh.tet_vertices[t[mod4(j + 1)]].is_on_bbox = true;
+                mesh.tet_vertices[t[mod4(j + 2)]].is_on_bbox = true;
+                mesh.tet_vertices[t[mod4(j + 3)]].is_on_bbox = true;
+            }
+        }
+    }
+    //
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree,
+              std::array<int, 5>({{0, 1, 0, 1, 0}}));
+    //
+    for (auto &v: mesh.tet_vertices) {
+        v.is_freezed = false;
+    }
+
+    insert_triangles_aux(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
+}
+
+void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
 

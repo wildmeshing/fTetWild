@@ -497,12 +497,6 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         freezed_v_ids.insert(edges.back()[0]);
         freezed_v_ids.insert(edges.back()[1]);
     }
-    //
-    std::unordered_set<int> all_v_ids;
-    for (const auto &e:edges) {
-        all_v_ids.insert(e[0]);
-        all_v_ids.insert(e[1]);
-    }
 
     std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
     for (const auto &e:edges) {
@@ -511,6 +505,15 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
             ec_queue.push(ElementInQueue({{e[0], e[1]}}, l_2));
         if (freezed_v_ids.find(e[1]) == freezed_v_ids.end())
             ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
+    }
+    //
+    if(ec_queue.empty())
+        return;
+    //
+    std::unordered_set<int> all_v_ids;
+    for (const auto &e:edges) {
+        all_v_ids.insert(e[0]);
+        all_v_ids.insert(e[1]);
     }
     //
     int _ts = 0;

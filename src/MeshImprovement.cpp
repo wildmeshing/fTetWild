@@ -143,13 +143,13 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
         Scalar max_energy, avg_energy;
         get_max_avg_energy(mesh, max_energy, avg_energy);
-        if (max_energy <= mesh.params.stop_energy)
+        if (max_energy <= mesh.params.stop_energy && it_after_al_inserted > M)
             break;
 
         if (mesh.params.stop_p > 0) {
             int p = get_max_p(mesh);
             cout << "p = " << p << endl;
-            if (p <= mesh.params.stop_p)
+            if (p <= mesh.params.stop_p && it_after_al_inserted > M)
                 break;
         }
 
@@ -222,7 +222,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
             continue;
         v.sizing_scalar = 1;
     }
-    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 1}}));
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 0}}));
 }
 
 void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {

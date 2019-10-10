@@ -275,6 +275,8 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
     }
     igl::writeSTL("inserted.stl", V, F);
     ///fortest
+
+    pausee();
 }
 
 bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector3> &input_vertices,
@@ -390,7 +392,8 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
-    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
+//    if(!is_again)
+        simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
     time_push_new_tets += timer.getElapsedTime();
 
     return true;
@@ -547,8 +550,7 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         for (int t_id: mesh.tet_vertices[v1_id].conn_tets) {
             for (int j = 0; j < 4; j++) {
                 if ((!track_surface_fs[t_id][j].empty() && !vector_contains(track_surface_fs[t_id][j], insert_f_id))
-                    || (mesh.tets[t_id][j] != v1_id && mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE
-                        && mesh.tets[t_id].is_bbox_fs[j] != NOT_BBOX)) {
+                    || (mesh.tets[t_id][j] != v1_id && (mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE || mesh.tets[t_id].is_bbox_fs[j] != NOT_BBOX))) {
                     is_valid = false;
                     break;
                 }
@@ -568,10 +570,6 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         int result = collapse_an_edge(mesh, v_ids[0], v_ids[1], tree, new_edges, _ts, _tet_tss,
                                       is_check_quality);
         if (result > 0) {
-//            for (int t_id: v1_conn_tets) {
-//                if (mesh.tets[t_id].is_removed)
-//                    modified_t_ids.push_back(t_id);
-//            }
             for(const auto& e: new_edges){
                 if(all_v_ids.find(e[0]) == all_v_ids.end() || all_v_ids.find(e[1]) == all_v_ids.end())
                     continue;
@@ -1455,6 +1453,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                 for (auto &f: cut_fs)
                     mark_known_surface_fs(f, KNOWN_SURFACE);
                 known_surface_fs.insert(known_surface_fs.end(), cut_fs.begin(), cut_fs.end());
+                cout << "SEMI-FAIL subdivide_tets" << endl;
             }
 
             is_all_inserted = false;//unless now

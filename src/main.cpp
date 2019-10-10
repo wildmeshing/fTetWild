@@ -349,7 +349,6 @@ int main(int argc, char **argv) {
     stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                    mesh.get_max_energy(), mesh.get_avg_energy(),
                    std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
-    pausee();
 
 //    timer.start();
 ////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);

@@ -59,6 +59,9 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
         std::array<int, 2> v_ids = es_queue.top().v_ids;
         es_queue.pop();
 
+        if(tet_vertices[v_ids[0]].is_freezed && tet_vertices[v_ids[1]].is_freezed)
+            continue;
+
         std::vector<std::array<int, 2>> new_edges;
         if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges))
             suc_counter++;

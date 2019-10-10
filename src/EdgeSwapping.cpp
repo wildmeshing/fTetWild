@@ -45,6 +45,9 @@ void floatTetWild::edge_swapping(Mesh& mesh) {
         std::array<int, 2> v_ids = es_queue.top().v_ids;
         es_queue.pop();
 
+        if(tet_vertices[v_ids[0]].is_freezed && tet_vertices[v_ids[1]].is_freezed)
+            continue;
+
         std::vector<int> n12_t_ids;
         set_intersection(tet_vertices[v_ids[0]].conn_tets, tet_vertices[v_ids[1]].conn_tets, n12_t_ids);
         if (!is_swappable(v_ids[0], v_ids[1], n12_t_ids))

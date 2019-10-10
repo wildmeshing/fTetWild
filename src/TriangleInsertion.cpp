@@ -453,6 +453,12 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         freezed_v_ids.insert(edges.back()[0]);
         freezed_v_ids.insert(edges.back()[1]);
     }
+    //
+    std::unordered_set<int> all_v_ids;
+    for (const auto &e:edges) {
+        all_v_ids.insert(e[0]);
+        all_v_ids.insert(e[1]);
+    }
 
     std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
     for (const auto &e:edges) {
@@ -515,9 +521,18 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         int result = collapse_an_edge(mesh, v_ids[0], v_ids[1], tree, new_edges, _ts, _tet_tss,
                                       is_check_quality);
         if (result > 0) {
-            for (int t_id: v1_conn_tets) {
-                if (mesh.tets[t_id].is_removed)
-                    modified_t_ids.push_back(t_id);
+//            for (int t_id: v1_conn_tets) {
+//                if (mesh.tets[t_id].is_removed)
+//                    modified_t_ids.push_back(t_id);
+//            }
+            for(const auto& e: new_edges){
+                if(all_v_ids.find(e[0]) == all_v_ids.end() || all_v_ids.find(e[1]) == all_v_ids.end())
+                    continue;
+                Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
+                if (freezed_v_ids.find(e[0]) == freezed_v_ids.end())
+                    ec_queue.push(ElementInQueue({{e[0], e[1]}}, l_2));
+                if (freezed_v_ids.find(e[1]) == freezed_v_ids.end())
+                    ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
             }
             cnt_suc++;
         }

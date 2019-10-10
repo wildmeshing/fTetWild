@@ -70,6 +70,29 @@ bool floatTetWild::seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, c
     return true;
 }
 
+floatTetWild::Scalar floatTetWild::seg_seg_squared_dist_3d(const std::array<Vector3, 2> &s1, const std::array<Vector3, 2> &s2) {
+    Vector3 w0 = s1[0] - s2[0];
+    Vector3 u = (s1[1] - s1[0]).normalized();
+    Vector3 v = (s2[1] - s2[0]).normalized();
+    Scalar a = u.dot(u);
+    Scalar b = u.dot(v);
+    Scalar c = v.dot(v);
+    Scalar d = u.dot(w0);
+    Scalar e = v.dot(w0);
+
+    Scalar dd = a * c - b * b;
+    Scalar t1, t2;
+    if (dd == 0) {
+        t1 = 0;
+        t2 = d / b;
+    } else {
+        t1 = (b * e - c * d) / dd;
+        t2 = (a * e - b * d) / dd;
+    }
+
+    return (((1 - t1) * s1[0] + t1 * s1[1]) - ((1 - t2) * s2[0] + t2 * s2[1])).squaredNorm();
+}
+
 floatTetWild::Scalar floatTetWild::p_line_squared_dist_3d(const Vector3 &v, const Vector3 &a, const Vector3 &b) {
     return ((b - a).cross(a - v)).squaredNorm() / (b - a).squaredNorm();
 }
@@ -382,6 +405,12 @@ int floatTetWild::get_t(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2)
 
 floatTetWild::Vector2 floatTetWild::to_2d(const Vector3 &p, int t) {
     return Vector2(p[(t + 1) % 3], p[(t + 2) % 3]);
+}
+
+floatTetWild::Vector2 floatTetWild::to_2d(const Vector3 &p, const Vector3& n, const Vector3& pp, int t) {
+    Scalar dist = n.dot(p - pp);
+    Vector3 proj_p = p - dist * n;
+    return Vector2(proj_p[(t + 1) % 3], proj_p[(t + 2) % 3]);
 }
 
 bool floatTetWild::is_crossing(int s1, int s2) {

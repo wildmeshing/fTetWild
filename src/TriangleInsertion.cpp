@@ -1500,6 +1500,9 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
                   input_vertices[input_faces[n_f_ids.front()][1]],
                   input_vertices[input_faces[n_f_ids.front()][2]]);
     std::array<Vector2, 2> evs_2d = {{to_2d(input_vertices[e[0]], t), to_2d(input_vertices[e[1]], t)}};
+    Vector3 n = (input_vertices[input_faces[n_f_ids.front()][1]] - input_vertices[input_faces[n_f_ids.front()][0]]).cross(input_vertices[input_faces[n_f_ids.front()][2]] - input_vertices[input_faces[n_f_ids.front()][0]]);
+    n.normalize();
+    const Vector3& pp = input_vertices[input_faces[n_f_ids.front()][0]];
 
     std::vector<bool> is_visited(mesh.tets.size(), false);
     std::queue<int> t_ids_queue;
@@ -1555,9 +1558,12 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             //check tri side of seg
             std::array<int, 3> f_v_ids = {{mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4],
                                                   mesh.tets[t_id][(j + 3) % 4]}};
-            std::array<Vector2, 3> fvs_2d = {{to_2d(mesh.tet_vertices[f_v_ids[0]].pos, t),
-                                                     to_2d(mesh.tet_vertices[f_v_ids[1]].pos, t),
-                                                     to_2d(mesh.tet_vertices[f_v_ids[2]].pos, t)}};
+//            std::array<Vector2, 3> fvs_2d = {{to_2d(mesh.tet_vertices[f_v_ids[0]].pos, t),
+//                                                     to_2d(mesh.tet_vertices[f_v_ids[1]].pos, t),
+//                                                     to_2d(mesh.tet_vertices[f_v_ids[2]].pos, t)}};
+            std::array<Vector2, 3> fvs_2d = {{to_2d(mesh.tet_vertices[f_v_ids[0]].pos, n, pp, t),
+                                                     to_2d(mesh.tet_vertices[f_v_ids[1]].pos, n, pp, t),
+                                                     to_2d(mesh.tet_vertices[f_v_ids[2]].pos, n, pp, t)}};
             int cnt_pos = 0;
             int cnt_neg = 0;
             int cnt_on = 0;
@@ -1711,8 +1717,11 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             if (!is_cross(f_oris[i][j], f_oris[i][(j + 1) % 3]))
                 continue;
 
-            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
-                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
+//            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
+//                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
+            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, n, pp, t),
+                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, n, pp, t)}};
+
             Scalar t_seg = -1;
             if (seg_line_intersection_2d(tri_evs_2d, evs_2d, t_seg)) {
                 std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};

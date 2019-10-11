@@ -201,19 +201,16 @@ int sub_sub_cross_sub_dot(real a[3], real b[3], real c[3], real d[3]);
    source and target are the endpoints of the line segment of intersection
 */
 
-extern "C" real orient3d(const real *pa, const real *pb, const real *pc, const real *pd);
+//extern "C" real orient3d(const real *pa, const real *pb, const real *pc, const real *pd);
 
-
-inline int sub_sub_cross_sub_dot(real pa[3], real pb[3], real pc[3], real pd[3])
-{
-  const real res = orient3d(pa, pb, pc, pd);
-
-  if(res > 0)
-    return 1;
-  if(res < 0)
-    return -1;
-
-  return 0;
+#include <geogram/delaunay/delaunay_3d.h>
+inline int sub_sub_cross_sub_dot(real pa[3], real pb[3], real pc[3], real pd[3]) {
+    auto result = -GEO::PCK::orient_3d(pa, pb, pc, pd);
+    if (result > 0)
+        return 1;
+    else if (result < 0)
+        return -1;
+    return 0;
 }
 
 int tri_tri_intersection_test_3d(real p1[3], real q1[3], real r1[3],
@@ -246,7 +243,7 @@ int tri_tri_intersection_test_3d(real p1[3], real q1[3], real r1[3],
     dq1 = sub_sub_cross_sub_dot(p2, q2, r2, q1);
     dr1 = sub_sub_cross_sub_dot(p2, q2, r2, r1);
 
-    if (((dp1 * dq1) > 0) && ((dp1 * dr1) > 0))  return 0;
+    if (((dp1 * dq1) > 0) && ((dp1 * dr1) > 0))  return 666;
 
     // Compute distance signs  of p2, q2 and r2
     // to the plane of triangle(p1,q1,r1)
@@ -255,7 +252,7 @@ int tri_tri_intersection_test_3d(real p1[3], real q1[3], real r1[3],
     dq2 = sub_sub_cross_sub_dot(p1, q1, r1, q2);
     dr2 = sub_sub_cross_sub_dot(p1, q1, r1, r2);
 
-    if (((dp2 * dq2) > 0) && ((dp2 * dr2) > 0)) return 0;
+    if (((dp2 * dq2) > 0) && ((dp2 * dr2) > 0)) return 666;
 
     // Permutation in a canonical form of T1's vertices
 

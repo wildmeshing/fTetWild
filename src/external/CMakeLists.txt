@@ -19,6 +19,9 @@ set(SOURCES
 
 	bfs_orient.h
 	bfs_orient.cpp
+
+	FastWindingNumber.hpp
+	FastWindingNumber.cpp
 )
 
 prepend_current_path(SOURCES)

@@ -103,3 +103,11 @@ function(float_tetwild_download_aabbcc)
             GIT_TAG        0c85e61362d384d70c71946826bfed0fb24a74ba
             )
 endfunction()
+
+## winding number
+function(float_tetwild_download_windingnumber)
+    float_tetwild_download_project(windingnumber
+            GIT_REPOSITORY https://github.com/alecjacobson/WindingNumber.git
+            GIT_TAG        1e6081e52905575d8e98fb8b7c0921274a18752f
+            )
+endfunction()

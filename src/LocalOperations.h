@@ -107,7 +107,7 @@ namespace floatTetWild {
         return j%2;
     }
 
-    void pausee();
+    void pausee(std::string msg = "");
 
     ///////////////
     class ElementInQueue{

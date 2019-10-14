@@ -7,6 +7,7 @@
 #include <floattetwild/VertexSmoothing.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/MeshIO.hpp>
+#include <floattetwild/FastWindingNumber.hpp>
 
 #include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/TriangleInsertion.h>
@@ -15,6 +16,9 @@
 #include <floattetwild/Logger.hpp>
 
 #include <igl/Timer.h>
+#include <igl/winding_number.h>
+
+#define USE_FWN true
 
 void floatTetWild::init(Mesh &mesh, AABBWrapper& tree) {
     cout << "initializing..." << endl;
@@ -1120,7 +1124,6 @@ void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& 
     }
 }
 
-#include <igl/winding_number.h>
 void floatTetWild::boolean_operation(Mesh& mesh, int op){
     const int OP_UNION = 0;
     const int OP_INTERSECTION = 1;
@@ -1147,8 +1150,14 @@ void floatTetWild::boolean_operation(Mesh& mesh, int op){
     }
 
     Eigen::VectorXd w1, w2;
+#if USE_FWN
+    floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
+    floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+#else
     igl::winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
     igl::winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+#endif
+
 
     int cnt = 0;
     for (int t_id = 0; t_id < mesh.tets.size(); ++t_id) {
@@ -1198,7 +1207,11 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
         F.col(1) = F.col(2).eval();
         F.col(2) = tmp;
     }
+#if USE_FWN
+    floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+#else
     igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+#endif
 
     index = 0;
     int n_tets = 0;
@@ -1266,7 +1279,11 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
         F.col(2) = tmp;
     }
     Eigen::VectorXd W;
+#if USE_FWN
+    floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+#else
     igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+#endif
 
     index = 0;
     int n_tets = 0;

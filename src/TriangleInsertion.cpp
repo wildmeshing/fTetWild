@@ -261,20 +261,20 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
     }
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-    ///fortest
-    Eigen::MatrixXd V(input_vertices.size(), 3);
-    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-    for (int i = 0; i < input_vertices.size(); i++)
-        V.row(i) = input_vertices[i];
-    int cnt = 0;
-    for (int i = 0; i < input_faces.size(); i++) {
-        if (!is_face_inserted[i])
-            continue;
-        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-        cnt++;
-    }
-    igl::writeSTL("inserted.stl", V, F);
-    ///fortest
+//    ///fortest
+//    Eigen::MatrixXd V(input_vertices.size(), 3);
+//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
+//    for (int i = 0; i < input_vertices.size(); i++)
+//        V.row(i) = input_vertices[i];
+//    int cnt = 0;
+//    for (int i = 0; i < input_faces.size(); i++) {
+//        if (!is_face_inserted[i])
+//            continue;
+//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+//        cnt++;
+//    }
+//    igl::writeSTL("inserted.stl", V, F);
+//    ///fortest
 
     pausee();
 }

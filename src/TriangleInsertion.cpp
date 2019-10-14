@@ -1635,7 +1635,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         }
     }
 
-//    std::vector<std::array<int, 3>> f_oris;
     std::vector<int> v_oris(mesh.tet_vertices.size(), Predicates::ORI_UNKNOWN);
     while (!t_ids_queue.empty()) {
         int t_id = t_ids_queue.front();
@@ -1666,25 +1665,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             int cnt_pos = 0;
             int cnt_neg = 0;
             int cnt_on = 0;
-//            std::array<int, 3> oris;
-//            for (int k = 0; k < 3; k++) {
-//                oris[k] = Predicates::orient_2d(evs_2d[0], evs_2d[1], fvs_2d[k]);
-//                if (oris[k] == Predicates::ORI_ZERO) {
-//                    cnt_on++;
-//                } else {
-//                    Scalar dis_2 = p_seg_squared_dist_3d(mesh.tet_vertices[f_v_ids[k]].pos, input_vertices[e[0]],
-//                                                         input_vertices[e[1]]);
-//                    if (dis_2 < mesh.params.eps_2_coplanar) {
-//                        oris[k] = Predicates::ORI_ZERO;
-//                        cnt_on++;
-//                        continue;
-//                    }
-//                    if (oris[k] == Predicates::ORI_POSITIVE)
-//                        cnt_pos++;
-//                    else
-//                        cnt_neg++;
-//                }
-//            }
             for (int k = 0; k < 3; k++) {
                 int &ori = v_oris[f_v_ids[k]];
                 if (ori == Predicates::ORI_UNKNOWN)
@@ -1708,7 +1688,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             if (cnt_on >= 2) {
                 cut_fs.push_back(f_v_ids);
                 std::sort(cut_fs.back().begin(), cut_fs.back().end());
-//                f_oris.push_back(oris);
                 continue;
             }
             if (cnt_neg == 0 || cnt_pos == 0)
@@ -1725,9 +1704,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             if (!is_intersected) { ///then check if there's intersection
                 for (int k = 0; k < 3; k++) {
                     //if cross
-//                    if (!is_cross(oris[k], oris[(k + 1) % 3]))
-                    if(v_oris[f_v_ids[k]] == Predicates::ORI_UNKNOWN || v_oris[f_v_ids[(k + 1) % 3]] == Predicates::ORI_UNKNOWN)
-                        pausee("hehe");
                     if (!is_cross(v_oris[f_v_ids[k]], v_oris[f_v_ids[(k + 1) % 3]]))
                         continue;
                     //if already know intersect
@@ -1769,7 +1745,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
 
             std::sort(f_v_ids.begin(), f_v_ids.end());
             cut_fs.push_back(f_v_ids);
-//            f_oris.push_back(oris);
             is_cut_vs[(j + 1) % 4] = true;
             is_cut_vs[(j + 2) % 4] = true;
             is_cut_vs[(j + 3) % 4] = true;
@@ -1785,26 +1760,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             }
         }
     }
-    //remove duplicated elements
-//    {
-//        std::vector<int> indices(cut_fs.size());
-//        for (int i = 0; i < cut_fs.size(); i++)
-//            indices[i] = i;
-//        std::sort(indices.begin(), indices.end(), [&cut_fs](int i1, int i2) {
-//            return cut_fs[i1] < cut_fs[i2];
-//        });
-//        indices.erase(std::unique(indices.begin(), indices.end(), [&cut_fs](int i1, int i2) {
-//            return cut_fs[i1] == cut_fs[i2];
-//        }), indices.end());
-//        std::vector<std::array<int, 3>> new_cut_fs(indices.size());
-//        std::vector<std::array<int, 3>> new_f_oris(indices.size());
-//        for (int i = 0; i < indices.size(); i++) {
-//            new_cut_fs[i] = cut_fs[indices[i]];
-//            new_f_oris[i] = f_oris[indices[i]];
-//        }
-//        cut_fs = new_cut_fs;
-//        f_oris = new_f_oris;
-//    }
     vector_unique(cut_fs);
 
     std::vector<std::array<int, 2>> tet_edges;
@@ -1840,8 +1795,6 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         }
     }
     vector_unique(snapped_v_ids);
-//    cout << "map_edge_to_intersecting_point.size = " << map_edge_to_intersecting_point.size() << endl;
-//    cout << "points.size = " << points.size() << endl;
 
 //    //fortest
 //    Eigen::MatrixXd V(cut_fs.size() * 3, 3), C(cut_fs.size() * 3, 3);
@@ -1869,101 +1822,8 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
 //    fout << "l 1 2" << endl;
 //    fout.close();
 //    //
-////            cout << "cnt_tmp = " << cnt_tmp << endl;
-////            cout << "cnt = " << cnt << endl;
 //    pausee();
 //    //fortest
-
-
-//    for (int i = 0; i < cut_fs.size(); i++) {
-//        std::array<bool, 3> is_e_intersected = {{false, false, false}};
-//        int cnt = 0;
-//        for (int j = 0; j < 3; j++) {
-//            if (f_oris[i][j] == Predicates::ORI_ZERO) {
-//                cnt++;
-//                is_e_intersected[j] = true;
-//                snapped_v_ids.push_back(cut_fs[i][j]);
-//                continue;
-//            }
-//            std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
-//            if (tri_e[0] > tri_e[1])
-//                std::swap(tri_e[0], tri_e[1]);
-//            if (map_edge_to_intersecting_point.find(tri_e) != map_edge_to_intersecting_point.end()) {
-//                cnt++;
-//                is_e_intersected[j] = true;
-//                continue;
-//            }
-//
-//            if (f_oris[i][(j + 1) % 3] == Predicates::ORI_ZERO)
-//                is_e_intersected[j] = true;
-//        }
-////        if (cnt == 2)
-//        if (cnt >= 2)
-//            continue;
-//
-//        //line - tri edges intersection
-//        int cnt_tmp = 0;
-//        for (int j = 0; j < 3; j++) {
-//            if (is_e_intersected[j])
-//                continue;
-//            if (!is_cross(f_oris[i][j], f_oris[i][(j + 1) % 3]))
-//                continue;
-//
-////            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, t),
-////                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, t)}};
-//            std::array<Vector2, 2> tri_evs_2d = {{to_2d(mesh.tet_vertices[cut_fs[i][j]].pos, n, pp, t),
-//                                                         to_2d(mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos, n, pp,
-//                                                               t)}};
-//
-//            Scalar t_seg = -1;
-//            if (seg_line_intersection_2d(tri_evs_2d, evs_2d, t_seg)) {
-//                std::array<int, 2> tri_e = {{cut_fs[i][j], cut_fs[i][(j + 1) % 3]}};
-//                if (tri_e[0] > tri_e[1])
-//                    std::swap(tri_e[0], tri_e[1]);
-//                points.push_back((1 - t_seg) * mesh.tet_vertices[cut_fs[i][j]].pos
-//                                 + t_seg * mesh.tet_vertices[cut_fs[i][(j + 1) % 3]].pos);
-//                map_edge_to_intersecting_point[tri_e] = points.size() - 1;
-//                cnt++;
-//                cnt_tmp++;
-//            }
-//        }
-//        if (cnt < 2) {
-//            cut_fs.erase(cut_fs.begin()+i);
-//            i--;
-////            //fortest
-//////            Eigen::MatrixXd V(cut_fs.size() * 3, 3), C(cut_fs.size() * 3, 3);
-//////            Eigen::MatrixXi F(cut_fs.size(), 3);
-//////            for (int i = 0; i < cut_fs.size(); i++) {
-//////                for (int j = 0; j < 3; j++) {
-//////                    V.row(i * 3 + j) = mesh.tet_vertices[cut_fs[i][j]].pos;
-//////                    C.row(i * 3 + j) << 0, 0, 1;
-//////                }
-//////                F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
-//////            }
-//////            igl::writeOFF("test_f.off", V, F, C);
-////            Eigen::MatrixXd V(3, 3), C(3, 3);
-////            Eigen::MatrixXi F(1, 3);
-////            for (int j = 0; j < 3; j++) {
-////                V.row(j) = mesh.tet_vertices[cut_fs[i][j]].pos;
-////                C.row(j) << 0, 0, 1;
-////            }
-////            F.row(i) << 0, 1, 2;
-////            igl::writeOFF("test_f.off", V, F, C);
-////            //
-////            std::ofstream fout("test_e.obj");
-////            fout << "v " << input_vertices[e[0]].transpose() << endl;
-////            fout << "v " << input_vertices[e[1]].transpose() << endl;
-////            fout << "l 1 2" << endl;
-////            fout.close();
-////            //
-////            cout << "cnt_tmp = " << cnt_tmp << endl;
-////            cout << "cnt = " << cnt << endl;
-////            pausee();
-////            //fortest
-////
-////            return false;///has to return false here
-//        }
-//    }
 
     return true;
 }

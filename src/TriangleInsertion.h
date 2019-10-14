@@ -64,7 +64,7 @@ namespace floatTetWild {
                                std::vector<std::array<int, 3>>& known_surface_fs,
                                std::vector<std::array<int, 3>>& known_not_surface_fs);
 
-    bool insert_boundary_edges_get_intersecting_edges_and_points(
+    bool insert_boundary_edges_get_intersecting_edges_and_points(const std::vector<std::vector<std::pair<int, int>>>& covered_fs_infos,
             const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
             const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
             std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,

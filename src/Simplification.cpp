@@ -33,13 +33,11 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
     igl::Timer timer;
     timer.start();
     collapsing(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
-    timer.stop();
-    std::cout<<"collapsing "<<timer.getElapsedTimeInSec()<<std::endl;
+    std::cout<<"collapsing "<<timer.getElapsedTime()<<std::endl;
 
-    swapping(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
     timer.start();
-    timer.stop();
-    std::cout<<"swapping "<<timer.getElapsedTimeInSec()<<std::endl;
+    swapping(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
+    std::cout<<"swapping "<<timer.getElapsedTime()<<std::endl;
 
     //clean up vs, fs
     //v

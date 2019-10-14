@@ -300,7 +300,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     //fortest
     myassert(!cut_t_ids.empty(), "cut_t_ids.empty()!!!");
-    if(cut_t_ids.empty()) {
+    if (cut_t_ids.empty()) {
         cout << get_area(vs[0], vs[1], vs[2]) << endl;
         cout << "f" << insert_f_id << ": " << input_faces[insert_f_id][0] << " " << input_faces[insert_f_id][1]
              << " " << input_faces[insert_f_id][2] << endl;
@@ -320,35 +320,15 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //    bool is_expanded = false;//fortest
 
     if (cut_mesh.snap_to_plane()) {
-//        //fortest
-//        if(!cut_mesh.check()) {
-//            cout<<"checking cut_mesh 1"<<endl;
-//            pausee();
-//        }
-//        //fortest
-
         cnt_snapped++;
-//        cout<<cut_t_ids.size()<<"->";
-//        cut_mesh.expand(cut_t_ids);
         cut_mesh.expand_new(cut_t_ids);
         //fortest
         int cnt_proj = cut_mesh.project_to_plane();
-        int cnt_all = std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true);
-        if(cnt_proj != cnt_all)
-            cout<<cnt_proj<<"/"<<cnt_all<<endl;
+//        int cnt_all = std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true);
+//        if (cnt_proj != cnt_all)
+//            cout << cnt_proj << "/" << cnt_all << endl;
         //fortest
-//        logger().info("#v_snapped = {}/{}", cnt_proj,
-//                      std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true));
-//        cout<<cut_t_ids.size()<<endl;
-//        vector_print(cut_t_ids);
-//        pausee();
     }
-//    //fortest
-//    if(!cut_mesh.check()) {
-//        cout<<"checking cut_mesh 2"<<endl;
-//        pausee();
-//    }
-    //fortest
     time_cut_mesh2 += timer1.getElapsedTime();
     time_cut_mesh += timer.getElapsedTime();
 
@@ -359,9 +339,6 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     std::vector<int> subdivide_t_ids;
     if (!cut_mesh.get_intersecting_edges_and_points(points, map_edge_to_intersecting_point, subdivide_t_ids)) {
         time_get_intersecting_edges_and_points += timer.getElapsedTime();
-//        cout<<"FAIL get_intersecting_edges_and_points"<<endl;
-//        if(is_expanded)
-//            cout<<"expanded"<<endl;
         return false;
     }
     time_get_intersecting_edges_and_points += timer.getElapsedTime();
@@ -392,8 +369,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
-//    if(!is_again)
-//        simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
+    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
     time_push_new_tets += timer.getElapsedTime();
 
     return true;
@@ -1380,25 +1356,52 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                                          std::vector<bool> &is_face_inserted, bool is_again,
                                          std::vector<std::array<int, 3>>& known_surface_fs,
                                          std::vector<std::array<int, 3>>& known_not_surface_fs) {
+    //fortest
+    auto check_corvered_area = [&](int I, const std::vector<std::array<int, 3>>& cut_fs){
+        int f_id = b_edge_infos[I].second[0];
+        {
+            auto &infos = cut_fs;
+            Eigen::MatrixXd V(infos.size() * 3, 3), C(infos.size() * 3, 3);
+            Eigen::MatrixXi F(infos.size(), 3);
+            for (int i = 0; i < infos.size(); i++) {
+                for (int j = 0; j < 3; j++) {
+                    V.row(i * 3 + j) = mesh.tet_vertices[infos[i][j]].pos;
+                    C.row(i * 3 + j) << 0, 0, 255;
+                }
+                F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
+            }
+            igl::writeOFF("_covered_tet_fs_" + std::to_string(f_id) + ".off", V, F, C);
+        }
+        {
+            Eigen::MatrixXd V(3, 3), C(3, 3);
+            Eigen::MatrixXi F(1, 3);
+            for (int j = 0; j < 3; j++) {
+                V.row(j) = input_vertices[input_faces[f_id][j]];
+                C.row(j) << 255, 0, 0;
+            }
+            F.row(0) << 0, 1, 2;
+            igl::writeOFF("_input_f_" + std::to_string(f_id) + ".off", V, F, C);
+        }
+        pausee();
+    };
+    //fortest
 
-    auto mark_known_surface_fs = [&](const std::array<int, 3>& f, int tag){
+    auto mark_known_surface_fs = [&](const std::array<int, 3> &f, int tag) {
         std::vector<int> n_t_ids;
         set_intersection(mesh.tet_vertices[f[0]].conn_tets, mesh.tet_vertices[f[1]].conn_tets,
                          mesh.tet_vertices[f[2]].conn_tets, n_t_ids);
-        if(n_t_ids.size()!=2)//todo:?????
+        if (n_t_ids.size() != 2)//todo:?????
             return;
 
-        for(int t_id:n_t_ids){
+        for (int t_id:n_t_ids) {
             int j = get_local_f_id(t_id, f[0], f[1], f[2], mesh);
             mesh.tets[t_id].is_surface_fs[j] = tag;
         }
     };
 
-    std::ofstream fout_e("b_edges1.obj");
-    std::ofstream fout_v("b_edges1_points.xyz");
-    std::vector<std::array<int, 2>> e_ids;//fortest
-    auto record_boundary_info = [&](const std::vector<Vector3>& points, const std::vector<int>& snapped_v_ids,
-            const std::array<int, 2>& e){
+
+    auto record_boundary_info = [&](const std::vector<Vector3> &points, const std::vector<int> &snapped_v_ids,
+                                    const std::array<int, 2> &e) {
         const int tet_vertices_size = mesh.tet_vertices.size();
         for (int i = points.size(); i > 0; i--)
             mesh.tet_vertices[tet_vertices_size - i].is_on_boundary = true;
@@ -1412,35 +1415,26 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
 
         b_edges.push_back(e);
 
-        //fortest
-        for(auto& e: b_edges) {
-            fout_e << "v " << input_vertices[e[0]][0] << " "
-                   << input_vertices[e[0]][1] << " "
-                   << input_vertices[e[0]][2] << endl;
-            fout_e << "v " << input_vertices[e[1]][0] << " "
-                   << input_vertices[e[1]][1] << " "
-                   << input_vertices[e[1]][2] << endl;
-        }
-        const int e_ids_size = e_ids.size();
-        for(int i=0;i<b_edges.size();i++){
-            e_ids.push_back({{e_ids_size+i*2, e_ids_size+i*2+1}});
-        }
-
-        for (int i = points.size(); i > 0; i--)
-            fout_v<<mesh.tet_vertices[tet_vertices_size - i].pos[0]<<" "
-                <<mesh.tet_vertices[tet_vertices_size - i].pos[1]<<" "
-                <<mesh.tet_vertices[tet_vertices_size - i].pos[2]<<endl;
-
-        for (int v_id: snapped_v_ids) {
-            Scalar dis_2 = p_seg_squared_dist_3d(mesh.tet_vertices[v_id].pos, input_vertices[e[0]],
-                                                 input_vertices[e[1]]);
-            if (dis_2 <= mesh.params.eps_2)
-                fout_v << mesh.tet_vertices[v_id].pos[0] << " "
-                     << mesh.tet_vertices[v_id].pos[1] << " "
-                     << mesh.tet_vertices[v_id].pos[2] << endl;
-        }
-        //fortest
+//        //fortest
+//        for (int v_id: snapped_v_ids) {
+//            Scalar dis_2 = p_seg_squared_dist_3d(mesh.tet_vertices[v_id].pos, input_vertices[e[0]],
+//                                                 input_vertices[e[1]]);
+//            if (dis_2 <= mesh.params.eps_2)
+//                fout_v << mesh.tet_vertices[v_id].pos[0] << " "
+//                     << mesh.tet_vertices[v_id].pos[1] << " "
+//                     << mesh.tet_vertices[v_id].pos[2] << endl;
+//        }
+//        //fortest
     };
+
+
+    std::vector<std::vector<std::pair<int, int>>> covered_fs_infos(input_faces.size());
+    for (int i = 0; i < track_surface_fs.size(); i++) {
+        for (int j = 0; j < 4; j++) {
+            for (int f_id: track_surface_fs[i][j])
+                covered_fs_infos[f_id].push_back(std::make_pair(i, j));
+        }
+    }
 
     bool is_all_inserted = true;
     int cnt = 0;
@@ -1466,7 +1460,8 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
         std::map<std::array<int, 2>, int> map_edge_to_intersecting_point;
         std::vector<int> snapped_v_ids;
         std::vector<std::array<int, 3>> cut_fs;
-        if (!insert_boundary_edges_get_intersecting_edges_and_points(input_vertices, input_faces, e, n_f_ids,
+        if (!insert_boundary_edges_get_intersecting_edges_and_points(covered_fs_infos,
+                                                                     input_vertices, input_faces, e, n_f_ids,
                                                                      track_surface_fs,
                                                                      mesh, points, map_edge_to_intersecting_point,
                                                                      snapped_v_ids, cut_fs,
@@ -1543,16 +1538,31 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
 
     logger().info("uninsert boundary #e = {}/{}", b_edge_infos.size() - cnt, b_edge_infos.size());
 
-    for(auto& e: e_ids){
-        fout_e<<"l "<<e[0]+1<<" "<<e[1]+1<<endl;
+    //fortest
+    std::ofstream fout_e("b_edges1.obj");
+//    std::ofstream fout_v("b_edges1_points.xyz");
+    for (auto &e: b_edges) {
+        fout_e << "v " << input_vertices[e[0]][0] << " "
+               << input_vertices[e[0]][1] << " "
+               << input_vertices[e[0]][2] << endl;
+        fout_e << "v " << input_vertices[e[1]][0] << " "
+               << input_vertices[e[1]][1] << " "
+               << input_vertices[e[1]][2] << endl;
+    }
+    for (int i = 0; i < b_edges.size(); i++) {
+        fout_e << "l " << i * 2 + 1 << " " << i * 2 + 2 << endl;
     }
     fout_e.close();
-    fout_v.close();
+//    fout_v.close();
+    //fortest
+
+    cout << "b_edges.size = " << b_edges.size() << endl;
 
     return is_all_inserted;
 }
 
 bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
+        const std::vector<std::vector<std::pair<int, int>>>& covered_fs_infos,
         const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
         const std::array<int, 2> &e, const std::vector<int> &n_f_ids,
         std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
@@ -1580,6 +1590,10 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
     ///find seed t_ids
     if (!is_again) {
         std::vector<int> t_ids;
+        for(int f_id: n_f_ids) {
+            for (const auto &info: covered_fs_infos[f_id])
+                t_ids.push_back(info.first);
+        }
         for (int v_id: e)
             t_ids.insert(t_ids.end(), mesh.tet_vertices[v_id].conn_tets.begin(),
                          mesh.tet_vertices[v_id].conn_tets.end());
@@ -1592,6 +1606,11 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         Vector3 min_e, max_e;
         get_bbox_face(input_vertices[e[0]], input_vertices[e[0]], input_vertices[e[1]], min_e, max_e);
 
+        std::vector<int> t_ids;
+        for(int f_id: n_f_ids) {
+            for (const auto &info: covered_fs_infos[f_id])
+                t_ids.push_back(info.first);
+        }
         for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
             if (mesh.tets[t_id].is_removed)
                 continue;
@@ -1603,6 +1622,10 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             if (!is_bbox_intersected(min_e, max_e, min_t, max_t))
                 continue;
 
+            t_ids.push_back(t_id);
+        }
+        vector_unique(t_ids);
+        for (int t_id: t_ids) {
             t_ids_queue.push(t_id);
             is_visited[t_id] = true;
         }
@@ -1734,8 +1757,8 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             }
         }
     }
-//    cout<<"cut_fs.size = "<<cut_fs.size()<<endl;
-    {//remove duplicated elements
+    //remove duplicated elements
+    {
         std::vector<int> indices(cut_fs.size());
         for (int i = 0; i < cut_fs.size(); i++)
             indices[i] = i;
@@ -1743,7 +1766,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             return cut_fs[i1] < cut_fs[i2];
         });
         indices.erase(std::unique(indices.begin(), indices.end(), [&cut_fs](int i1, int i2) {
-            return cut_fs[i1] < cut_fs[i2];
+            return cut_fs[i1] == cut_fs[i2];
         }), indices.end());
         std::vector<std::array<int, 3>> new_cut_fs(indices.size());
         std::vector<std::array<int, 3>> new_f_oris(indices.size());
@@ -2022,8 +2045,8 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 //
 
                 //fortest
-                double eps = (mesh.params.eps+mesh.params.eps_simplification)/2;
-                double dd = (mesh.params.dd + mesh.params.dd_simplification)/2;
+                double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
+                double dd = (mesh.params.dd + mesh.params.dd_simplification) / 2;
                 eps *= eps;
                 std::vector<GEO::vec3> ps;
                 sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, dd);

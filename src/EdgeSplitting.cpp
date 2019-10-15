@@ -54,6 +54,7 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
             tets.reserve(tets.size() + es_queue.size() * 6 * 2 - t_slots + 1);
     }
 
+    std::vector<bool> is_splittable(mesh.tets.size(), true);
     bool is_repush = true;
     while (!es_queue.empty()) {
         std::array<int, 2> v_ids = es_queue.top().v_ids;
@@ -63,7 +64,7 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
             continue;
 
         std::vector<std::array<int, 2>> new_edges;
-        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges))
+        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges, is_splittable))
             suc_counter++;
         else
             is_repush = false;
@@ -97,7 +98,8 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
     cout<<"success = "<<suc_counter<<"("<<counter<<")"<<endl;
 }
 
-bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush, std::vector<std::array<int, 2>>& new_edges) {
+bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush,
+        std::vector<std::array<int, 2>>& new_edges, std::vector<bool>& is_splittable) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -126,11 +128,17 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
     std::vector<int> old_t_ids;
     set_intersection(tet_vertices[v1_id].conn_tets, tet_vertices[v2_id].conn_tets, old_t_ids);
     for (int t_id: old_t_ids) {
+        if(!is_splittable[t_id]){
+            tet_vertices[v_id].is_removed = true;
+            return false;
+        }
         for (int j = 0; j < 4; j++) {
             if (tets[t_id][j] == v1_id || tets[t_id][j] == v2_id) {
 //                if (is_inverted(new_v, tet_vertices[tets[t_id][(j + 1) % 4]], tet_vertices[tets[t_id][(j + 2) % 4]],
 //                                tet_vertices[tets[t_id][(j + 1) % 4]]))
                 if(is_inverted(mesh, t_id, j, new_v.pos)) {
+                    for (int t_id1: old_t_ids)
+                        is_splittable[t_id1] = false;
                     tet_vertices[v_id].is_removed = true;
                     return false;
                 }

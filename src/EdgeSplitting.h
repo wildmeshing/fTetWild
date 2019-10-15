@@ -4,8 +4,10 @@
 #include <floattetwild/Mesh.hpp>
 
 namespace floatTetWild {
-    void edge_splitting(Mesh& mesh);
-    bool split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush, std::vector<std::array<int, 2>>& new_edges);
+    void edge_splitting(Mesh &mesh);
+
+    bool split_an_edge(Mesh &mesh, int v1_id, int v2_id, bool is_repush, std::vector<std::array<int, 2>> &new_edges,
+                       std::vector<bool> &is_splittable);
 }
 
 #endif //FLOATTETWILD_EDGESPLITTING_H

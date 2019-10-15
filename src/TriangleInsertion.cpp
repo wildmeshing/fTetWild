@@ -49,6 +49,7 @@ double time_push_new_tets = 0;
 double time_push_new_tets1 = 0;
 double time_push_new_tets2 = 0;
 double time_push_new_tets3 = 0;
+double time_simplify_subdivision_result = 0;
 int cnt_snapped = 0;
 
 double old_time_find_cutting_tets = 0;
@@ -56,6 +57,7 @@ double old_time_cut_mesh = 0;
 double old_time_get_intersecting_edges_and_points = 0;
 double old_time_subdivide_tets = 0;
 double old_time_push_new_tets = 0;
+double old_time_simplify_subdivision_result = 0;
 
 std::vector<std::array<int, 3>> covered_tet_fs;//fortest
 //fortest
@@ -141,9 +143,58 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
     insert_triangles_aux(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
 }
 
+void floatTetWild::optimize_non_surface(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                        const std::vector<int> &input_tags, std::vector<bool> &is_face_inserted,
+                                        const std::vector<std::array<std::vector<int>, 4 >>& track_surface_fs,
+                                        Mesh &mesh, AABBWrapper &tree, bool is_again) {
+    if (!is_again) {
+        for (int i = 0; i < mesh.tet_vertices.size(); i++)
+            if (i < input_vertices.size())
+                mesh.tet_vertices[i].is_freezed = true;
+    }
+    //
+    for (auto &v: mesh.tet_vertices) {
+        if (v.is_removed)
+            continue;
+        v.is_on_surface = false;
+        v.is_on_bbox = false;
+    }
+    //
+    for (int i = 0; i < mesh.tets.size(); i++) {
+        auto &t = mesh.tets[i];
+        if (t.is_removed)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            if (t.is_surface_fs[j] <= 0) {
+                for (int k = 0; k < 3; k++) {
+                    mesh.tet_vertices[t[(j + 1 + k) % 4]].is_on_surface = true;
+                    mesh.tet_vertices[t[(j + 1 + k) % 4]].is_freezed = true;
+                }
+            }
+            if (t.is_bbox_fs[j] != NOT_BBOX) {
+                for (int k = 0; k < 3; k++)
+                    mesh.tet_vertices[t[mod4(j + 1 + k)]].is_on_bbox = true;
+            }
+            if (!track_surface_fs[i][j].empty()) {
+                for (int k = 0; k < 3; k++)
+                    mesh.tet_vertices[t[(j + 1 + k) % 4]].is_freezed = true;
+            }
+        }
+        if (t.quality == 0)
+            t.quality = get_quality(mesh, t);
+    }
+    //
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree,
+              std::array<int, 5>({{0, 1, 1, 1, 0}}));
+    //
+    for (auto &v: mesh.tet_vertices)
+        v.is_freezed = false;
+}
+
 void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertices,
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
-        Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
+        Mesh &mesh, std::vector<bool> &is_face_inserted,
+        AABBWrapper &tree, bool is_again) {
 
     logger().info("triangle insertion start, #f = {}, #v = {}, #t = {}",
                   input_faces.size(), mesh.tet_vertices.size(), mesh.tets.size());
@@ -190,14 +241,33 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 //            logger().info("\t\t- time_push_new_tets1 = {}s", time_push_new_tets1);
 //            logger().info("\t\t- time_push_new_tets2 = {}s", time_push_new_tets2);
 //            logger().info("\t\t- time_push_new_tets3 = {}s", time_push_new_tets3);
+            logger().info("\t- time_simplify_subdivision_result = {}s (total {}s)",
+                          time_simplify_subdivision_result - old_time_simplify_subdivision_result,
+                          time_simplify_subdivision_result);
 
             old_time_find_cutting_tets = time_find_cutting_tets;
             old_time_cut_mesh = time_cut_mesh;
             old_time_get_intersecting_edges_and_points = time_get_intersecting_edges_and_points;
             old_time_subdivide_tets = time_subdivide_tets;
             old_time_push_new_tets = time_push_new_tets;
+            old_time_simplify_subdivision_result = time_simplify_subdivision_result;
+            logger().info("#v = {}/{}", mesh.get_v_num(), mesh.tet_vertices.size());
+            logger().info("#t = {}/{}", mesh.get_t_num(), mesh.tets.size());
         }
         //fortest
+
+//        //fortest
+//        if(i>0 && i%10000 == 0) {
+//            logger().info("before opt");
+//            logger().info("#v = {}/{}", mesh.get_v_num(), mesh.tet_vertices.size());
+//            logger().info("#t = {}/{}", mesh.get_t_num(), mesh.tets.size());
+//            optimize_non_surface(input_vertices, input_faces, input_tags, is_face_inserted, track_surface_fs,
+//                                 mesh, tree, is_again);
+//            logger().info("after opt");
+//            logger().info("#v = {}/{}", mesh.get_v_num(), mesh.tet_vertices.size());
+//            logger().info("#t = {}/{}", mesh.get_t_num(), mesh.tets.size());
+//        }
+//        //fortest
 
         int f_id = sorted_f_ids[i];
         if (is_face_inserted[f_id])
@@ -369,8 +439,11 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 
     timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
-    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
     time_push_new_tets += timer.getElapsedTime();
+
+    timer.start();
+    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
+    time_simplify_subdivision_result += timer.getElapsedTime();
 
     return true;
 }
@@ -421,6 +494,9 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
         }
         //todo: tags???
     }
+//    time_push_new_tets2 += timer.getElapsedTime();
+
+//    timer.start();
     mesh.tets.insert(mesh.tets.end(), new_tets.begin() + modified_t_ids.size(), new_tets.end());
     track_surface_fs.insert(track_surface_fs.end(), new_track_surface_fs.begin() + modified_t_ids.size(),
                             new_track_surface_fs.end());
@@ -497,7 +573,7 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
     //
     int _ts = 0;
     std::vector<int> _tet_tss;
-    _tet_tss.assign(mesh.tets.size(), 0);
+    bool is_update_tss = false;
     int cnt_suc = 0;
     while (!ec_queue.empty()) {
         std::array<int, 2> v_ids = ec_queue.top().v_ids;
@@ -544,7 +620,7 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
             mesh.tets[t_id].quality = get_quality(mesh, t_id);
         }
         int result = collapse_an_edge(mesh, v_ids[0], v_ids[1], tree, new_edges, _ts, _tet_tss,
-                                      is_check_quality);
+                                      is_check_quality, is_update_tss);
         if (result > 0) {
             for(const auto& e: new_edges){
                 if(all_v_ids.find(e[0]) == all_v_ids.end() || all_v_ids.find(e[1]) == all_v_ids.end())

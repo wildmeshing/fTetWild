@@ -237,7 +237,7 @@ void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
 
 int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree,
         std::vector<std::array<int, 2>>& new_edges, int ts, std::vector<int>& tet_tss,
-        bool is_check_quality) {
+        bool is_check_quality, bool is_update_tss) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -459,7 +459,8 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
         tets[t_id][j] = v2_id;
 //        tet_vertices[v2_id].conn_tets.insert(t_id);
         tet_vertices[v2_id].conn_tets.push_back(t_id);
-        tet_tss[t_id] = ts;//update timestamp
+        if(is_update_tss)
+            tet_tss[t_id] = ts;//update timestamp
     }
     for (int t_id: n12_t_ids) {
         tets[t_id].is_removed = true;

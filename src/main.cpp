@@ -393,7 +393,15 @@ int main(int argc, char **argv) {
 //    else
 //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
 
-    MeshIO::write_mesh(output_mesh_name, mesh, false);
+    //fortest
+    std::vector<Scalar> colors(mesh.tets.size(), -1);
+    for (int i = 0; i < mesh.tets.size(); i++) {
+        if (mesh.tets[i].is_removed)
+            continue;
+        colors[i] = mesh.tets[i].quality;
+    }
+    //fortest
+    MeshIO::write_mesh(output_mesh_name, mesh, false, colors);
     MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh, false);
 
     std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");

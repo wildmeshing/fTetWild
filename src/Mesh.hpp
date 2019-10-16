@@ -49,6 +49,8 @@ public:
 #define OPP_T_ID_UNKNOWN -2
 #define OPP_T_ID_BOUNDARY -1
 
+#define MAX_ENERGY 1e50
+
     using std::cout;
     using std::cin;
     using std::endl;

@@ -333,13 +333,19 @@ bool floatTetWild::is_point_out_boundary_envelope(const Mesh& mesh, const Vector
 //    return false;
 }
 
-Scalar floatTetWild::get_quality(const Mesh& mesh, const MeshTet& t){
+Scalar floatTetWild::get_quality(const Mesh& mesh, const MeshTet& t) {
     std::array<Scalar, 12> T;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 3; j++)
             T[i * 3 + j] = mesh.tet_vertices[t[i]].pos[j];
     }
+
     return AMIPS_energy(T);
+//    Scalar q = AMIPS_energy(T);
+//    if (q > 1e8)
+//        return MAX_ENERGY;
+//    else
+//        return q;
 }
 
 Scalar floatTetWild::get_quality(const Mesh& mesh, int t_id) {
@@ -349,18 +355,33 @@ Scalar floatTetWild::get_quality(const Mesh& mesh, int t_id) {
             T[i * 3 + j] = mesh.tet_vertices[mesh.tets[t_id][i]].pos[j];
     }
     return AMIPS_energy(T);
+//    Scalar q = AMIPS_energy(T);
+//    if (q > 1e8)
+//        return MAX_ENERGY;
+//    else
+//        return q;
 }
 
 Scalar floatTetWild::get_quality(const MeshVertex& v0, const MeshVertex& v1, const MeshVertex& v2, const MeshVertex& v3) {
     std::array<Scalar, 12> T = {{v0.pos[0], v0.pos[1], v0.pos[2], v1.pos[0], v1.pos[1], v1.pos[2],
                                         v2.pos[0], v2.pos[1], v2.pos[2], v3.pos[0], v3.pos[1], v3.pos[2]}};
     return AMIPS_energy(T);
+//    Scalar q = AMIPS_energy(T);
+//    if (q > 1e8)
+//        return MAX_ENERGY;
+//    else
+//        return q;
 }
 
 Scalar floatTetWild::get_quality(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3){
     std::array<Scalar, 12> T = {{v0[0], v0[1], v0[2], v1[0], v1[1], v1[2],
                                         v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]}};
     return AMIPS_energy(T);
+//    Scalar q = AMIPS_energy(T);
+//    if (q > 1e8)
+//        return MAX_ENERGY;
+//    else
+//        return q;
 }
 
 void floatTetWild::get_max_avg_energy(const Mesh& mesh, Scalar& max_energy, Scalar& avg_energy) {
@@ -842,6 +863,23 @@ void floatTetWild::pausee(std::string msg) {
 }
 
 Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T){
+    Scalar res = AMIPS_energy_aux(T);
+    if(res > 1e8) {
+        Scalar avg = res;
+        for(int j=1;j<4;j++) {
+            std::array<Scalar, 12> tmp_T = {{T[j*3], T[j*3+1], T[j*3+2],
+                                                    T[((j+1)%4)*3], T[((j+1)%4)*3+1], T[((j+1)%4)*3+2],
+                                                    T[((j+2)%4)*3], T[((j+2)%4)*3+1], T[((j+2)%4)*3+2],
+                                                    T[((j+3)%4)*3], T[((j+3)%4)*3+1], T[((j+3)%4)*3+2]}};
+            avg += AMIPS_energy_aux(tmp_T);
+        }
+        avg/=4;
+        return avg;
+    } else
+        return res;
+}
+
+Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {
     Scalar helper_0[12];
     helper_0[0] = T[0];
     helper_0[1] = T[1];
@@ -879,21 +917,23 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T){
     Scalar helper_19 = 0.5 * helper_13 + 0.5 * helper_4;
     Scalar helper_20 = 0.5 * helper_8 + 0.5 * helper_9;
     Scalar helper_21 = 0.5 * helper_15 + 0.5 * helper_16;
-    return -(helper_1 * (-1.5 * helper_1 + 0.5 * helper_2 + helper_21) +
-             helper_10 * (-1.5 * helper_10 + helper_20 + 0.5 * helper_7) +
-             helper_13 * (-1.5 * helper_13 + 0.5 * helper_3 + 0.5 * helper_4 + 0.5 * helper_5) +
-             helper_15 * (0.5 * helper_1 - 1.5 * helper_15 + 0.5 * helper_16 + 0.5 * helper_2) +
-             helper_16 * (0.5 * helper_1 + 0.5 * helper_15 - 1.5 * helper_16 + 0.5 * helper_2) +
-             helper_2 * (0.5 * helper_1 - 1.5 * helper_2 + helper_21) +
-             helper_3 * (helper_19 - 1.5 * helper_3 + 0.5 * helper_5) +
-             helper_4 * (0.5 * helper_13 + 0.5 * helper_3 - 1.5 * helper_4 + 0.5 * helper_5) +
-             helper_5 * (helper_19 + 0.5 * helper_3 - 1.5 * helper_5) +
-             helper_7 * (0.5 * helper_10 + helper_20 - 1.5 * helper_7) +
-             helper_8 * (0.5 * helper_10 + 0.5 * helper_7 - 1.5 * helper_8 + 0.5 * helper_9) +
-             helper_9 * (0.5 * helper_10 + 0.5 * helper_7 + 0.5 * helper_8 - 1.5 * helper_9)) *
-           pow(pow((helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
-                   (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
-                   (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17), 2), -0.333333333333333);
+    Scalar res = -(helper_1 * (-1.5 * helper_1 + 0.5 * helper_2 + helper_21) +
+                   helper_10 * (-1.5 * helper_10 + helper_20 + 0.5 * helper_7) +
+                   helper_13 * (-1.5 * helper_13 + 0.5 * helper_3 + 0.5 * helper_4 + 0.5 * helper_5) +
+                   helper_15 * (0.5 * helper_1 - 1.5 * helper_15 + 0.5 * helper_16 + 0.5 * helper_2) +
+                   helper_16 * (0.5 * helper_1 + 0.5 * helper_15 - 1.5 * helper_16 + 0.5 * helper_2) +
+                   helper_2 * (0.5 * helper_1 - 1.5 * helper_2 + helper_21) +
+                   helper_3 * (helper_19 - 1.5 * helper_3 + 0.5 * helper_5) +
+                   helper_4 * (0.5 * helper_13 + 0.5 * helper_3 - 1.5 * helper_4 + 0.5 * helper_5) +
+                   helper_5 * (helper_19 + 0.5 * helper_3 - 1.5 * helper_5) +
+                   helper_7 * (0.5 * helper_10 + helper_20 - 1.5 * helper_7) +
+                   helper_8 * (0.5 * helper_10 + 0.5 * helper_7 - 1.5 * helper_8 + 0.5 * helper_9) +
+                   helper_9 * (0.5 * helper_10 + 0.5 * helper_7 + 0.5 * helper_8 - 1.5 * helper_9)) *
+                 pow(pow((helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
+                         (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
+                         (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17), 2),
+                     -0.333333333333333);
+    return res;
 }
 
 void floatTetWild::AMIPS_jacobian(const std::array<Scalar, 12>& T, Vector3& result_0){

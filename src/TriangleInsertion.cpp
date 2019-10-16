@@ -327,8 +327,23 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 //        }
 //    }
     for (auto &t:mesh.tets) {
-        if (!t.is_removed)
+        if (!t.is_removed) {
             t.quality = get_quality(mesh, t);
+//            //fortest
+//            if (t.quality > 1e5) {
+//                std::array<double, 4> qs;
+//                for (int j = 0; j < 4; j++) {
+//                    qs[j] = get_quality(mesh.tet_vertices[t[j]], mesh.tet_vertices[t[(j + 1) % 4]],
+//                                        mesh.tet_vertices[t[(j + 2) % 4]], mesh.tet_vertices[t[(j + 3) % 4]]);
+//                }
+//                if(!(qs[0] == qs[1] && qs[1] == qs[2] && qs[2] == qs[3])) {
+//                    for (int j = 0; j < 4; j++)
+//                        cout<<std::setprecision(16)<<qs[j]<<" "<<std::setprecision(6)<<qs[j]<<endl;
+//                    pausee("quality problem!!");
+//                }
+//            }
+//            //fortest
+        }
     }
     if (std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0)
         mesh.is_input_all_inserted = true;

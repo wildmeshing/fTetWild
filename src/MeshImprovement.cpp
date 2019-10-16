@@ -597,21 +597,21 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 //    cout << "#t = " << cnt_t << "(" << tets.size() << ")" << endl;
 
     //quality
-//    Scalar max_energy, avg_energy;
-//    get_max_avg_energy(mesh, max_energy, avg_energy);
-//    cout << "max_energy = " << max_energy << endl;
-//    cout << "avg_energy = " << avg_energy << endl;
+    Scalar max_energy, avg_energy;
+    get_max_avg_energy(mesh, max_energy, avg_energy);
+    cout << "max_energy = " << max_energy << endl;
+    cout << "avg_energy = " << avg_energy << endl;
 
-//    for (int i = 0; i < tets.size(); i++) {
-//        if (tets[i].is_removed)
-//            continue;
-//        Scalar q = get_quality(mesh, i);
-//        if (abs(tets[i].quality - q)/tets[i].quality > 0.01) {
-//            cout << "tets[i].quality != get_quality(mesh,i)" << endl;
-//            cout << tets[i].quality << " - " << q << " = " << tets[i].quality - q << endl;
-//            //pausee();
-//        }
-//    }
+    for (int i = 0; i < tets.size(); i++) {
+        if (tets[i].is_removed)
+            continue;
+        Scalar q = get_quality(mesh, i);
+        if (abs(tets[i].quality - q) / tets[i].quality > 0.01) {
+            cout << "tets[i].quality != get_quality(mesh,i)" << endl;
+            cout << tets[i].quality << " - " << q << " = " << tets[i].quality - q << endl;
+//            pausee();
+        }
+    }
 
     if(mesh.params.log_level > 1) {
         output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");

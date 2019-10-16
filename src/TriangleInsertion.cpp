@@ -320,15 +320,18 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
     /////
     //build b_tree using b_edges
     tree.init_tmp_b_mesh_and_tree(input_vertices, input_faces, b_edges1, mesh, b_edges2);
-    if (!is_again) {
-        for (auto &t:mesh.tets) {
-            if(t.quality == 0)
-                t.quality = get_quality(mesh, t);
-        }
+//    if (!is_again) {
+//        for (auto &t:mesh.tets) {
+//            if(t.quality == 0)
+//                t.quality = get_quality(mesh, t);
+//        }
+//    }
+    for (auto &t:mesh.tets) {
+        if (!t.is_removed)
+            t.quality = get_quality(mesh, t);
     }
-    if(std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0) {
+    if (std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0)
         mesh.is_input_all_inserted = true;
-    }
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
 //    ///fortest
@@ -617,7 +620,8 @@ void floatTetWild::simplify_subdivision_result(int insert_f_id, int input_v_size
         static const bool is_check_quality = true;
         auto v1_conn_tets = mesh.tet_vertices[v1_id].conn_tets;
         for (int t_id: mesh.tet_vertices[v1_id].conn_tets) {
-            mesh.tets[t_id].quality = get_quality(mesh, t_id);
+//            if(mesh.tets[t_id].quality == 0)
+                mesh.tets[t_id].quality = get_quality(mesh, t_id);
         }
         int result = collapse_an_edge(mesh, v_ids[0], v_ids[1], tree, new_edges, _ts, _tet_tss,
                                       is_check_quality, is_update_tss);

@@ -61,6 +61,9 @@ double old_time_simplify_subdivision_result = 0;
 
 std::vector<std::array<int, 3>> covered_tet_fs;//fortest
 //fortest
+
+///two places to update quality: snapping tet vertices to plane, push new tets
+
 void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                     const Mesh &mesh, std::vector<int> &sorted_f_ids) {///use 38416, 232368 as example //todo: think why
     std::vector<Scalar> weights(input_faces.size());
@@ -180,8 +183,8 @@ void floatTetWild::optimize_non_surface(const std::vector<Vector3> &input_vertic
                     mesh.tet_vertices[t[(j + 1 + k) % 4]].is_freezed = true;
             }
         }
-        if (t.quality == 0)
-            t.quality = get_quality(mesh, t);
+//        if (t.quality == 0)
+//            t.quality = get_quality(mesh, t);
     }
     //
     operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree,
@@ -488,8 +491,8 @@ void floatTetWild::push_new_tets(Mesh &mesh, std::vector<std::array<std::vector<
 
 //    timer.start();
     for (int i = 0; i < new_tets.size(); i++) {
-        if (is_again)
-            new_tets[i].quality = get_quality(mesh, new_tets[i]);
+//        if (is_again)
+//            new_tets[i].quality = get_quality(mesh, new_tets[i]);
 
         if (i < modified_t_ids.size()) {
             for (int j = 0; j < 4; j++) {

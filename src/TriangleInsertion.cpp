@@ -32,9 +32,11 @@
 #include <numeric>
 #include <unordered_map>
 
+
 #define III -1
 
 //fortest
+#include <floattetwild/Rational.h>
 double time_find_cutting_tets = 0;
 double time_find_cutting_tets1 = 0;
 double time_find_cutting_tets2 = 0;
@@ -463,7 +465,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     time_push_new_tets += timer.getElapsedTime();
 
     timer.start();
-    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
+//    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
     time_simplify_subdivision_result += timer.getElapsedTime();
 
     return true;
@@ -745,8 +747,8 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
 
 //    const int CUT_UNKNOWN = INT_MIN;
 //    std::vector<std::array<int, 4>> visited_results(mesh.tets.size(), {{CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN}});
-//    const int test_f_id = 771;
-    const int test_f_id = -1;
+    const int test_f_id = 771;
+//    const int test_f_id = -1;
     const int test_j = 1;
     const int test_v_id = input_faces[test_f_id][test_j];
     while (!queue_t_ids.empty()) {
@@ -835,6 +837,8 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
                              << Predicates::orient_3d(tp1, tp3, tp2, vs[k]) << " "
                              << Predicates::orient_3d(tp3, tp2, tp1, vs[k]) << endl;
                     }
+
+
                     pausee();
                 }
 
@@ -883,6 +887,17 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
                 cout << "cnt_neg = " << cnt_neg << endl;
                 cout << "result = " << result << endl;
 //                if (cnt_pos > 0 && cnt_neg > 0) {
+                if (t_id == 3976){
+                    {
+                        Eigen::MatrixXd V(4, 3);
+                        Eigen::MatrixXi F(4, 3);
+                        for (int k = 0; k < 4; k++) {
+                            V.row(k) = mesh.tet_vertices[mesh.tets[t_id][k]].pos;
+                            F.row(k) << (k + 1) % 4, (k + 2) % 4, (k + 3) % 4;
+                        }
+                        igl::writeOFF("test_cut_t_ids1_"+std::to_string(t_id)+".off", V, F);
+                    }
+                }
                 if (t_id == 1016) {
                     {
                         Eigen::MatrixXd V(4, 3);

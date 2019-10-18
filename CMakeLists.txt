@@ -85,6 +85,11 @@ include(FloatTetwildDependencies)
 # FloatTetwild library
 ################################################################################
 
+find_package(GMPfTetWild)
+IF(NOT ${GMP_FOUND})
+	MESSAGE(FATAL_ERROR "Cannot find GMP")
+ENDIF()
+
 # add_library() can only be called without any source since CMake 3.11 ...
 add_library(${PROJECT_NAME} src/Logger.cpp)
 
@@ -116,6 +121,8 @@ if(FLOAT_TETWILD_USE_FLOAT)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_USE_FLOAT)
 endif()
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
+
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		igl::core
@@ -123,6 +130,7 @@ target_link_libraries(${PROJECT_NAME}
 		spdlog::spdlog
 		Threads::Threads
 		fast_winding_number
+		${GMP_LIBRARIES}
 )
 if(FLOAT_TETWILD_ENABLE_TBB)
 	target_link_libraries(${PROJECT_NAME} PUBLIC tbb::tbb)

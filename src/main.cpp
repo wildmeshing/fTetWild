@@ -85,24 +85,6 @@ void connect_2_meshes(std::string m1, std::string m2, std::string m);
 
 extern "C" void exactinit();
 int main(int argc, char **argv) {
-//    std::array<int, 4> comb = {{0,1,2,3}};
-//    for(int a=0;a<4;a++){
-//        for(int i=0;i<4;i++){
-//            if(comb[i]==a)
-//                continue;
-//            int b = comb[i];
-//            std::vector<int> cc;
-//            for(int j=0;j<4;j++) {
-//                if(comb[j]!=a && comb[j]!=b) {
-//                    cc.push_back(comb[j]);
-//                }
-//            }
-//            cout << "{{"<<a << ", " << b << ", "<<cc[0]<<", "<<cc[1]<<"}}, "<<endl;
-//            cout << "{{"<<a << ", " << b << ", "<<cc[1]<<", "<<cc[0]<<"}}, "<<endl;
-//        }
-//    }
-//    return 0;
-
 //    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
 //                     "/Users/yixinhu/Downloads/test_cutting/37627.stl");
 

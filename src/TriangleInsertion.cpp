@@ -745,7 +745,8 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
 
 //    const int CUT_UNKNOWN = INT_MIN;
 //    std::vector<std::array<int, 4>> visited_results(mesh.tets.size(), {{CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN}});
-    const int test_f_id = 771;
+//    const int test_f_id = 771;
+    const int test_f_id = -1;
     const int test_j = 1;
     const int test_v_id = input_faces[test_f_id][test_j];
     while (!queue_t_ids.empty()) {

@@ -862,21 +862,97 @@ void floatTetWild::pausee(std::string msg) {
         exit(0);
 }
 
-Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T){
+Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
+    static const std::vector<std::array<int, 4>> combs = {{{0, 1, 3, 2}},
+                                                          {{0, 2, 1, 3}},
+                                                          {{0, 2, 3, 1}},
+                                                          {{0, 3, 1, 2}},
+                                                          {{0, 3, 2, 1}},
+                                                          {{1, 0, 2, 3}},
+                                                          {{1, 0, 3, 2}},
+                                                          {{1, 2, 0, 3}},
+                                                          {{1, 2, 3, 0}},
+                                                          {{1, 3, 0, 2}},
+                                                          {{1, 3, 2, 0}},
+                                                          {{2, 0, 1, 3}},
+                                                          {{2, 0, 3, 1}},
+                                                          {{2, 1, 0, 3}},
+                                                          {{2, 1, 3, 0}},
+                                                          {{2, 3, 0, 1}},
+                                                          {{2, 3, 1, 0}},
+                                                          {{3, 0, 1, 2}},
+                                                          {{3, 0, 2, 1}},
+                                                          {{3, 1, 0, 2}},
+                                                          {{3, 1, 2, 0}},
+                                                          {{3, 2, 0, 1}},
+                                                          {{3, 2, 1, 0}}};
+
+//    static Eigen::MatrixXd G(3, 4);
+//    G << -1, 0, 0, 1,
+//            -0.5773502691896258, 1.154700538379252, 0, -0.5773502691896258,
+//            -0.4082482904638631, -0.4082482904638632, 1.224744871391589, -0.4082482904638631;
+
     Scalar res = AMIPS_energy_aux(T);
-    if(res > 1e8) {
-        Scalar avg = res;
-        for(int j=1;j<4;j++) {
-            std::array<Scalar, 12> tmp_T = {{T[j*3], T[j*3+1], T[j*3+2],
-                                                    T[((j+1)%4)*3], T[((j+1)%4)*3+1], T[((j+1)%4)*3+2],
-                                                    T[((j+2)%4)*3], T[((j+2)%4)*3+1], T[((j+2)%4)*3+2],
-                                                    T[((j+3)%4)*3], T[((j+3)%4)*3+1], T[((j+3)%4)*3+2]}};
-            avg += AMIPS_energy_aux(tmp_T);
+    if (res > 1e8) {
+        Scalar avg;
+        int cnt;
+        if (std::isinf(res)) {
+            avg = 0;
+            cnt = 0;
+        } else {
+            avg = res;
+            cnt = 1;
         }
-        avg/=4;
+//        cout << res << endl;
+        for (int i = 0; i < combs.size(); i++) {
+            std::array<Scalar, 12> tmp_T;
+            for (int j = 0; j < 4; j++) {
+                for (int k = 0; k < 3; k++)
+                    tmp_T[j * 3 + k] = T[combs[i][j] * 3 + k];
+            }
+            Scalar res1 = AMIPS_energy_aux(tmp_T);
+            if (std::isinf(res1))
+                continue;
+            cnt++;
+            avg += res1;
+//            cout<<res1<<endl;
+//            cout << res1 << " / ";
+//            //
+//            Eigen::MatrixXd Tet(4, 3);
+//            for (int i = 0; i < 4; i++) {
+//                for (int j = 0; j < 3; j++)
+//                    Tet(i, j) = tmp_T[i * 3 + j];
+//            }
+//            Eigen::Matrix3d J = G * Tet;
+//            Eigen::JacobiSVD<Eigen::MatrixXd> svd(J, Eigen::ComputeThinU | Eigen::ComputeThinV);
+//            Eigen::Vector3d S = svd.singularValues();
+//            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
+//                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
+//            cout << res2 << endl;
+        }
+        avg /= cnt;
+//        cout << "avg = " << avg << endl;
+//        pausee();
         return avg;
-    } else
+    } else {
+//        if(res>1e8) {
+//            cout << res << " / ";
+//            Eigen::MatrixXd Tet(4, 3);
+//            for (int i = 0; i < 4; i++) {
+//                for (int j = 0; j < 3; j++)
+//                    Tet(i, j) = T[i * 3 + j];
+//            }
+//            Eigen::Matrix3d J = G * Tet;
+//            Eigen::Matrix3d U, V;
+//            Eigen::Vector3d S;
+//            igl::svd3x3(J, U, S, V);
+//            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
+//                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
+//            cout << res2 << endl;
+//            pausee();
+//        }
         return res;
+    }
 }
 
 Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {
@@ -917,6 +993,9 @@ Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {
     Scalar helper_19 = 0.5 * helper_13 + 0.5 * helper_4;
     Scalar helper_20 = 0.5 * helper_8 + 0.5 * helper_9;
     Scalar helper_21 = 0.5 * helper_15 + 0.5 * helper_16;
+    Scalar helper_22 = (helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
+                       (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
+                       (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17);
     Scalar res = -(helper_1 * (-1.5 * helper_1 + 0.5 * helper_2 + helper_21) +
                    helper_10 * (-1.5 * helper_10 + helper_20 + 0.5 * helper_7) +
                    helper_13 * (-1.5 * helper_13 + 0.5 * helper_3 + 0.5 * helper_4 + 0.5 * helper_5) +
@@ -928,11 +1007,12 @@ Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {
                    helper_5 * (helper_19 + 0.5 * helper_3 - 1.5 * helper_5) +
                    helper_7 * (0.5 * helper_10 + helper_20 - 1.5 * helper_7) +
                    helper_8 * (0.5 * helper_10 + 0.5 * helper_7 - 1.5 * helper_8 + 0.5 * helper_9) +
-                   helper_9 * (0.5 * helper_10 + 0.5 * helper_7 + 0.5 * helper_8 - 1.5 * helper_9)) *
-                 pow(pow((helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
-                         (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
-                         (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17), 2),
-                     -0.333333333333333);
+                   helper_9 * (0.5 * helper_10 + 0.5 * helper_7 + 0.5 * helper_8 - 1.5 * helper_9))
+            / std::cbrt(helper_22*helper_22);
+//                 * pow(pow((helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
+//                         (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
+//                         (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17), 2),
+//                     -0.333333333333333);
     return res;
 }
 

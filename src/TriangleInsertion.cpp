@@ -222,31 +222,31 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
     for (int i = 0; i < sorted_f_ids.size(); i++) {
         //fortest
         if (!is_again && i > 0 && i % 1000 == 0) {
-            logger().info("inserting f{}... {} failed", i, cnt_fail);
-            logger().info("snapped {}/{}", cnt_snapped, cnt_total);
-            logger().info("\t- time_find_cutting_tets = {}s (total {}s)",
+            logger().debug("inserting f{}... {} failed", i, cnt_fail);
+            logger().debug("snapped {}/{}", cnt_snapped, cnt_total);
+            logger().debug("\t- time_find_cutting_tets = {}s (total {}s)",
                           time_find_cutting_tets - old_time_find_cutting_tets, time_find_cutting_tets);
 //            logger().info("\t\t- time_find_cutting_tets1 = {}s", time_find_cutting_tets1);
 //            logger().info("\t\t- time_find_cutting_tets2 = {}s", time_find_cutting_tets2);
 //            logger().info("\t\t- time_find_cutting_tets3 = {}s", time_find_cutting_tets3);
 //            logger().info("\t\t- time_find_cutting_tets4 = {}s", time_find_cutting_tets4);
-            logger().info("\t- time_cut_mesh = {}s (total {}s)",
+            logger().debug("\t- time_cut_mesh = {}s (total {}s)",
                           time_cut_mesh - old_time_cut_mesh, time_cut_mesh);
 //            logger().info("\t\t- time_cut_mesh1 = {}s", time_cut_mesh1);
 //            logger().info("\t\t- time_cut_mesh2 = {}s", time_cut_mesh2);
 //            print_times1();
-            logger().info("\t- time_get_intersecting_edges_and_points = {}s (total {}s)",
+            logger().debug("\t- time_get_intersecting_edges_and_points = {}s (total {}s)",
                           time_get_intersecting_edges_and_points - old_time_get_intersecting_edges_and_points,
                           time_get_intersecting_edges_and_points);
             print_times1();
-            logger().info("\t- time_subdivide_tets = {}s (total {}s)",
+            logger().debug("\t- time_subdivide_tets = {}s (total {}s)",
                           time_subdivide_tets - old_time_subdivide_tets, time_subdivide_tets);
-            logger().info("\t- time_push_new_tets = {}s (total {}s)",
+            logger().debug("\t- time_push_new_tets = {}s (total {}s)",
                           time_push_new_tets - old_time_push_new_tets, time_push_new_tets);
 //            logger().info("\t\t- time_push_new_tets1 = {}s", time_push_new_tets1);
 //            logger().info("\t\t- time_push_new_tets2 = {}s", time_push_new_tets2);
 //            logger().info("\t\t- time_push_new_tets3 = {}s", time_push_new_tets3);
-            logger().info("\t- time_simplify_subdivision_result = {}s (total {}s)",
+            logger().debug("\t- time_simplify_subdivision_result = {}s (total {}s)",
                           time_simplify_subdivision_result - old_time_simplify_subdivision_result,
                           time_simplify_subdivision_result);
 
@@ -256,8 +256,8 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
             old_time_subdivide_tets = time_subdivide_tets;
             old_time_push_new_tets = time_push_new_tets;
             old_time_simplify_subdivision_result = time_simplify_subdivision_result;
-            logger().info("#v = {}/{}", mesh.get_v_num(), mesh.tet_vertices.size());
-            logger().info("#t = {}/{}", mesh.get_t_num(), mesh.tets.size());
+            logger().debug("#v = {}/{}", mesh.get_v_num(), mesh.tet_vertices.size());
+            logger().debug("#t = {}/{}", mesh.get_t_num(), mesh.tets.size());
         }
         //fortest
 

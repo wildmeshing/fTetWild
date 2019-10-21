@@ -887,6 +887,42 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
                 cout << "cnt_neg = " << cnt_neg << endl;
                 cout << "result = " << result << endl;
 //                if (cnt_pos > 0 && cnt_neg > 0) {
+                if(t_id == 3976 || t_id == 1016){
+                    cout<<"//////"<<endl;
+                    std::array<Vector3_r, 4> tet_vr;
+                    std::array<Vector3_r, 3> tri_vr;
+                    std::array<Vector3, 4> tet_vf;
+                    std::array<Vector3, 3> tri_vf;
+                    for(int k=0;k<4;k++){
+                        for(int r=0;r<3;r++) {
+                            tet_vr[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
+                            tet_vf[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
+                        }
+                    }
+                    for(int k=0;k<3;k++){
+                        for(int r=0;r<3;r++) {
+                            tri_vr[k][r] = input_vertices[input_faces[f_id][k]][r];
+                            tri_vf[k][r] = input_vertices[input_faces[f_id][k]][r];
+                        }
+                    }
+                    for(int k=0;k<4;k++) {
+                        cout << "tet " << t_id << " face" << k << endl;
+                        cout<<"plane of tet face:"<<endl;
+                        for (int r = 0; r < 3; r++) {
+                            cout << orient_rational(tet_vr[k], tet_vr[(k + 1) % 4], tet_vr[(k + 2) % 4], tri_vr[r])
+                                 << "/ f:";
+                            cout << Predicates::orient_3d(tet_vf[k], tet_vf[(k + 1) % 4], tet_vf[(k + 2) % 4], tri_vf[r])
+                                 << endl;
+                        }
+                        cout<<"plane of tri:"<<endl;
+                        for (int r = 0; r < 3; r++) {
+                            cout << orient_rational(tri_vr[0], tri_vr[1], tri_vr[2], tet_vr[(k + r) % 4]) << "/ f:";
+                            cout << Predicates::orient_3d(tri_vf[0], tri_vf[1], tri_vf[2], tet_vf[(k + r) % 4]) << endl;
+                        }
+                    }
+                    cout<<"//////"<<endl;
+                }
+
                 if (t_id == 3976){
                     {
                         Eigen::MatrixXd V(4, 3);
@@ -2581,4 +2617,15 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
         }
 //        pausee();
     }
+}
+
+int floatTetWild::orient_rational(const Vector3_r& p1, const Vector3_r& p2, const Vector3_r& p3, const Vector3_r& p){
+    auto nv = (p2-p1).cross(p3-p1);
+    triwild::Rational res = nv.dot(p-p1);
+    if(res == 0)
+        return Predicates::ORI_ZERO;
+    if(res > 0)
+        return Predicates::ORI_POSITIVE;
+    else
+        return Predicates::ORI_NEGATIVE;
 }

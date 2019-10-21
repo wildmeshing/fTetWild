@@ -13,6 +13,7 @@
 #include <tbb/concurrent_vector.h>
 #endif
 
+#include <floattetwild/Rational.h>
 namespace floatTetWild {
     void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                           const std::vector<int> &input_tags, Mesh &mesh,
@@ -100,6 +101,10 @@ namespace floatTetWild {
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                                 const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                 const std::vector<int> &sorted_f_ids);
+
+    //fortest
+    typedef Eigen::Matrix<triwild::Rational, 3, 1> Vector3_r;
+    int orient_rational(const Vector3_r& p1, const Vector3_r& p2, const Vector3_r& p3, const Vector3_r& p);
 }
 
 

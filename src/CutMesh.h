@@ -32,7 +32,7 @@ namespace floatTetWild {
         void expand(std::vector<int> &cut_t_ids);
         void expand_new(std::vector<int> &cut_t_ids);
 
-        int project_to_plane();
+        int project_to_plane(int input_vertices_size);
 
         bool get_intersecting_edges_and_points(std::vector<Vector3> &points,
                                                std::map<std::array<int, 2>, int> &map_edge_to_intersecting_point,

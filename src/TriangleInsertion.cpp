@@ -416,7 +416,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         cnt_snapped++;
         cut_mesh.expand_new(cut_t_ids);
         //fortest
-        int cnt_proj = cut_mesh.project_to_plane();
+        int cnt_proj = cut_mesh.project_to_plane(input_vertices.size());
 //        int cnt_all = std::count(cut_mesh.is_snapped.begin(), cut_mesh.is_snapped.end(), true);
 //        if (cnt_proj != cnt_all)
 //            cout << cnt_proj << "/" << cnt_all << endl;
@@ -747,8 +747,8 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
 
 //    const int CUT_UNKNOWN = INT_MIN;
 //    std::vector<std::array<int, 4>> visited_results(mesh.tets.size(), {{CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN, CUT_UNKNOWN}});
-    const int test_f_id = 771;
-//    const int test_f_id = -1;
+//    const int test_f_id = 771;
+    const int test_f_id = -1;
     const int test_j = 1;
     const int test_v_id = input_faces[test_f_id][test_j];
     while (!queue_t_ids.empty()) {
@@ -803,13 +803,15 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
 //            is_cut_vs[(j + 2) % 4] = true;
 //            is_cut_vs[(j + 3) % 4] = true;
 
-            if(t_id == 1016 && f_id == test_f_id) {//fortest
-                cout<<"1016"<<endl;
-                mesh.tets[t_id].print();
-                cout<<oris[0]<<" "<<oris[1]<<" "<<oris[2]<<" "<<oris[3]<<endl;
-                is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE, true);
-                pausee();
-            }
+//            //fortest
+//            if(t_id == 1016 && f_id == test_f_id) {
+//                cout<<"1016"<<endl;
+//                mesh.tets[t_id].print();
+//                cout<<oris[0]<<" "<<oris[1]<<" "<<oris[2]<<" "<<oris[3]<<endl;
+//                is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE, true);
+//                pausee();
+//            }
+//            //fortest
 
             if (cnt_on == 3) {
                 if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_COPLANAR) == CUT_COPLANAR) {
@@ -820,27 +822,27 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
                     is_cut_vs[(j + 3) % 4] = true;
                 }
             } else if (cnt_pos > 0 && cnt_neg > 0) {
-                if(t_id == 3976 && f_id == test_f_id) {//fortest
-                    mesh.tets[t_id].print();
-                    cout << oris[0] << " " << oris[1] << " " << oris[2] << " " << oris[3] << endl;
-                    std::vector<int> tmp;
-                    set_intersection(mesh.tet_vertices[mesh.tets[t_id][1]].conn_tets,
-                                     mesh.tet_vertices[mesh.tets[t_id][2]].conn_tets,
-                                     mesh.tet_vertices[mesh.tets[t_id][3]].conn_tets, tmp);
-                    vector_print(tmp);
-                    is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE, true);
-                    is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp3, tp2, CUT_FACE, true);
-                    is_tri_tri_cutted_hint(vs[0], vs[2], vs[1], tp1, tp2, tp3, CUT_FACE, true);
-                    is_tri_tri_cutted_hint(vs[0], vs[2], vs[1], tp1, tp3, tp2, CUT_FACE, true);
-                    for (int k = 0; k < 3; k++) {
-                        cout << Predicates::orient_3d(tp1, tp2, tp3, vs[k]) << " "
-                             << Predicates::orient_3d(tp1, tp3, tp2, vs[k]) << " "
-                             << Predicates::orient_3d(tp3, tp2, tp1, vs[k]) << endl;
-                    }
-
-
-                    pausee();
-                }
+//                //fortest
+//                if(t_id == 3976 && f_id == test_f_id) {
+//                    mesh.tets[t_id].print();
+//                    cout << oris[0] << " " << oris[1] << " " << oris[2] << " " << oris[3] << endl;
+//                    std::vector<int> tmp;
+//                    set_intersection(mesh.tet_vertices[mesh.tets[t_id][1]].conn_tets,
+//                                     mesh.tet_vertices[mesh.tets[t_id][2]].conn_tets,
+//                                     mesh.tet_vertices[mesh.tets[t_id][3]].conn_tets, tmp);
+//                    vector_print(tmp);
+//                    is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE, true);
+//                    is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp3, tp2, CUT_FACE, true);
+//                    is_tri_tri_cutted_hint(vs[0], vs[2], vs[1], tp1, tp2, tp3, CUT_FACE, true);
+//                    is_tri_tri_cutted_hint(vs[0], vs[2], vs[1], tp1, tp3, tp2, CUT_FACE, true);
+//                    for (int k = 0; k < 3; k++) {
+//                        cout << Predicates::orient_3d(tp1, tp2, tp3, vs[k]) << " "
+//                             << Predicates::orient_3d(tp1, tp3, tp2, vs[k]) << " "
+//                             << Predicates::orient_3d(tp3, tp2, tp1, vs[k]) << endl;
+//                    }
+//                    pausee();
+//                }
+//                //fortest
 
                 if (is_tri_tri_cutted_hint(vs[0], vs[1], vs[2], tp1, tp2, tp3, CUT_FACE) == CUT_FACE) {
                     result = CUT_FACE;
@@ -874,87 +876,112 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
 //            if (is_cut_vs[0] && is_cut_vs[1] && is_cut_vs[2] && is_cut_vs[3])
 //                break;
 
-            if (f_id == test_f_id && mesh.tets[t_id].find(test_v_id) >= 0) {
-                cout << "input_f " << input_faces[f_id].transpose() << endl;
-//                cout << input_vertices[input_faces[f_id][0]].transpose() << endl;
-//                cout << input_vertices[input_faces[f_id][1]].transpose() << endl;
-//                cout << input_vertices[input_faces[f_id][2]].transpose() << endl;
-                cout << "t " << t_id << ": ";
-                mesh.tets[t_id].print();
-                cout << "j " << j << endl;
-                cout << "cnt_on = " << cnt_on << endl;
-                cout << "cnt_pos = " << cnt_pos << endl;
-                cout << "cnt_neg = " << cnt_neg << endl;
-                cout << "result = " << result << endl;
-//                if (cnt_pos > 0 && cnt_neg > 0) {
-                if(t_id == 3976 || t_id == 1016){
-                    cout<<"//////"<<endl;
-                    std::array<Vector3_r, 4> tet_vr;
-                    std::array<Vector3_r, 3> tri_vr;
-                    std::array<Vector3, 4> tet_vf;
-                    std::array<Vector3, 3> tri_vf;
-                    for(int k=0;k<4;k++){
-                        for(int r=0;r<3;r++) {
-                            tet_vr[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
-                            tet_vf[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
-                        }
-                    }
-                    for(int k=0;k<3;k++){
-                        for(int r=0;r<3;r++) {
-                            tri_vr[k][r] = input_vertices[input_faces[f_id][k]][r];
-                            tri_vf[k][r] = input_vertices[input_faces[f_id][k]][r];
-                        }
-                    }
-                    for(int k=0;k<4;k++) {
-                        cout << "tet " << t_id << " face" << k << endl;
-                        cout<<"plane of tet face:"<<endl;
-                        for (int r = 0; r < 3; r++) {
-                            cout << orient_rational(tet_vr[k], tet_vr[(k + 1) % 4], tet_vr[(k + 2) % 4], tri_vr[r])
-                                 << "/ f:";
-                            cout << Predicates::orient_3d(tet_vf[k], tet_vf[(k + 1) % 4], tet_vf[(k + 2) % 4], tri_vf[r])
-                                 << endl;
-                        }
-                        cout<<"plane of tri:"<<endl;
-                        for (int r = 0; r < 3; r++) {
-                            cout << orient_rational(tri_vr[0], tri_vr[1], tri_vr[2], tet_vr[(k + r) % 4]) << "/ f:";
-                            cout << Predicates::orient_3d(tri_vf[0], tri_vf[1], tri_vf[2], tet_vf[(k + r) % 4]) << endl;
-                        }
-                    }
-                    cout<<"//////"<<endl;
-                }
-
-                if (t_id == 3976){
-                    {
-                        Eigen::MatrixXd V(4, 3);
-                        Eigen::MatrixXi F(4, 3);
-                        for (int k = 0; k < 4; k++) {
-                            V.row(k) = mesh.tet_vertices[mesh.tets[t_id][k]].pos;
-                            F.row(k) << (k + 1) % 4, (k + 2) % 4, (k + 3) % 4;
-                        }
-                        igl::writeOFF("test_cut_t_ids1_"+std::to_string(t_id)+".off", V, F);
-                    }
-                }
-                if (t_id == 1016) {
-                    {
-                        Eigen::MatrixXd V(4, 3);
-                        Eigen::MatrixXi F(4, 3);
-                        for (int k = 0; k < 4; k++) {
-                            V.row(k) = mesh.tet_vertices[mesh.tets[t_id][k]].pos;
-                            F.row(k) << (k + 1) % 4, (k + 2) % 4, (k + 3) % 4;
-                        }
-                        igl::writeOFF("test_cut_t_ids1_"+std::to_string(t_id)+".off", V, F);
-                    }
-                    {
-                        Eigen::MatrixXd V(3, 3);
-                        Eigen::MatrixXi F(1, 3);
-                        for (int k = 0; k < 3; k++)
-                            V.row(k) = input_vertices[input_faces[f_id][k]];
-                        F.row(0) << 0, 1, 2;
-                        igl::writeOFF("test_cut_t_ids2_"+std::to_string(t_id)+".off", V, F);
-                    }
-//                    pausee();
-                }
-            }
+//            //fortest
+//            if (f_id == test_f_id && mesh.tets[t_id].find(test_v_id) >= 0) {
+//                cout << "input_f " << input_faces[f_id].transpose() << endl;
+////                cout << input_vertices[input_faces[f_id][0]].transpose() << endl;
+////                cout << input_vertices[input_faces[f_id][1]].transpose() << endl;
+////                cout << input_vertices[input_faces[f_id][2]].transpose() << endl;
+//                cout << "t " << t_id << ": ";
+//                mesh.tets[t_id].print();
+//                cout << "j " << j << endl;
+//                cout << "cnt_on = " << cnt_on << endl;
+//                cout << "cnt_pos = " << cnt_pos << endl;
+//                cout << "cnt_neg = " << cnt_neg << endl;
+//                cout << "result = " << result << endl;
+////                if (cnt_pos > 0 && cnt_neg > 0) {
+//                if(t_id == 3976 || t_id == 1016){
+//                    cout<<"//////"<<endl;
+//                    std::array<Vector3_r, 4> tet_vr;
+//                    std::array<Vector3_r, 3> tri_vr;
+//                    std::array<Vector3, 4> tet_vf;
+//                    std::array<Vector3, 3> tri_vf;
+//                    std::array<int, 4> tet_vids;
+//                    std::array<int, 3> tri_vids;
+//                    for(int k=0;k<4;k++){
+//                        for(int r=0;r<3;r++) {
+//                            tet_vr[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
+//                            tet_vf[k][r] = mesh.tet_vertices[mesh.tets[t_id][k]].pos[r];
+//                        }
+//                        tet_vids[k] = mesh.tets[t_id][k];
+//                    }
+//                    for(int k=0;k<3;k++){
+//                        for(int r=0;r<3;r++) {
+//                            tri_vr[k][r] = input_vertices[input_faces[f_id][k]][r];
+//                            tri_vf[k][r] = input_vertices[input_faces[f_id][k]][r];
+//                        }
+//                        tri_vids[k] = input_faces[f_id][k];
+//                    }
+//                    for(int k=0;k<4;k++) {
+//                        cout << "tet " << t_id << " face" << k << endl;
+//                        cout<<"plane of tet face:"<<endl;
+//                        for (int r = 0; r < 3; r++) {
+////                            cout<<mesh.tets[t_id][k]<<" "<<mesh.tets[t_id][(k + 1) % 4]<<" "<<mesh.tets[t_id][(k + 2) % 4]<<endl;
+////                            cout<<input_faces[f_id][r]<<endl;
+//                            cout<<tet_vids[k]<<" "<<tet_vids[(k + 1) % 4]<<" "<<tet_vids[(k + 2) % 4]<<endl;
+//                            cout<<tri_vids[r]<<endl;
+//                            if(tri_vids[r] == 406 && tet_vids[(k + 1) % 4] == 406){
+//                                auto v = tet_vr[(k + 1) % 4] - tri_vr[r];
+//                                cout<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+//                                if(v[0] != 0)
+//                                    cout<<"v0!=0"<<endl;
+//                                if(v[1] != 0)
+//                                    cout<<"v1!=0"<<endl;
+//                                if(v[2] != 0)
+//                                    cout<<"v2!=0"<<endl;
+//                                pausee();
+//                            }
+//                            cout << orient_rational(tet_vr[k], tet_vr[(k + 1) % 4], tet_vr[(k + 2) % 4], tri_vr[r])
+//                                 << "/ f:";
+//                            cout << Predicates::orient_3d(tet_vf[k], tet_vf[(k + 1) % 4], tet_vf[(k + 2) % 4], tri_vf[r])
+//                                 << endl;
+//                        }
+//                        cout<<"plane of tri:"<<endl;
+//                        for (int r = 0; r < 3; r++) {
+////                            cout<<input_faces[f_id][0]<<" "<<input_faces[f_id][1]<<" "<<input_faces[f_id][2]<<endl;
+////                            cout<<mesh.tets[t_id][(k + r) % 4]<<endl;
+//                            cout<<tri_vids[0]<<" "<<tri_vids[1]<<" "<<tri_vids[2]<<endl;
+//                            cout<<tet_vids[(k + r) % 4]<<endl;
+//                            cout << orient_rational(tri_vr[0], tri_vr[1], tri_vr[2], tet_vr[(k + r) % 4]) << "/ f:";
+//                            cout << Predicates::orient_3d(tri_vf[0], tri_vf[1], tri_vf[2], tet_vf[(k + r) % 4]) << endl;
+//                        }
+//                    }
+//                    cout<<"//////"<<endl;
+//                }
+//
+//                if (t_id == 3976){
+//                    {
+//                        Eigen::MatrixXd V(4, 3);
+//                        Eigen::MatrixXi F(4, 3);
+//                        for (int k = 0; k < 4; k++) {
+//                            V.row(k) = mesh.tet_vertices[mesh.tets[t_id][k]].pos;
+//                            F.row(k) << (k + 1) % 4, (k + 2) % 4, (k + 3) % 4;
+//                        }
+//                        igl::writeOFF("test_cut_t_ids1_"+std::to_string(t_id)+".off", V, F);
+//                    }
+//                }
+//                if (t_id == 1016) {
+//                    {
+//                        Eigen::MatrixXd V(4, 3);
+//                        Eigen::MatrixXi F(4, 3);
+//                        for (int k = 0; k < 4; k++) {
+//                            V.row(k) = mesh.tet_vertices[mesh.tets[t_id][k]].pos;
+//                            F.row(k) << (k + 1) % 4, (k + 2) % 4, (k + 3) % 4;
+//                        }
+//                        igl::writeOFF("test_cut_t_ids1_"+std::to_string(t_id)+".off", V, F);
+//                    }
+//                    {
+//                        Eigen::MatrixXd V(3, 3);
+//                        Eigen::MatrixXi F(1, 3);
+//                        for (int k = 0; k < 3; k++)
+//                            V.row(k) = input_vertices[input_faces[f_id][k]];
+//                        F.row(0) << 0, 1, 2;
+//                        igl::writeOFF("test_cut_t_ids2_"+std::to_string(t_id)+".off", V, F);
+//                    }
+////                    pausee();
+//                }
+//            }
+//            //fortest
         }
         if (is_cutted)
             cut_t_ids.push_back(t_id);
@@ -2624,7 +2651,7 @@ int floatTetWild::orient_rational(const Vector3_r& p1, const Vector3_r& p2, cons
     triwild::Rational res = nv.dot(p-p1);
     if(res == 0)
         return Predicates::ORI_ZERO;
-    if(res > 0)
+    if(res < 0)
         return Predicates::ORI_POSITIVE;
     else
         return Predicates::ORI_NEGATIVE;

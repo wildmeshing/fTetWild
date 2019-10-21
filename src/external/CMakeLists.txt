@@ -24,8 +24,7 @@ set(SOURCES
 	FastWindingNumber.cpp
 
 	Rational.h
-	Multiprecision.hpp
-		)
+)
 
 prepend_current_path(SOURCES)
 float_tetwild_copy_headers(${SOURCES})

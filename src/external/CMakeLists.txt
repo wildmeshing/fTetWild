@@ -23,7 +23,8 @@ set(SOURCES
 	FastWindingNumber.hpp
 	FastWindingNumber.cpp
 
-		Rational.h
+	Rational.h
+	Multiprecision.hpp
 		)
 
 prepend_current_path(SOURCES)

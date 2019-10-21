@@ -17,7 +17,7 @@ namespace floatTetWild {
 
     Scalar get_edge_length(const Mesh& mesh, int v1_id, int v2_id);
     Scalar get_edge_length_2(const Mesh& mesh, int v1_id, int v2_id);
-    
+
     Scalar get_quality(const Mesh& mesh, const MeshTet& t);
     Scalar get_quality(const Mesh& mesh, int t_id);
     Scalar get_quality(const MeshVertex& v0, const MeshVertex& v1, const MeshVertex& v2, const MeshVertex& v3);
@@ -134,6 +134,7 @@ namespace floatTetWild {
     };
 
     Scalar AMIPS_energy_aux(const std::array<Scalar, 12>& T);
+    Scalar AMIPS_energy_mp(const std::array<Scalar, 12>& T);
     Scalar AMIPS_energy(const std::array<Scalar, 12>& T);
     void AMIPS_jacobian(const std::array<Scalar, 12>& T, Vector3& result_0);
     void AMIPS_hessian(const std::array<Scalar, 12>& T, Matrix3& result_0);

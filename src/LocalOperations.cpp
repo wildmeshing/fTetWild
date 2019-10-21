@@ -955,6 +955,70 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     }
 }
 
+
+#include <floattetwild/Multiprecision.hpp>
+Scalar floatTetWild::AMIPS_energy_mp(const std::array<Scalar, 12>& T) {
+    Multiprecision helper_0[12];
+    helper_0[0] = T[0];
+    helper_0[1] = T[1];
+    helper_0[2] = T[2];
+    helper_0[3] = T[3];
+    helper_0[4] = T[4];
+    helper_0[5] = T[5];
+    helper_0[6] = T[6];
+    helper_0[7] = T[7];
+    helper_0[8] = T[8];
+    helper_0[9] = T[9];
+    helper_0[10] = T[10];
+    helper_0[11] = T[11];
+    Multiprecision helper_1 = helper_0[2];
+    Multiprecision helper_2 = helper_0[11];
+    Multiprecision helper_3 = helper_0[0];
+    Multiprecision helper_4 = helper_0[3];
+    Multiprecision helper_5 = helper_0[9];
+    Multiprecision helper_6 = 0.577350269189626 * helper_3 - 1.15470053837925 * helper_4 + 0.577350269189626 * helper_5;
+    Multiprecision helper_7 = helper_0[1];
+    Multiprecision helper_8 = helper_0[4];
+    Multiprecision helper_9 = helper_0[7];
+    Multiprecision helper_10 = helper_0[10];
+    Multiprecision helper_11 = 0.408248290463863 * helper_10 + 0.408248290463863 * helper_7 + 0.408248290463863 * helper_8 -
+                       1.22474487139159 * helper_9;
+    Multiprecision helper_12 = 0.577350269189626 * helper_10 + 0.577350269189626 * helper_7 - 1.15470053837925 * helper_8;
+    Multiprecision helper_13 = helper_0[6];
+    Multiprecision helper_14 = -1.22474487139159 * helper_13 + 0.408248290463863 * helper_3 + 0.408248290463863 * helper_4 +
+                       0.408248290463863 * helper_5;
+    Multiprecision helper_15 = helper_0[5];
+    Multiprecision helper_16 = helper_0[8];
+    Multiprecision helper_17 = 0.408248290463863 * helper_1 + 0.408248290463863 * helper_15 - 1.22474487139159 * helper_16 +
+                       0.408248290463863 * helper_2;
+    Multiprecision helper_18 = 0.577350269189626 * helper_1 - 1.15470053837925 * helper_15 + 0.577350269189626 * helper_2;
+    Multiprecision helper_19 = 0.5 * helper_13 + 0.5 * helper_4;
+    Multiprecision helper_20 = 0.5 * helper_8 + 0.5 * helper_9;
+    Multiprecision helper_21 = 0.5 * helper_15 + 0.5 * helper_16;
+    Multiprecision helper_22 = (helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
+                       (helper_7-helper_10 ) * (helper_17 * helper_6-helper_14 * helper_18) +
+                       (helper_3 - helper_5) * (helper_12 * helper_17-helper_11 * helper_18);
+    Multiprecision res =
+                   helper_10 * (-1.5 * helper_10 + helper_20 + 0.5 * helper_7) -
+                   (helper_1 * (-1.5 * helper_1 + 0.5 * helper_2 + helper_21) +
+                   helper_13 * (-1.5 * helper_13 + 0.5 * helper_3 + 0.5 * helper_4 + 0.5 * helper_5) +
+                   helper_15 * (0.5 * helper_1 - 1.5 * helper_15 + 0.5 * helper_16 + 0.5 * helper_2) +
+                   helper_16 * (0.5 * helper_1 + 0.5 * helper_15 - 1.5 * helper_16 + 0.5 * helper_2) +
+                   helper_2 * (0.5 * helper_1 - 1.5 * helper_2 + helper_21) +
+                   helper_3 * (helper_19 - 1.5 * helper_3 + 0.5 * helper_5) +
+                   helper_4 * (0.5 * helper_13 + 0.5 * helper_3 - 1.5 * helper_4 + 0.5 * helper_5) +
+                   helper_5 * (helper_19 + 0.5 * helper_3 - 1.5 * helper_5) +
+                   helper_7 * (0.5 * helper_10 + helper_20 - 1.5 * helper_7) +
+                   helper_8 * (0.5 * helper_10 + 0.5 * helper_7 - 1.5 * helper_8 + 0.5 * helper_9) +
+                   helper_9 * (0.5 * helper_10 + 0.5 * helper_7 + 0.5 * helper_8 - 1.5 * helper_9))
+            / cbrt(helper_22*helper_22);
+//                 * pow(pow((helper_1 - helper_2) * (helper_11 * helper_6 - helper_12 * helper_14) -
+//                         (-helper_10 + helper_7) * (-helper_14 * helper_18 + helper_17 * helper_6) +
+//                         (helper_3 - helper_5) * (-helper_11 * helper_18 + helper_12 * helper_17), 2),
+//                     -0.333333333333333);
+    return res.to_double();
+}
+
 Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {
     Scalar helper_0[12];
     helper_0[0] = T[0];

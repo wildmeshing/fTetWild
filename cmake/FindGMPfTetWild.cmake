@@ -9,11 +9,24 @@ if (GMP_INCLUDE_DIRS AND GMP_LIBRARIES)
 endif (GMP_INCLUDE_DIRS AND GMP_LIBRARIES)
 
 
+
+#if(WIN32)
+#	if(CYGWIN)
+#		triwild_download_gmp_cygwin()
+	#elseif(MINGW)
+#		triwild_download_gmp_mingw()
+	#else()
+#		triwild_download_gmp_vc()
+	#endif()
+
+	#SET(GMP_WINDOWS_PATH ${THIRD_PARTY_DIR}/gmp)
+#endif()
+
+
 find_path(GMP_INCLUDE_DIRS NAMES gmp.h PATHS $ENV{GMP_INC} ${GMP_WINDOWS_PATH})
 find_library(GMP_LIBRARIES NAMES gmp libgmp PATHS $ENV{GMP_LIB} ${GMP_WINDOWS_PATH})
 find_library(GMPXX_LIBRARIES NAMES gmpxx libgmpxx PATHS $ENV{GMP_LIB} ${GMP_WINDOWS_PATH})
 #MESSAGE(STATUS "GMP libs: " ${GMP_LIBRARIES} " " ${GMPXX_LIBRARIES} )
-
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(GMP DEFAULT_MSG GMP_INCLUDE_DIRS GMP_LIBRARIES)

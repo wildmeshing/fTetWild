@@ -465,7 +465,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     time_push_new_tets += timer.getElapsedTime();
 
     timer.start();
-//    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
+    simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
     time_simplify_subdivision_result += timer.getElapsedTime();
 
     return true;

@@ -869,10 +869,14 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
 //    return res;
 
     if (res > 1e8) {
+        if(is_inverted(Vector3(T[0], T[1], T[2]), Vector3(T[3], T[4], T[5]), Vector3(T[6], T[7], T[8]),
+                    Vector3(T[9], T[10], T[11])))
+            return std::numeric_limits<double>::infinity();
+
         std::array<triwild::Rational, 12> r_T;
         for (int j = 0; j < 12; j++)
             r_T[j] = T[j];
-        static const triwild::Rational twothird = triwild::Rational(2) / triwild::Rational(3);
+        const triwild::Rational twothird = triwild::Rational(2) / triwild::Rational(3);
         auto res_r = triwild::Rational(27) / 16 *
                      pow(((-r_T[1 + 2] + r_T[1 + 5]) * r_T[1 + 1] + r_T[1 + 2] * r_T[1 + 7] +
                           (r_T[1 + -1] - r_T[1 + 5]) * r_T[1 + 4] - r_T[1 + -1] * r_T[1 + 7]) * r_T[1 + 9] +

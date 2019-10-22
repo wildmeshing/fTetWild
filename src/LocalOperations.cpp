@@ -853,6 +853,7 @@ void floatTetWild::set_intersection_sorted(const std::vector<int>& s1, const std
 }
 
 void floatTetWild::pausee(std::string msg) {
+//    return;
     if (!msg.empty())
         cout << msg << endl;
     cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
@@ -864,109 +865,41 @@ void floatTetWild::pausee(std::string msg) {
 
 #include <floattetwild/Rational.h>
 Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
-//    static const std::vector<std::array<int, 4>> combs = {{{0, 1, 3, 2}},
-//                                                          {{0, 2, 1, 3}},
-//                                                          {{0, 2, 3, 1}},
-//                                                          {{0, 3, 1, 2}},
-//                                                          {{0, 3, 2, 1}},
-//                                                          {{1, 0, 2, 3}},
-//                                                          {{1, 0, 3, 2}},
-//                                                          {{1, 2, 0, 3}},
-//                                                          {{1, 2, 3, 0}},
-//                                                          {{1, 3, 0, 2}},
-//                                                          {{1, 3, 2, 0}},
-//                                                          {{2, 0, 1, 3}},
-//                                                          {{2, 0, 3, 1}},
-//                                                          {{2, 1, 0, 3}},
-//                                                          {{2, 1, 3, 0}},
-//                                                          {{2, 3, 0, 1}},
-//                                                          {{2, 3, 1, 0}},
-//                                                          {{3, 0, 1, 2}},
-//                                                          {{3, 0, 2, 1}},
-//                                                          {{3, 1, 0, 2}},
-//                                                          {{3, 1, 2, 0}},
-//                                                          {{3, 2, 0, 1}},
-//                                                          {{3, 2, 1, 0}}};
-
     Scalar res = AMIPS_energy_aux(T);
+//    return res;
+
     if (res > 1e8) {
         std::array<triwild::Rational, 12> r_T;
-        for(int j = 0;j < 12;j++)
+        for (int j = 0; j < 12; j++)
             r_T[j] = T[j];
-        static const triwild::Rational twothird = triwild::Rational(2)/triwild::Rational(3);
-        auto res_r = triwild::Rational(27) / 16 * pow(((-r_T[1+2] + r_T[1+5]) * r_T[1+1] + r_T[1+2] * r_T[1+7] + (r_T[1+-1] - r_T[1+5]) * r_T[1+4] - r_T[1+-1] * r_T[1+7]) * r_T[1+9] + ((r_T[1+2] - r_T[1+5]) * r_T[1+0] - r_T[1+2] * r_T[1+6] + (-r_T[1+-1] + r_T[1+5]) * r_T[1+3] + r_T[1+-1] * r_T[1+6]) * r_T[1+10] + (-r_T[1+2] * r_T[1+7] + (-r_T[1+8] + r_T[1+5]) * r_T[1+4] + r_T[1+8] * r_T[1+7]) * r_T[1+0] + (r_T[1+2] * r_T[1+6] + (r_T[1+8] - r_T[1+5]) * r_T[1+3] - r_T[1+8] * r_T[1+6]) * r_T[1+1] + (r_T[1+3] * r_T[1+7] - r_T[1+4] * r_T[1+6]) * (r_T[1+-1] - r_T[1+8]), -2) * pow(r_T[1+9] * r_T[1+9] + (-twothird * r_T[1+0] - twothird * r_T[1+3] - twothird * r_T[1+6]) * r_T[1+9] + r_T[1+10] * r_T[1+10] + (-twothird * r_T[1+1] - twothird * r_T[1+4] - twothird * r_T[1+7]) * r_T[1+10] + r_T[1+0] * r_T[1+0] + (-twothird * r_T[1+3] - twothird * r_T[1+6]) * r_T[1+0] + r_T[1+1] * r_T[1+1] + (-twothird * r_T[1+4] - twothird * r_T[1+7]) * r_T[1+1] + r_T[1+2] * r_T[1+2] + (-twothird * r_T[1+-1] - twothird * r_T[1+8] - twothird * r_T[1+5]) * r_T[1+2] + r_T[1+3] * r_T[1+3] - twothird * r_T[1+3] * r_T[1+6] + r_T[1+4] * r_T[1+4] - twothird * r_T[1+4] * r_T[1+7] + r_T[1+5] * r_T[1+5] + (-twothird * r_T[1+-1] - twothird * r_T[1+8]) * r_T[1+5] - twothird * r_T[1+-1] * r_T[1+8] + r_T[1+-1] * r_T[1+-1] + r_T[1+8] * r_T[1+8] + r_T[1+6] * r_T[1+6] + r_T[1+7] * r_T[1+7], 3);
+        static const triwild::Rational twothird = triwild::Rational(2) / triwild::Rational(3);
+        auto res_r = triwild::Rational(27) / 16 *
+                     pow(((-r_T[1 + 2] + r_T[1 + 5]) * r_T[1 + 1] + r_T[1 + 2] * r_T[1 + 7] +
+                          (r_T[1 + -1] - r_T[1 + 5]) * r_T[1 + 4] - r_T[1 + -1] * r_T[1 + 7]) * r_T[1 + 9] +
+                         ((r_T[1 + 2] - r_T[1 + 5]) * r_T[1 + 0] - r_T[1 + 2] * r_T[1 + 6] +
+                          (-r_T[1 + -1] + r_T[1 + 5]) * r_T[1 + 3] + r_T[1 + -1] * r_T[1 + 6]) * r_T[1 + 10] +
+                         (-r_T[1 + 2] * r_T[1 + 7] + (-r_T[1 + 8] + r_T[1 + 5]) * r_T[1 + 4] +
+                          r_T[1 + 8] * r_T[1 + 7]) * r_T[1 + 0] +
+                         (r_T[1 + 2] * r_T[1 + 6] + (r_T[1 + 8] - r_T[1 + 5]) * r_T[1 + 3] - r_T[1 + 8] * r_T[1 + 6]) *
+                         r_T[1 + 1] + (r_T[1 + 3] * r_T[1 + 7] - r_T[1 + 4] * r_T[1 + 6]) * (r_T[1 + -1] - r_T[1 + 8]),
+                         -2) * pow(r_T[1 + 9] * r_T[1 + 9] +
+                                   (-twothird * r_T[1 + 0] - twothird * r_T[1 + 3] - twothird * r_T[1 + 6]) *
+                                   r_T[1 + 9] + r_T[1 + 10] * r_T[1 + 10] +
+                                   (-twothird * r_T[1 + 1] - twothird * r_T[1 + 4] - twothird * r_T[1 + 7]) *
+                                   r_T[1 + 10] + r_T[1 + 0] * r_T[1 + 0] +
+                                   (-twothird * r_T[1 + 3] - twothird * r_T[1 + 6]) * r_T[1 + 0] +
+                                   r_T[1 + 1] * r_T[1 + 1] +
+                                   (-twothird * r_T[1 + 4] - twothird * r_T[1 + 7]) * r_T[1 + 1] +
+                                   r_T[1 + 2] * r_T[1 + 2] +
+                                   (-twothird * r_T[1 + -1] - twothird * r_T[1 + 8] - twothird * r_T[1 + 5]) *
+                                   r_T[1 + 2] + r_T[1 + 3] * r_T[1 + 3] - twothird * r_T[1 + 3] * r_T[1 + 6] +
+                                   r_T[1 + 4] * r_T[1 + 4] - twothird * r_T[1 + 4] * r_T[1 + 7] +
+                                   r_T[1 + 5] * r_T[1 + 5] +
+                                   (-twothird * r_T[1 + -1] - twothird * r_T[1 + 8]) * r_T[1 + 5] -
+                                   twothird * r_T[1 + -1] * r_T[1 + 8] + r_T[1 + -1] * r_T[1 + -1] +
+                                   r_T[1 + 8] * r_T[1 + 8] + r_T[1 + 6] * r_T[1 + 6] + r_T[1 + 7] * r_T[1 + 7], 3);
         return std::cbrt(res_r.to_double());
-
-
-//        Scalar avg;
-//        int cnt;
-//        if (std::isinf(res)) {
-//            avg = 0;
-//            cnt = 0;
-//        } else {
-//            avg = res;
-//            cnt = 1;
-//        }
-////        cout << res << endl;
-//        for (int i = 0; i < combs.size(); i++) {
-//            std::array<Scalar, 12> tmp_T;
-//            for (int j = 0; j < 4; j++) {
-//                for (int k = 0; k < 3; k++)
-//                    tmp_T[j * 3 + k] = T[combs[i][j] * 3 + k];
-//            }
-//            Scalar res1 = AMIPS_energy_aux(tmp_T);
-//            if (std::isinf(res1))
-//                continue;
-//            cnt++;
-//            avg += res1;
-//            cout<<res1<<"/";
-//            cout<<0.27e2 / 0.16e2 * pow(((-tmp_T[1+2] + tmp_T[1+5]) * tmp_T[1+1] + tmp_T[1+2] * tmp_T[1+7] + (tmp_T[1+-1] - tmp_T[1+5]) * tmp_T[1+4] - tmp_T[1+-1] * tmp_T[1+7]) * tmp_T[1+9] + ((tmp_T[1+2] - tmp_T[1+5]) * tmp_T[1+0] - tmp_T[1+2] * tmp_T[1+6] + (-tmp_T[1+-1] + tmp_T[1+5]) * tmp_T[1+3] + tmp_T[1+-1] * tmp_T[1+6]) * tmp_T[1+10] + (-tmp_T[1+2] * tmp_T[1+7] + (-tmp_T[1+8] + tmp_T[1+5]) * tmp_T[1+4] + tmp_T[1+8] * tmp_T[1+7]) * tmp_T[1+0] + (tmp_T[1+2] * tmp_T[1+6] + (tmp_T[1+8] - tmp_T[1+5]) * tmp_T[1+3] - tmp_T[1+8] * tmp_T[1+6]) * tmp_T[1+1] + (tmp_T[1+3] * tmp_T[1+7] - tmp_T[1+4] * tmp_T[1+6]) * (tmp_T[1+-1] - tmp_T[1+8]), -0.2e1) * pow(tmp_T[1+9] * tmp_T[1+9] + (-0.2e1 / 0.3e1 * tmp_T[1+0] - 0.2e1 / 0.3e1 * tmp_T[1+3] - 0.2e1 / 0.3e1 * tmp_T[1+6]) * tmp_T[1+9] + tmp_T[1+10] * tmp_T[1+10] + (-0.2e1 / 0.3e1 * tmp_T[1+1] - 0.2e1 / 0.3e1 * tmp_T[1+4] - 0.2e1 / 0.3e1 * tmp_T[1+7]) * tmp_T[1+10] + tmp_T[1+0] * tmp_T[1+0] + (-0.2e1 / 0.3e1 * tmp_T[1+3] - 0.2e1 / 0.3e1 * tmp_T[1+6]) * tmp_T[1+0] + tmp_T[1+1] * tmp_T[1+1] + (-0.2e1 / 0.3e1 * tmp_T[1+4] - 0.2e1 / 0.3e1 * tmp_T[1+7]) * tmp_T[1+1] + tmp_T[1+2] * tmp_T[1+2] + (-0.2e1 / 0.3e1 * tmp_T[1+-1] - 0.2e1 / 0.3e1 * tmp_T[1+8] - 0.2e1 / 0.3e1 * tmp_T[1+5]) * tmp_T[1+2] + tmp_T[1+3] * tmp_T[1+3] - 0.2e1 / 0.3e1 * tmp_T[1+3] * tmp_T[1+6] + tmp_T[1+4] * tmp_T[1+4] - 0.2e1 / 0.3e1 * tmp_T[1+4] * tmp_T[1+7] + tmp_T[1+5] * tmp_T[1+5] + (-0.2e1 / 0.3e1 * tmp_T[1+-1] - 0.2e1 / 0.3e1 * tmp_T[1+8]) * tmp_T[1+5] - 0.2e1 / 0.3e1 * tmp_T[1+-1] * tmp_T[1+8] + tmp_T[1+-1] * tmp_T[1+-1] + tmp_T[1+8] * tmp_T[1+8] + tmp_T[1+6] * tmp_T[1+6] + tmp_T[1+7] * tmp_T[1+7], 0.3e1);
-//            cout<<"/";
-//            std::array<triwild::Rational, 12> r_T;
-//            for(int j=0;j<12;j++){
-//                r_T[j] = tmp_T[j];
-//            }
-//            const triwild::Rational twothird = triwild::Rational(2)/triwild::Rational(3);
-//            auto res_R = triwild::Rational(27) / 16 * pow(((-r_T[1+2] + r_T[1+5]) * r_T[1+1] + r_T[1+2] * r_T[1+7] + (r_T[1+-1] - r_T[1+5]) * r_T[1+4] - r_T[1+-1] * r_T[1+7]) * r_T[1+9] + ((r_T[1+2] - r_T[1+5]) * r_T[1+0] - r_T[1+2] * r_T[1+6] + (-r_T[1+-1] + r_T[1+5]) * r_T[1+3] + r_T[1+-1] * r_T[1+6]) * r_T[1+10] + (-r_T[1+2] * r_T[1+7] + (-r_T[1+8] + r_T[1+5]) * r_T[1+4] + r_T[1+8] * r_T[1+7]) * r_T[1+0] + (r_T[1+2] * r_T[1+6] + (r_T[1+8] - r_T[1+5]) * r_T[1+3] - r_T[1+8] * r_T[1+6]) * r_T[1+1] + (r_T[1+3] * r_T[1+7] - r_T[1+4] * r_T[1+6]) * (r_T[1+-1] - r_T[1+8]), -2) * pow(r_T[1+9] * r_T[1+9] + (-twothird * r_T[1+0] - twothird * r_T[1+3] - twothird * r_T[1+6]) * r_T[1+9] + r_T[1+10] * r_T[1+10] + (-twothird * r_T[1+1] - twothird * r_T[1+4] - twothird * r_T[1+7]) * r_T[1+10] + r_T[1+0] * r_T[1+0] + (-twothird * r_T[1+3] - twothird * r_T[1+6]) * r_T[1+0] + r_T[1+1] * r_T[1+1] + (-twothird * r_T[1+4] - twothird * r_T[1+7]) * r_T[1+1] + r_T[1+2] * r_T[1+2] + (-twothird * r_T[1+-1] - twothird * r_T[1+8] - twothird * r_T[1+5]) * r_T[1+2] + r_T[1+3] * r_T[1+3] - twothird * r_T[1+3] * r_T[1+6] + r_T[1+4] * r_T[1+4] - twothird * r_T[1+4] * r_T[1+7] + r_T[1+5] * r_T[1+5] + (-twothird * r_T[1+-1] - twothird * r_T[1+8]) * r_T[1+5] - twothird * r_T[1+-1] * r_T[1+8] + r_T[1+-1] * r_T[1+-1] + r_T[1+8] * r_T[1+8] + r_T[1+6] * r_T[1+6] + r_T[1+7] * r_T[1+7], 3);
-//            cout<<std::cbrt(res_R.to_double())<<endl;
-//            //            cout << res1 << " / ";
-////            //
-////            Eigen::MatrixXd Tet(4, 3);
-////            for (int i = 0; i < 4; i++) {
-////                for (int j = 0; j < 3; j++)
-////                    Tet(i, j) = tmp_T[i * 3 + j];
-////            }
-////            Eigen::Matrix3d J = G * Tet;
-////            Eigen::JacobiSVD<Eigen::MatrixXd> svd(J, Eigen::ComputeThinU | Eigen::ComputeThinV);
-////            Eigen::Vector3d S = svd.singularValues();
-////            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
-////                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
-////            cout << res2 << endl;
-//        }
-//        avg /= cnt;
-//        cout << "avg = " << avg << endl;
-//        pausee();
-//        return avg;
     } else {
-//        if(res>1e8) {
-//            cout << res << " / ";
-//            Eigen::MatrixXd Tet(4, 3);
-//            for (int i = 0; i < 4; i++) {
-//                for (int j = 0; j < 3; j++)
-//                    Tet(i, j) = T[i * 3 + j];
-//            }
-//            Eigen::Matrix3d J = G * Tet;
-//            Eigen::Matrix3d U, V;
-//            Eigen::Vector3d S;
-//            igl::svd3x3(J, U, S, V);
-//            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
-//                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
-//            cout << res2 << endl;
-//            pausee();
-//        }
-//        cout<<res<<endl;
-//        cout<<AMIPS_energy_mp(T)<<endl;
-//        pausee();
         return res;
     }
 }

@@ -284,24 +284,8 @@ bool floatTetWild::find_new_pos(Mesh& mesh, const int v_id, Vector3& x) {
                 T[2] = x_next(2);
             }
 
-            //check energy
-            Scalar f_next = 0;
-            for (auto &T:Ts) {
-                f_next += AMIPS_energy(T);
-            }
-//            cout<<i<<" "<<f_next<<endl;
-            if (f_next >= f) {
-                a /= 2;
-                continue;
-            }
             //check inversion
             bool is_valid = true;
-//            for (auto &T:Ts) {
-//                if (is_inverted(x_next, Vector3(T[3], T[4], T[5]), Vector3(T[6], T[7], T[8]), Vector3(T[9], T[10], T[11]))) {
-//                    is_valid = false;
-//                    break;
-//                }
-//            }
             int ii=0;
             for (int t_id:tet_vertices[v_id].conn_tets) {
                 int j = js[ii++];
@@ -311,6 +295,17 @@ bool floatTetWild::find_new_pos(Mesh& mesh, const int v_id, Vector3& x) {
                 }
             }
             if (!is_valid) {
+                a /= 2;
+                continue;
+            }
+
+            //check energy
+            Scalar f_next = 0;
+            for (auto &T:Ts) {
+                f_next += AMIPS_energy(T);
+            }
+//            cout<<i<<" "<<f_next<<endl;
+            if (f_next >= f) {
                 a /= 2;
                 continue;
             }

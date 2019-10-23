@@ -853,6 +853,7 @@ void floatTetWild::set_intersection_sorted(const std::vector<int>& s1, const std
 }
 
 void floatTetWild::pausee(std::string msg) {
+//    return;
     if (!msg.empty())
         cout << msg << endl;
     cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
@@ -862,95 +863,47 @@ void floatTetWild::pausee(std::string msg) {
         exit(0);
 }
 
+#include <floattetwild/Rational.h>
 Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
-    static const std::vector<std::array<int, 4>> combs = {{{0, 1, 3, 2}},
-                                                          {{0, 2, 1, 3}},
-                                                          {{0, 2, 3, 1}},
-                                                          {{0, 3, 1, 2}},
-                                                          {{0, 3, 2, 1}},
-                                                          {{1, 0, 2, 3}},
-                                                          {{1, 0, 3, 2}},
-                                                          {{1, 2, 0, 3}},
-                                                          {{1, 2, 3, 0}},
-                                                          {{1, 3, 0, 2}},
-                                                          {{1, 3, 2, 0}},
-                                                          {{2, 0, 1, 3}},
-                                                          {{2, 0, 3, 1}},
-                                                          {{2, 1, 0, 3}},
-                                                          {{2, 1, 3, 0}},
-                                                          {{2, 3, 0, 1}},
-                                                          {{2, 3, 1, 0}},
-                                                          {{3, 0, 1, 2}},
-                                                          {{3, 0, 2, 1}},
-                                                          {{3, 1, 0, 2}},
-                                                          {{3, 1, 2, 0}},
-                                                          {{3, 2, 0, 1}},
-                                                          {{3, 2, 1, 0}}};
-
-//    static Eigen::MatrixXd G(3, 4);
-//    G << -1, 0, 0, 1,
-//            -0.5773502691896258, 1.154700538379252, 0, -0.5773502691896258,
-//            -0.4082482904638631, -0.4082482904638632, 1.224744871391589, -0.4082482904638631;
-
     Scalar res = AMIPS_energy_aux(T);
+//    return res;
+
     if (res > 1e8) {
-        Scalar avg;
-        int cnt;
-        if (std::isinf(res)) {
-            avg = 0;
-            cnt = 0;
-        } else {
-            avg = res;
-            cnt = 1;
-        }
-//        cout << res << endl;
-        for (int i = 0; i < combs.size(); i++) {
-            std::array<Scalar, 12> tmp_T;
-            for (int j = 0; j < 4; j++) {
-                for (int k = 0; k < 3; k++)
-                    tmp_T[j * 3 + k] = T[combs[i][j] * 3 + k];
-            }
-            Scalar res1 = AMIPS_energy_aux(tmp_T);
-            if (std::isinf(res1))
-                continue;
-            cnt++;
-            avg += res1;
-//            cout<<res1<<endl;
-//            cout << res1 << " / ";
-//            //
-//            Eigen::MatrixXd Tet(4, 3);
-//            for (int i = 0; i < 4; i++) {
-//                for (int j = 0; j < 3; j++)
-//                    Tet(i, j) = tmp_T[i * 3 + j];
-//            }
-//            Eigen::Matrix3d J = G * Tet;
-//            Eigen::JacobiSVD<Eigen::MatrixXd> svd(J, Eigen::ComputeThinU | Eigen::ComputeThinV);
-//            Eigen::Vector3d S = svd.singularValues();
-//            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
-//                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
-//            cout << res2 << endl;
-        }
-        avg /= cnt;
-//        cout << "avg = " << avg << endl;
-//        pausee();
-        return avg;
+        if(is_inverted(Vector3(T[0], T[1], T[2]), Vector3(T[3], T[4], T[5]), Vector3(T[6], T[7], T[8]),
+                    Vector3(T[9], T[10], T[11])))
+            return std::numeric_limits<double>::infinity();
+
+        std::array<triwild::Rational, 12> r_T;
+        for (int j = 0; j < 12; j++)
+            r_T[j] = T[j];
+        const triwild::Rational twothird = triwild::Rational(2) / triwild::Rational(3);
+        auto res_r = triwild::Rational(27) / 16 *
+                     pow(((-r_T[1 + 2] + r_T[1 + 5]) * r_T[1 + 1] + r_T[1 + 2] * r_T[1 + 7] +
+                          (r_T[1 + -1] - r_T[1 + 5]) * r_T[1 + 4] - r_T[1 + -1] * r_T[1 + 7]) * r_T[1 + 9] +
+                         ((r_T[1 + 2] - r_T[1 + 5]) * r_T[1 + 0] - r_T[1 + 2] * r_T[1 + 6] +
+                          (-r_T[1 + -1] + r_T[1 + 5]) * r_T[1 + 3] + r_T[1 + -1] * r_T[1 + 6]) * r_T[1 + 10] +
+                         (-r_T[1 + 2] * r_T[1 + 7] + (-r_T[1 + 8] + r_T[1 + 5]) * r_T[1 + 4] +
+                          r_T[1 + 8] * r_T[1 + 7]) * r_T[1 + 0] +
+                         (r_T[1 + 2] * r_T[1 + 6] + (r_T[1 + 8] - r_T[1 + 5]) * r_T[1 + 3] - r_T[1 + 8] * r_T[1 + 6]) *
+                         r_T[1 + 1] + (r_T[1 + 3] * r_T[1 + 7] - r_T[1 + 4] * r_T[1 + 6]) * (r_T[1 + -1] - r_T[1 + 8]),
+                         -2) * pow(r_T[1 + 9] * r_T[1 + 9] +
+                                   (-twothird * r_T[1 + 0] - twothird * r_T[1 + 3] - twothird * r_T[1 + 6]) *
+                                   r_T[1 + 9] + r_T[1 + 10] * r_T[1 + 10] +
+                                   (-twothird * r_T[1 + 1] - twothird * r_T[1 + 4] - twothird * r_T[1 + 7]) *
+                                   r_T[1 + 10] + r_T[1 + 0] * r_T[1 + 0] +
+                                   (-twothird * r_T[1 + 3] - twothird * r_T[1 + 6]) * r_T[1 + 0] +
+                                   r_T[1 + 1] * r_T[1 + 1] +
+                                   (-twothird * r_T[1 + 4] - twothird * r_T[1 + 7]) * r_T[1 + 1] +
+                                   r_T[1 + 2] * r_T[1 + 2] +
+                                   (-twothird * r_T[1 + -1] - twothird * r_T[1 + 8] - twothird * r_T[1 + 5]) *
+                                   r_T[1 + 2] + r_T[1 + 3] * r_T[1 + 3] - twothird * r_T[1 + 3] * r_T[1 + 6] +
+                                   r_T[1 + 4] * r_T[1 + 4] - twothird * r_T[1 + 4] * r_T[1 + 7] +
+                                   r_T[1 + 5] * r_T[1 + 5] +
+                                   (-twothird * r_T[1 + -1] - twothird * r_T[1 + 8]) * r_T[1 + 5] -
+                                   twothird * r_T[1 + -1] * r_T[1 + 8] + r_T[1 + -1] * r_T[1 + -1] +
+                                   r_T[1 + 8] * r_T[1 + 8] + r_T[1 + 6] * r_T[1 + 6] + r_T[1 + 7] * r_T[1 + 7], 3);
+        return std::cbrt(res_r.to_double());
     } else {
-//        if(res>1e8) {
-//            cout << res << " / ";
-//            Eigen::MatrixXd Tet(4, 3);
-//            for (int i = 0; i < 4; i++) {
-//                for (int j = 0; j < 3; j++)
-//                    Tet(i, j) = T[i * 3 + j];
-//            }
-//            Eigen::Matrix3d J = G * Tet;
-//            Eigen::Matrix3d U, V;
-//            Eigen::Vector3d S;
-//            igl::svd3x3(J, U, S, V);
-//            double res2 = (S[0] * S[0] + S[1] * S[1] + S[2] * S[2])
-//                          / std::cbrt(S[0] * S[1] * S[2] * S[0] * S[1] * S[2]);
-//            cout << res2 << endl;
-//            pausee();
-//        }
         return res;
     }
 }

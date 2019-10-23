@@ -81,6 +81,13 @@ namespace triwild {
 //            mpq_set(value, r.value);
 //        }
 
+
+        friend Rational operator-(const Rational& x) {
+            Rational r_out;
+            mpq_neg(r_out.value, x.value);
+            return r_out;
+        }
+
         friend Rational operator+(const Rational& x, const Rational& y) {
             Rational r_out;
             mpq_add(r_out.value, x.value, y.value);
@@ -102,6 +109,16 @@ namespace triwild {
         friend Rational operator/(const Rational& x, const Rational& y) {
             Rational r_out;
             mpq_div(r_out.value, x.value, y.value);
+            return r_out;
+        }
+
+        friend Rational pow(const Rational& x, int p) {
+            Rational r_out = x;
+            for (int i = 1; i < std::abs(p); i++) {
+                r_out = r_out * x;
+            }
+            if (p < 0)
+                return 1 / r_out;
             return r_out;
         }
 

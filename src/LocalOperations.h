@@ -17,7 +17,7 @@ namespace floatTetWild {
 
     Scalar get_edge_length(const Mesh& mesh, int v1_id, int v2_id);
     Scalar get_edge_length_2(const Mesh& mesh, int v1_id, int v2_id);
-    
+
     Scalar get_quality(const Mesh& mesh, const MeshTet& t);
     Scalar get_quality(const Mesh& mesh, int t_id);
     Scalar get_quality(const MeshVertex& v0, const MeshVertex& v1, const MeshVertex& v2, const MeshVertex& v3);

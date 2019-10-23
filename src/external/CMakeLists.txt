@@ -23,8 +23,8 @@ set(SOURCES
 	FastWindingNumber.hpp
 	FastWindingNumber.cpp
 
-		Rational.h
-		)
+	Rational.h
+)
 
 prepend_current_path(SOURCES)
 float_tetwild_copy_headers(${SOURCES})

@@ -128,9 +128,10 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
     ////pre-processing
     mesh.is_limit_length = false;
-    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 1}}));
-    cleanup_empty_slots(mesh);
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 0}}));
     mesh.is_limit_length = true;
+    cleanup_empty_slots(mesh);
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 0, 0, 0, 1}}));
 
     const int M = 5;
     const int N = 5;

@@ -22,14 +22,14 @@ double time_get_intersecting_edges_and_points4 = 0;
 igl::Timer timer;
 
 void floatTetWild::print_times1(){
-//    logger().info("\t\t\t- time_cut_mesh11 = {}s", time_cut_mesh11);
-//    logger().info("\t\t\t- time_cut_mesh12 = {}s", time_cut_mesh12);
-//    logger().info("\t\t\t- time_cut_mesh13 = {}s", time_cut_mesh13);
-//    logger().info("\t\t\t- time_cut_mesh14 = {}s", time_cut_mesh14);
-    logger().info("\t\t- time_get_intersecting_edges_and_points1 = {}s", time_get_intersecting_edges_and_points1);
-    logger().info("\t\t- time_get_intersecting_edges_and_points2 = {}s", time_get_intersecting_edges_and_points2);
-    logger().info("\t\t- time_get_intersecting_edges_and_points3 = {}s", time_get_intersecting_edges_and_points3);
-    logger().info("\t\t- time_get_intersecting_edges_and_points4 = {}s", time_get_intersecting_edges_and_points4);
+//    logger().debug("\t\t\t- time_cut_mesh11 = {}s", time_cut_mesh11);
+//    logger().debug("\t\t\t- time_cut_mesh12 = {}s", time_cut_mesh12);
+//    logger().debug("\t\t\t- time_cut_mesh13 = {}s", time_cut_mesh13);
+//    logger().debug("\t\t\t- time_cut_mesh14 = {}s", time_cut_mesh14);
+    logger().debug("\t\t- time_get_intersecting_edges_and_points1 = {}s", time_get_intersecting_edges_and_points1);
+    logger().debug("\t\t- time_get_intersecting_edges_and_points2 = {}s", time_get_intersecting_edges_and_points2);
+    logger().debug("\t\t- time_get_intersecting_edges_and_points3 = {}s", time_get_intersecting_edges_and_points3);
+    logger().debug("\t\t- time_get_intersecting_edges_and_points4 = {}s", time_get_intersecting_edges_and_points4);
 }
 
 void floatTetWild::CutMesh::construct(const std::vector<int>& cut_t_ids) {
@@ -492,13 +492,15 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 //    //fortest
 }
 
-int floatTetWild::CutMesh::project_to_plane() {
+int floatTetWild::CutMesh::project_to_plane(int input_vertices_size) {
     int cnt = 0;
     for (int i = 0; i < is_snapped.size(); i++) {
-        if(!is_snapped[i])
+        if (!is_snapped[i])
+            continue;
+        if (v_ids[i] < input_vertices_size)
             continue;
         Scalar dist = get_to_plane_dist(mesh.tet_vertices[v_ids[i]].pos);
-        if(std::abs(dist) <= 1e-10) {
+        if (std::abs(dist) <= 1e-9) {
             cnt++;
             continue;
         }

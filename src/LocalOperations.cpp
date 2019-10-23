@@ -857,7 +857,7 @@ void floatTetWild::pausee(std::string msg) {
     if (!msg.empty())
         cout << msg << endl;
     cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
-    char c;
+    char c = ' ';
     std::cin >> c;
     if (c == '0')
         exit(0);

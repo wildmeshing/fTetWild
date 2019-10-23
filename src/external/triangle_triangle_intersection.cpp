@@ -201,12 +201,12 @@ int sub_sub_cross_sub_dot(real a[3], real b[3], real c[3], real d[3]);
    source and target are the endpoints of the line segment of intersection
 */
 
-extern "C" real orient3d(const real *pa, const real *pb, const real *pc, const real *pd);
+//extern "C" real orient3d(const real *pa, const real *pb, const real *pc, const real *pd);
 
 #include <geogram/delaunay/delaunay_3d.h>
 inline int sub_sub_cross_sub_dot(real pa[3], real pb[3], real pc[3], real pd[3]) {
-    const real result = orient3d(pa, pb, pc, pd);
-//    auto result = -GEO::PCK::orient_3d(pa, pb, pc, pd);
+//    const real result = orient3d(pa, pb, pc, pd);
+    auto result = -GEO::PCK::orient_3d(pa, pb, pc, pd);
     if (result > 0)
         return 1;
     else if (result < 0)

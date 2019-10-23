@@ -83,7 +83,7 @@ protected:
 
 void connect_2_meshes(std::string m1, std::string m2, std::string m);
 
-extern "C" void exactinit();
+//extern "C" void exactinit();
 int main(int argc, char **argv) {
 //    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
 //                     "/Users/yixinhu/Downloads/test_cutting/37627.stl");
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 #endif
 
     GEO::initialize();
-    exactinit();
+//    exactinit();
 
     std::vector<int> indices(20);
     std::iota(std::begin(indices), std::end(indices), 0);

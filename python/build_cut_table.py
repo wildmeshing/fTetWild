@@ -921,4 +921,9 @@ if __name__ == '__main__':
     for i in range(len(table.table)):
         confs = table.table[i]
         if confs:
-            print(i)
+            print(i, table.int_to_flags_rec(i), table.int_to_flags_rec(i).count("1"))
+    print(".................")
+    for i in range(len(table.table)):
+        confs = table.table[i]
+        if not confs:
+            print(i, table.int_to_flags_rec(i), table.int_to_flags_rec(i).count("1"))

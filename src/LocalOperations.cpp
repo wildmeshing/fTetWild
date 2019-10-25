@@ -454,6 +454,12 @@ bool floatTetWild::is_inverted(const Vector3& v0, const Vector3& v1, const Vecto
     return true;
 }
 
+bool floatTetWild::is_degenerate(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3){
+    if (Predicates::orient_3d(v0, v1, v2, v3) == Predicates::ORI_ZERO)
+        return true;
+    return false;
+}
+
 bool floatTetWild::is_out_boundary_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree){
     if(mesh.is_input_all_inserted)
         return false;
@@ -916,8 +922,7 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     Scalar res = AMIPS_energy_aux(T);
 //    return res;
 
-
-    if (res > 1e8) {
+    if (res > 1e7) {
 //        //fortest
 //        cnt_large++;
 //        if(!is_energy_unstable(T, res)){
@@ -925,9 +930,11 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
 //        }
 //        //fortest
 
-        if(is_inverted(Vector3(T[0], T[1], T[2]), Vector3(T[3], T[4], T[5]), Vector3(T[6], T[7], T[8]),
-                    Vector3(T[9], T[10], T[11])))
+        if(is_degenerate(Vector3(T[0], T[1], T[2]), Vector3(T[3], T[4], T[5]), Vector3(T[6], T[7], T[8]),
+                    Vector3(T[9], T[10], T[11]))) {
+            pausee("energy computation degenerate found!!!");
             return std::numeric_limits<double>::infinity();
+        }
 
         std::array<triwild::Rational, 12> r_T;
         for (int j = 0; j < 12; j++)

@@ -331,7 +331,12 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 //                t.quality = get_quality(mesh, t);
 //        }
 //    }
+#ifdef FLOAT_TETWILD_USE_TBB
+    tbb::parallel_for(size_t(0), mesh.tets.size(), [&](size_t i){
+        auto &t = mesh.tets[i];
+#else
     for (auto &t:mesh.tets) {
+#endif
         if (!t.is_removed) {
             t.quality = get_quality(mesh, t);
 //            //fortest
@@ -349,7 +354,12 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 //            }
 //            //fortest
         }
+#ifdef FLOAT_TETWILD_USE_TBB
+    });
+#else
     }
+#endif
+
     if (std::count(is_face_inserted.begin(), is_face_inserted.end(), false) == 0)
         mesh.is_input_all_inserted = true;
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());

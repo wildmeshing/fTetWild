@@ -134,6 +134,7 @@ namespace floatTetWild {
     };
 
     Scalar AMIPS_energy_aux(const std::array<Scalar, 12>& T);
+    bool is_energy_unstable(const std::array<Scalar, 12>& T, Scalar res);
     Scalar AMIPS_energy(const std::array<Scalar, 12>& T);
     void AMIPS_jacobian(const std::array<Scalar, 12>& T, Vector3& result_0);
     void AMIPS_hessian(const std::array<Scalar, 12>& T, Matrix3& result_0);

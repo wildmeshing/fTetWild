@@ -291,6 +291,8 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     double max_energy, avg_energy;
     double time;
 
+    untangle(mesh);
+
     for (int i = 0; i < ops[0]; i++) {
         igl_timer.start();
         cout << "edge splitting..." << endl;
@@ -613,6 +615,23 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 ////            pausee();
 //        }
 //    }
+
+    Scalar max_energy = 0;
+    int max_i = -1;
+    for (int i = 0; i < tets.size(); i++) {
+        if (tets[i].is_removed)
+            continue;
+        if(tets[i].quality > max_energy){
+            max_energy = tets[i].quality;
+            max_i = i;
+        }
+    }
+    cout<<"tet "<<max_i<<": ";
+    mesh.tets[max_i].print();
+    for(int j=0;j<4;j++) {
+        cout << mesh.tet_vertices[mesh.tets[max_i][j]].pos.transpose() << endl;
+        cout << (int)mesh.tets[max_i].is_surface_fs[j] << endl;
+    }
 
     if(mesh.params.log_level > 1) {
         output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");
@@ -1327,5 +1346,26 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
             }
         }
         v.is_outside = is_outside;
+    }
+}
+
+void floatTetWild::untangle(Mesh &mesh) {
+    auto &tet_vertices = mesh.tet_vertices;
+    auto &tets = mesh.tets;
+    static const Scalar zero_area = 2 * SCALAR_ZERO;
+
+    for (auto &t: mesh.tets) {
+        if (t.is_removed)
+            continue;
+        if (t.quality < 1e3)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            if (t.is_surface_fs[j] != NOT_SURFACE && get_area(tet_vertices[t[(j + 1) % 4]].pos,
+                                                              tet_vertices[t[(j + 2) % 4]].pos,
+                                                              tet_vertices[t[(j + 3) % 4]].pos) < zero_area) {
+                t.is_surface_fs[j] = NOT_SURFACE;
+                //todo
+            }
+        }
     }
 }

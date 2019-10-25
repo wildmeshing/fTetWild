@@ -66,8 +66,5 @@ namespace floatTetWild {
     inline Vector3 get_normal(const Vector3& a, const Vector3& b, const Vector3& c) {
         return ((b - c).cross(a - c)).normalized();
     }
-    inline Scalar get_area(const Vector3& a, const Vector3& b, const Vector3& c) {
-        return ((b - c).cross(a - c)).norm();
-    }
 }
 #endif //FLOATTETWILD_FLOATTETCUTTING_H

@@ -1543,6 +1543,8 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                                          std::vector<bool> &is_face_inserted, bool is_again,
                                          std::vector<std::array<int, 3>>& known_surface_fs,
                                          std::vector<std::array<int, 3>>& known_not_surface_fs) {
+    igl::Timer timer;
+
     //fortest
     auto check_corvered_area = [&](int I, const std::vector<std::array<int, 3>>& cut_fs){
         int f_id = b_edge_infos[I].second[0];
@@ -1615,6 +1617,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
     };
 
 
+    timer.start();
     std::vector<std::vector<std::pair<int, int>>> covered_fs_infos(input_faces.size());
     for (int i = 0; i < track_surface_fs.size(); i++) {
         if (mesh.tets[i].is_removed)
@@ -1624,13 +1627,20 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                 covered_fs_infos[f_id].push_back(std::make_pair(i, j));
         }
     }
+    logger().info("time1 = {}", timer.getElapsedTime());
 
     bool is_all_inserted = true;
     int cnt = 0;
+    double time2 = 0;//fortest
+    double time3 = 0;
+    double time4 = 0;
+    double time5 = 0;
+    double time6 = 0;
     for (int I = 0; I < b_edge_infos.size(); I++) {
         const auto &e = b_edge_infos[I].first;
         auto &n_f_ids = b_edge_infos[I].second;///it is sorted
 
+        timer.start();
         ///double check neighbors
         for (int i = 0; i < n_f_ids.size(); i++) {
             if (!is_face_inserted[n_f_ids[i]]) {
@@ -1639,11 +1649,13 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                 break;
             }
         }
+        time2+=timer.getElapsedTime();
         if (n_f_ids.empty()) {
             cout << "FAIL n_f_ids.empty()" << endl;
             continue;
         }
 
+        timer.start();
         ///compute intersection
         std::vector<Vector3> points;
         std::map<std::array<int, 2>, int> map_edge_to_intersecting_point;
@@ -1660,14 +1672,17 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
             is_all_inserted = false;
 
             cout << "FAIL insert_boundary_edges_get_intersecting_edges_and_points" << endl;
+            time3+=timer.getElapsedTime();
             continue;
         }
+        time3+=timer.getElapsedTime();
         if (points.empty()) { ///if all snapped
             record_boundary_info(points, snapped_v_ids, e);
             cnt++;
             continue;
         }
 
+        timer.start();
         ///subdivision
         std::vector<int> cut_t_ids;
         for (const auto &m: map_edge_to_intersecting_point) {
@@ -1712,20 +1727,31 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
             }
 
             is_all_inserted = false;//unless now
+            time4+=timer.getElapsedTime();
             continue;
         }
+        time4+=timer.getElapsedTime();
 
         //
+        timer.start();
         push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
+        time5+=timer.getElapsedTime();
 
         //
         ///mark boundary vertices
         ///notice, here we assume points list is inserted in the end of mesh.tet_vertices
+        timer.start();
         record_boundary_info(points, snapped_v_ids, e);
+        time6+=timer.getElapsedTime();
         cnt++;
     }
 
     logger().info("uninsert boundary #e = {}/{}", b_edge_infos.size() - cnt, b_edge_infos.size());
+    logger().info("time2 = {}", time2);
+    logger().info("time3 = {}", time3);
+    logger().info("time4 = {}", time4);
+    logger().info("time5 = {}", time5);
+    logger().info("time6 = {}", time6);
 
 //    //fortest
 //    std::ofstream fout_e("b_edges1.obj");

@@ -24,6 +24,8 @@ namespace floatTetWild {
     void output_info(Mesh& mesh, const AABBWrapper& tree);
     void check_envelope(Mesh& mesh, const AABBWrapper& tree);
     void output_surface(Mesh& mesh, const std::string& filename);
+
+    void untangle(Mesh &mesh);
 }
 
 #endif //FLOATTETWILD_MESHIMPROVEMENT_H

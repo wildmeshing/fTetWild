@@ -140,6 +140,28 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
                     for (int t_id1: old_t_ids)
                         is_splittable[t_id1] = false;
                     tet_vertices[v_id].is_removed = true;
+
+                    //fortest
+                    cout<<"fail "<<v1_id<<" "<<v2_id<<endl;
+                    cout<<"is_surface_edge = "<<is_surface_edge(mesh, v1_id, v2_id, old_t_ids)<<endl;
+                    cout<<tet_vertices[v1_id].is_on_surface<<" "<<tet_vertices[v2_id].is_on_surface<<endl;
+                    if(vector_contains(old_t_ids, 1260))
+                        cout<<"contains 1260"<<endl;
+                    for(int t_id: old_t_ids) {
+                        cout << "t" << t_id << ": " << mesh.tets[t_id].quality << endl;
+                        mesh.tets[t_id].print();
+                        auto& t = tets[t_id];
+                        for(int j=0;j<4;j++) {
+                            cout << mesh.tet_vertices[mesh.tets[t_id][j]].pos.transpose() << endl;
+                            cout << (int)mesh.tets[t_id].is_surface_fs[j] << endl;
+                            cout<<get_area(tet_vertices[t[(j+1)%4]].pos, tet_vertices[t[(j+2)%4]].pos, tet_vertices[t[(j+3)%4]].pos)<<endl;
+                        }
+                    }
+                    cout<<"v "<<tet_vertices[v1_id].pos.transpose()<<endl;
+                    cout<<"v "<<tet_vertices[v2_id].pos.transpose()<<endl;
+                    cout<<"l 1 2"<<endl;
+                    pausee();
+                    //fortest
                     return false;
                 }
             }

@@ -289,6 +289,8 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
                 old_max_quality = tets[t_id].quality;
         }
     }
+    if(old_max_quality>1e10)
+        is_check_quality = false;
     for (int t_id:n1_t_ids) {
         int j = js_n1_t_ids[ii++];
         Scalar new_q = get_quality(tet_vertices[v2_id], tet_vertices[tets[t_id][mod4(j + 1)]],

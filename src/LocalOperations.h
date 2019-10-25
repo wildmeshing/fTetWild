@@ -47,6 +47,10 @@ namespace floatTetWild {
 
     void get_new_tet_slots(Mesh& mesh, int n, std::vector<int>& new_conn_tets);
 
+    inline Scalar get_area(const Vector3& a, const Vector3& b, const Vector3& c) {
+        return ((b - c).cross(a - c)).norm();
+    }
+
     template<typename T>
     void vector_unique(std::vector<T>& v){
         std::sort(v.begin(), v.end());

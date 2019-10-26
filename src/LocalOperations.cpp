@@ -922,7 +922,7 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     Scalar res = AMIPS_energy_aux(T);
 //    return res;
 
-    if (res > 1e7) {
+    if (res > 1e8) {
 //        //fortest
 //        cnt_large++;
 //        if(!is_energy_unstable(T, res)){

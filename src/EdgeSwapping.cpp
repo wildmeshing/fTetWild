@@ -249,11 +249,11 @@ bool floatTetWild::remove_an_edge_32(Mesh& mesh, int v1_id, int v2_id, const std
 }
 
 bool floatTetWild::remove_an_edge_44(Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& old_t_ids, std::vector<std::array<int, 2>>& new_edges) {
-    bool is_check = false;
-    if(v1_id == 482 && v2_id == 504){
-        is_check = true;
-        pausee("v1_id == 482 && v2_id == 504");
-    }
+//    bool is_check = false;
+//    if(v1_id == 482 && v2_id == 504){
+//        is_check = true;
+//        pausee("v1_id == 482 && v2_id == 504");
+//    }
 
     const int N = 4;
     if (old_t_ids.size() != N)

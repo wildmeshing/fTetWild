@@ -87,15 +87,6 @@ namespace floatTetWild {
 
     int get_opp_t_id(int t_id, int j, const Mesh &mesh);
 
-    inline int get_local_f_id(int t_id, int v1_id, int v2_id, int v3_id, Mesh &mesh) {
-        for (int j = 0; j < 4; j++) {
-            if (mesh.tets[t_id][j] != v1_id && mesh.tets[t_id][j] != v2_id && mesh.tets[t_id][j] != v3_id)
-                return j;
-        }
-        assert(false);
-        return -1;
-    }
-
     void myassert(bool b, const std::string& s);
 
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,

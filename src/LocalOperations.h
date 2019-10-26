@@ -11,6 +11,14 @@ namespace floatTetWild {
 
     int get_opp_t_id(const Mesh& mesh, int t_id, int j);
     void set_opp_t_id(Mesh& mesh, int t_id, int j);
+    inline int get_local_f_id(int t_id, int v1_id, int v2_id, int v3_id, Mesh &mesh) {
+        for (int j = 0; j < 4; j++) {
+            if (mesh.tets[t_id][j] != v1_id && mesh.tets[t_id][j] != v2_id && mesh.tets[t_id][j] != v3_id)
+                return j;
+        }
+        assert(false);
+        return -1;
+    }
 
     void get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2>>& edges);
     void get_all_edges(const Mesh& mesh, const std::vector<int>& t_ids, std::vector<std::array<int, 2>>& edges, bool skip_freezed = false);

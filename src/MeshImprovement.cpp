@@ -165,6 +165,7 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         else
             it_ops = {{ops[0], ops[1], ops[2], ops[3], 0}};
         operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, it_ops);
+        untangle(mesh);
 
         if (it > mesh.params.max_its / 4 && max_energy > 1e3) {//Scalar check
             if (cnt_increase_epsilon > 0 && cnt_increase_epsilon == mesh.params.stage - 1) {
@@ -290,8 +291,6 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     int v_num, t_num;
     double max_energy, avg_energy;
     double time;
-
-    untangle(mesh);
 
     for (int i = 0; i < ops[0]; i++) {
         igl_timer.start();
@@ -616,22 +615,22 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 //        }
 //    }
 
-    Scalar max_energy = 0;
-    int max_i = -1;
-    for (int i = 0; i < tets.size(); i++) {
-        if (tets[i].is_removed)
-            continue;
-        if(tets[i].quality > max_energy){
-            max_energy = tets[i].quality;
-            max_i = i;
-        }
-    }
-    cout<<"tet "<<max_i<<": ";
-    mesh.tets[max_i].print();
-    for(int j=0;j<4;j++) {
-        cout << mesh.tet_vertices[mesh.tets[max_i][j]].pos.transpose() << endl;
-        cout << (int)mesh.tets[max_i].is_surface_fs[j] << endl;
-    }
+//    Scalar max_energy = 0;
+//    int max_i = -1;
+//    for (int i = 0; i < tets.size(); i++) {
+//        if (tets[i].is_removed)
+//            continue;
+//        if(tets[i].quality > max_energy){
+//            max_energy = tets[i].quality;
+//            max_i = i;
+//        }
+//    }
+//    cout<<"tet "<<max_i<<": ";
+//    mesh.tets[max_i].print();
+//    for(int j=0;j<4;j++) {
+//        cout << mesh.tet_vertices[mesh.tets[max_i][j]].pos.transpose() << endl;
+//        cout << (int)mesh.tets[max_i].is_surface_fs[j] << endl;
+//    }
 
     if(mesh.params.log_level > 1) {
         output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");
@@ -757,6 +756,19 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
     for (int i = 0; i < tets.size(); i++) {
         if (tets[i].is_removed)
             continue;
+
+        for (int j = 0; j < 4; j++) {
+            auto &t = tets[i];
+            int opp_t_id = get_opp_t_id(mesh, i, j);
+            if (opp_t_id >= 0) {
+                int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+                if (tets[opp_t_id].is_surface_fs[k] == NOT_SURFACE && tets[i].is_surface_fs[j] == NOT_SURFACE);
+                else if (tets[opp_t_id].is_surface_fs[k] + tets[i].is_surface_fs[j] == 0);
+                else
+                    cout << "surface faces are not matched" << endl;
+            }
+        }
+
         for (int j = 0; j < 4; j++) {
             if (tets[i].is_surface_fs[j] != NOT_SURFACE && tets[i].is_bbox_fs[j] != NOT_BBOX){
                 cout<<"tets[i].is_surface_fs[j] != NOT_SURFACE && tets[i].is_bbox_fs[j] != NOT_BBOX"<<endl;
@@ -1352,20 +1364,46 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
 void floatTetWild::untangle(Mesh &mesh) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
-    static const Scalar zero_area = 2 * SCALAR_ZERO;
+    static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
 
-    for (auto &t: mesh.tets) {
+    int cnt = 0;
+    for (int t_id = 0;t_id<tets.size();t_id++) {
+        auto &t = tets[t_id];
         if (t.is_removed)
             continue;
-        if (t.quality < 1e3)
+        if (t.quality < 1e10)
             continue;
+        bool is_on_surface = false;
+        bool has_degenerate_face = false;
+        std::array<double, 4> areas;
+        double max_area = 0;
+        double max_j = -1;
         for (int j = 0; j < 4; j++) {
-            if (t.is_surface_fs[j] != NOT_SURFACE && get_area(tet_vertices[t[(j + 1) % 4]].pos,
-                                                              tet_vertices[t[(j + 2) % 4]].pos,
-                                                              tet_vertices[t[(j + 3) % 4]].pos) < zero_area) {
-                t.is_surface_fs[j] = NOT_SURFACE;
-                //todo
+            if (t.is_surface_fs[j] != NOT_SURFACE)
+                is_on_surface = true;
+            areas[j] = get_area(tet_vertices[t[(j + 1) % 4]].pos,
+                                tet_vertices[t[(j + 2) % 4]].pos,
+                                tet_vertices[t[(j + 3) % 4]].pos);
+            if (areas[j] < zero_area)
+                has_degenerate_face = true;
+            if (areas[j] > max_area) {
+                max_area = areas[j];
+                max_j = j;
             }
         }
+        if (is_on_surface && has_degenerate_face && t.is_surface_fs[max_j] != NOT_SURFACE && max_area > zero_area) {
+            for (int j = 0; j < 4; j++) {
+                if (j != max_j) {
+                    t.is_surface_fs[j] = NOT_SURFACE;
+                    int opp_t_id = get_opp_t_id(mesh, t_id, j);
+                    if (opp_t_id >= 0) {
+                        int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+                        tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+                    }
+                }
+            }
+        }
+        cnt++;
     }
+    pausee("fixed " + std::to_string(cnt) + " tangled element");
 }

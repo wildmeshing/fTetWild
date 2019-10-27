@@ -1365,6 +1365,8 @@ void floatTetWild::untangle(Mesh &mesh) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
     static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
+    static const std::vector<std::array<int, 4>> face_pairs = {{{0, 1, 2, 3}}, {{0, 2, 1, 3}}, {{0, 3, 1, 2}}};
+
 
     int cnt = 0;
     for (int t_id = 0;t_id<tets.size();t_id++) {
@@ -1373,14 +1375,14 @@ void floatTetWild::untangle(Mesh &mesh) {
             continue;
         if (t.quality < 1e10)
             continue;
-        bool is_on_surface = false;
+        int cnt_on_surface = 0;
         bool has_degenerate_face = false;
         std::array<double, 4> areas;
         double max_area = 0;
-        double max_j = -1;
+        int max_j = -1;
         for (int j = 0; j < 4; j++) {
             if (t.is_surface_fs[j] != NOT_SURFACE)
-                is_on_surface = true;
+                cnt_on_surface++;
             areas[j] = get_area(tet_vertices[t[(j + 1) % 4]].pos,
                                 tet_vertices[t[(j + 2) % 4]].pos,
                                 tet_vertices[t[(j + 3) % 4]].pos);
@@ -1391,19 +1393,79 @@ void floatTetWild::untangle(Mesh &mesh) {
                 max_j = j;
             }
         }
-        if (is_on_surface && has_degenerate_face && t.is_surface_fs[max_j] != NOT_SURFACE && max_area > zero_area) {
-            for (int j = 0; j < 4; j++) {
-                if (j != max_j) {
-                    t.is_surface_fs[j] = NOT_SURFACE;
-                    int opp_t_id = get_opp_t_id(mesh, t_id, j);
-                    if (opp_t_id >= 0) {
-                        int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
-                        tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+        if (cnt_on_surface == 0)
+            continue;
+
+        if (has_degenerate_face) {
+            if (t.is_surface_fs[max_j] != NOT_SURFACE && max_area > zero_area) {
+                for (int j = 0; j < 4; j++) {
+                    if (j != max_j) {
+                        t.is_surface_fs[j] = NOT_SURFACE;
+                        int opp_t_id = get_opp_t_id(mesh, t_id, j);
+                        if (opp_t_id >= 0) {
+                            int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+                            tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+                        }
                     }
+                }
+                cnt++;
+            }
+        } else {
+            if (cnt_on_surface <= 2)
+                continue;
+            if (max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4] < zero_area) {
+                for (int j = 0; j < 4; j++) {
+                    if (j != max_j) {
+                        t.is_surface_fs[j] = NOT_SURFACE;
+                        int opp_t_id = get_opp_t_id(mesh, t_id, j);
+                        if (opp_t_id >= 0) {
+                            int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+                            tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+                        }
+                    }
+                }
+                cnt++;
+            } else {
+                for (const auto &fp: face_pairs) {
+                    std::array<Vector3, 2> ns;
+                    auto& p1 = tet_vertices[tets[t_id][fp[2]]].pos;
+                    auto& p2 = tet_vertices[tets[t_id][fp[3]]].pos;
+                    Vector3 v = (p2-p1).normalized();
+                    for(int j=0;j<2;j++){
+                        auto& p = tet_vertices[tets[t_id][fp[j]]].pos;
+                        Vector3 q = p1+((p-p1).dot(v))*v;
+                        ns[j] = p-q;
+                    }
+                    if(ns[0].dot(ns[1])>0)
+                        continue;
+
+                    if (areas[fp[0]] + areas[fp[1]] - areas[fp[2]] - areas[fp[3]] > zero_area)
+                        continue;
+
+                    std::array<int, 2> js = {{-1, -1}};
+                    if (t.is_surface_fs[fp[0]] != NOT_SURFACE && t.is_surface_fs[fp[1]] != NOT_SURFACE)
+                        js = {{fp[2], fp[3]}};
+                    else if (t.is_surface_fs[fp[2]] != NOT_SURFACE && t.is_surface_fs[fp[3]] != NOT_SURFACE)
+                        js = {{fp[0], fp[1]}};
+
+                    for (int j: js) {
+                        if (j < 0)
+                            continue;
+                        if (t.is_surface_fs[j] == NOT_SURFACE)
+                            continue;
+                        t.is_surface_fs[j] = NOT_SURFACE;
+                        int opp_t_id = get_opp_t_id(mesh, t_id, j);
+                        if (opp_t_id >= 0) {
+                            int k = get_local_f_id(opp_t_id, t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4], mesh);
+                            tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
+                        }
+                    }
+                    if(js[0]>=0)//fortest
+                        cnt++;
+                    break;
                 }
             }
         }
-        cnt++;
     }
-    pausee("fixed " + std::to_string(cnt) + " tangled element");
+    cout<<"fixed " + std::to_string(cnt) + " tangled element"<<endl;
 }

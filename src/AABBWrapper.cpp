@@ -39,10 +39,14 @@ void floatTetWild::AABBWrapper::init_b_mesh(const std::vector<Vector3>& input_ve
 //        }
 //    }
 
-    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
-    find_boundary_edges(input_vertices, input_faces, std::vector<bool>(input_faces.size(), true), b_edge_infos);
+    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> _;
+    std::vector<std::array<int, 2>> b_edges;
+    find_boundary_edges(input_vertices, input_faces,
+            std::vector<bool>(input_faces.size(), true), std::vector<bool>(input_faces.size(), true),
+            _, b_edges);
 
-    if (b_edge_infos.empty()) {
+    if (b_edges.empty()) {
+//    if (b_edge_infos.empty()) {
         b_mesh.vertices.clear();
         b_mesh.vertices.create_vertices(1);
         b_mesh.vertices.point(0) = GEO::vec3(0, 0, 0);
@@ -52,29 +56,10 @@ void floatTetWild::AABBWrapper::init_b_mesh(const std::vector<Vector3>& input_ve
         b_mesh.facets.set_vertex(0, 1, 0);
         b_mesh.facets.set_vertex(0, 2, 0);
     } else {
-//        b_mesh.vertices.clear();
-//        b_mesh.vertices.create_vertices((int) b_edges.size() * 2);
-//        int cnt = 0;
-//        for (auto &e:b_edges) {
-//            for (int j = 0; j < 2; j++) {
-//                GEO::vec3 &p = b_mesh.vertices.point(cnt++);
-//                p[0] = input_vertices[e[j]][0];
-//                p[1] = input_vertices[e[j]][1];
-//                p[2] = input_vertices[e[j]][2];
-//            }
-//        }
-//        b_mesh.facets.clear();
-//        b_mesh.facets.create_triangles((int) b_edges.size());
-//        for (int i = 0; i < b_edges.size(); i++) {
-//            b_mesh.facets.set_vertex(i, 0, i * 2);
-//            b_mesh.facets.set_vertex(i, 1, i * 2);
-//            b_mesh.facets.set_vertex(i, 2, i * 2 + 1);
-//        }
         b_mesh.vertices.clear();
-        b_mesh.vertices.create_vertices((int) b_edge_infos.size() * 2);
+        b_mesh.vertices.create_vertices((int) b_edges.size() * 2);
         int cnt = 0;
-        for (auto &info:b_edge_infos) {
-            auto& e = info.first;
+        for (auto &e:b_edges) {
             for (int j = 0; j < 2; j++) {
                 GEO::vec3 &p = b_mesh.vertices.point(cnt++);
                 p[0] = input_vertices[e[j]][0];
@@ -83,12 +68,31 @@ void floatTetWild::AABBWrapper::init_b_mesh(const std::vector<Vector3>& input_ve
             }
         }
         b_mesh.facets.clear();
-        b_mesh.facets.create_triangles((int) b_edge_infos.size());
-        for (int i = 0; i < b_edge_infos.size(); i++) {
+        b_mesh.facets.create_triangles((int) b_edges.size());
+        for (int i = 0; i < b_edges.size(); i++) {
             b_mesh.facets.set_vertex(i, 0, i * 2);
             b_mesh.facets.set_vertex(i, 1, i * 2);
             b_mesh.facets.set_vertex(i, 2, i * 2 + 1);
         }
+//        b_mesh.vertices.clear();
+//        b_mesh.vertices.create_vertices((int) b_edge_infos.size() * 2);
+//        int cnt = 0;
+//        for (auto &info:b_edge_infos) {
+//            auto& e = info.first;
+//            for (int j = 0; j < 2; j++) {
+//                GEO::vec3 &p = b_mesh.vertices.point(cnt++);
+//                p[0] = input_vertices[e[j]][0];
+//                p[1] = input_vertices[e[j]][1];
+//                p[2] = input_vertices[e[j]][2];
+//            }
+//        }
+//        b_mesh.facets.clear();
+//        b_mesh.facets.create_triangles((int) b_edge_infos.size());
+//        for (int i = 0; i < b_edge_infos.size(); i++) {
+//            b_mesh.facets.set_vertex(i, 0, i * 2);
+//            b_mesh.facets.set_vertex(i, 1, i * 2);
+//            b_mesh.facets.set_vertex(i, 2, i * 2 + 1);
+//        }
     }
 
     mesh_reorder(b_mesh, GEO::MESH_ORDER_MORTON);

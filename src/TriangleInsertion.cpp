@@ -200,6 +200,7 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<bool> &is_face_inserted,
         AABBWrapper &tree, bool is_again) {
+    std::vector<bool> old_is_face_inserted = is_face_inserted;///is_face_inserted has been intialized in main
 
     logger().info("triangle insertion start, #f = {}, #v = {}, #t = {}",
                   input_faces.size(), mesh.tet_vertices.size(), mesh.tets.size());
@@ -301,13 +302,13 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 
 
     /////
-    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
-    find_boundary_edges(input_vertices, input_faces, is_face_inserted, b_edge_infos);
-    logger().info("find_boundary_edges done");
     std::vector<std::array<int, 2>> b_edges1;
+    std::vector<std::pair<std::array<int, 2>, std::vector<int>>> b_edge_infos;
+    find_boundary_edges(input_vertices, input_faces, is_face_inserted, old_is_face_inserted, b_edge_infos, b_edges1);
+    logger().info("find_boundary_edges done");
     std::vector<std::array<int, 3>> known_surface_fs;
     std::vector<std::array<int, 3>> known_not_surface_fs;
-    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree, b_edges1,
+    insert_boundary_edges(input_vertices, input_faces, b_edge_infos, track_surface_fs, mesh, tree,
                           is_face_inserted, is_again, known_surface_fs, known_not_surface_fs);
     logger().info("uninserted #f = {}/{}", std::count(is_face_inserted.begin(), is_face_inserted.end(), false),
                   is_face_inserted.size() - cnt_matched);
@@ -1473,8 +1474,9 @@ void floatTetWild::pair_track_surface_fs(Mesh &mesh, std::vector<std::array<std:
 }
 
 void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
-                                       const std::vector<bool> &is_face_inserted,
-                                       std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos) {
+                                       const std::vector<bool> &is_face_inserted, const std::vector<bool>& old_is_face_inserted,
+                                       std::vector<std::pair<std::array<int, 2>, std::vector<int>>> &b_edge_infos,
+                                       std::vector<std::array<int, 2>>& b_edges) {
     std::vector<std::array<int, 2>> edges;
     std::vector<std::vector<int>> conn_tris(input_vertices.size());
     for (int i = 0; i < input_faces.size(); i++) {
@@ -1499,9 +1501,18 @@ void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertice
         std::vector<int> n12_f_ids;
         std::set_intersection(conn_tris[e[0]].begin(), conn_tris[e[0]].end(),
                               conn_tris[e[1]].begin(), conn_tris[e[1]].end(), std::back_inserter(n12_f_ids));
+        bool needs_preserve = false;
+        for(int f_id: n12_f_ids){
+            if(!old_is_face_inserted[f_id]) {
+                needs_preserve = true;
+                break;
+            }
+        }
 
         if (n12_f_ids.size() == 1) {//open boundary
-            b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
+            b_edges.push_back(e);
+            if(needs_preserve)
+                b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
             cnt1++;
         } else {
             int f_id = n12_f_ids[0];
@@ -1560,7 +1571,9 @@ void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertice
                 continue;
 
             cnt2++;
-            b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
+            b_edges.push_back(e);
+            if(needs_preserve)
+                b_edge_infos.push_back(std::make_pair(e, n12_f_ids));
         }
     }
 
@@ -1575,7 +1588,7 @@ double time_e4 = 0;
 bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                          std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
                                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh& mesh,
-                                         AABBWrapper &tree, std::vector<std::array<int, 2>>& b_edges,
+                                         AABBWrapper &tree,
                                          std::vector<bool> &is_face_inserted, bool is_again,
                                          std::vector<std::array<int, 3>>& known_surface_fs,
                                          std::vector<std::array<int, 3>>& known_not_surface_fs) {
@@ -1642,7 +1655,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                 mesh.tet_vertices[v_id].is_on_boundary = true;
         }
 
-        b_edges.push_back(e);
+//        b_edges.push_back(e);
 
 //        //fortest
 //        for (int v_id: snapped_v_ids) {
@@ -1683,6 +1696,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
             mesh.tet_vertices[e[0]].is_on_boundary = true;
             mesh.tet_vertices[e[1]].is_on_boundary = true;
         }
+//        b_edges.push_back(e);
 
         timer.start();
         ///double check neighbors
@@ -1818,7 +1832,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
 ////    fout_v.close();
 //    //fortest
 
-    cout << "b_edges.size = " << b_edges.size() << endl;
+//    cout << "b_edges.size = " << b_edges.size() << endl;
 
     return is_all_inserted;
 }

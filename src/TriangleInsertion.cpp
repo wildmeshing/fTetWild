@@ -749,7 +749,27 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
         Vector3 min_f, max_f;
         get_bbox_face(input_vertices[input_faces[f_id][0]], input_vertices[input_faces[f_id][1]],
                       input_vertices[input_faces[f_id][2]], min_f, max_f);
+#ifdef FLOAT_TETWILD_USE_TBB
+        tbb::concurrent_vector<int> tbb_t_ids;
+        tbb::parallel_for(size_t(0), mesh.tets.size(), [&](size_t t_id){
+            if (mesh.tets[t_id].is_removed)
+                return;
 
+            Vector3 min_t, max_t;
+            get_bbox_tet(mesh.tet_vertices[mesh.tets[t_id][0]].pos, mesh.tet_vertices[mesh.tets[t_id][1]].pos,
+                         mesh.tet_vertices[mesh.tets[t_id][2]].pos, mesh.tet_vertices[mesh.tets[t_id][3]].pos,
+                         min_t, max_t);
+            if (!is_bbox_intersected(min_f, max_f, min_t, max_t))
+                return;
+
+            tbb_t_ids.push_back(t_id);
+
+        });
+        for(int t_id: tbb_t_ids) {
+            queue_t_ids.push(t_id);
+            is_visited[t_id] = true;
+        }
+#else
         for (int t_id = 0; t_id < mesh.tets.size(); t_id++) {
             if (mesh.tets[t_id].is_removed)
                 continue;
@@ -764,6 +784,7 @@ void floatTetWild::find_cutting_tets(int f_id, const std::vector<Vector3> &input
             queue_t_ids.push(t_id);
             is_visited[t_id] = true;
         }
+#endif
     }
 
 //    const int CUT_UNKNOWN = INT_MIN;

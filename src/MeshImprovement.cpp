@@ -165,7 +165,6 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         else
             it_ops = {{ops[0], ops[1], ops[2], ops[3], 0}};
         operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, it_ops);
-        untangle(mesh);
 
         if (it > mesh.params.max_its / 4 && max_energy > 1e3) {//Scalar check
             if (cnt_increase_epsilon > 0 && cnt_increase_epsilon == mesh.params.stage - 1) {
@@ -292,6 +291,8 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     double max_energy, avg_energy;
     double time;
 
+    untangle(mesh);
+
     for (int i = 0; i < ops[0]; i++) {
         igl_timer.start();
         cout << "edge splitting..." << endl;
@@ -368,13 +369,13 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         pausee();
 
         for (int i = 0; i < ops[4]; i++) {
-            //reset boundary points
-            for (auto &v: mesh.tet_vertices) {
-                if (v.is_removed)
-                    continue;
-                v.is_on_boundary = false;
-                v.on_boundary_e_id = -1;
-            }
+//            //reset boundary points
+//            for (auto &v: mesh.tet_vertices) {
+//                if (v.is_removed)
+//                    continue;
+//                v.is_on_boundary = false;
+//                v.on_boundary_e_id = -1;
+//            }
             //
             igl_timer.start();
             insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, true);
@@ -384,6 +385,17 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
                            mesh.get_max_energy(), mesh.get_avg_energy(),
                            std::count(is_face_inserted.begin(), is_face_inserted.end(),
                                       false));
+
+//            for (int v_id = 0; v_id < mesh.tet_vertices.size(); v_id++) {
+//                if (mesh.tet_vertices[v_id].is_removed)
+//                    continue;
+//                if (!mesh.tet_vertices[v_id].is_on_boundary)
+//                    continue;
+//
+//                GEO::index_t prev_facet;
+//                if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2, prev_facet))
+//                    mesh.tet_vertices[v_id].is_on_boundary = false;
+//            }
         }
 
 //        for (int i = 0; i < ops[4]; i++) {
@@ -1365,11 +1377,13 @@ void floatTetWild::untangle(Mesh &mesh) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
     static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
-    static const std::vector<std::array<int, 4>> face_pairs = {{{0, 1, 2, 3}}, {{0, 2, 1, 3}}, {{0, 3, 1, 2}}};
+    static const std::vector<std::array<int, 4>> face_pairs = {{{0, 1, 2, 3}},
+                                                               {{0, 2, 1, 3}},
+                                                               {{0, 3, 1, 2}}};
 
 
     int cnt = 0;
-    for (int t_id = 0;t_id<tets.size();t_id++) {
+    for (int t_id = 0; t_id < tets.size(); t_id++) {
         auto &t = tets[t_id];
         if (t.is_removed)
             continue;
@@ -1413,7 +1427,8 @@ void floatTetWild::untangle(Mesh &mesh) {
         } else {
             if (cnt_on_surface <= 2)
                 continue;
-            if (max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4] < zero_area) {
+            if (std::abs(max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4]) <
+                zero_area) {
                 for (int j = 0; j < 4; j++) {
                     if (j != max_j) {
                         t.is_surface_fs[j] = NOT_SURFACE;
@@ -1428,18 +1443,18 @@ void floatTetWild::untangle(Mesh &mesh) {
             } else {
                 for (const auto &fp: face_pairs) {
                     std::array<Vector3, 2> ns;
-                    auto& p1 = tet_vertices[tets[t_id][fp[2]]].pos;
-                    auto& p2 = tet_vertices[tets[t_id][fp[3]]].pos;
-                    Vector3 v = (p2-p1).normalized();
-                    for(int j=0;j<2;j++){
-                        auto& p = tet_vertices[tets[t_id][fp[j]]].pos;
-                        Vector3 q = p1+((p-p1).dot(v))*v;
-                        ns[j] = p-q;
+                    auto &p1 = tet_vertices[tets[t_id][fp[2]]].pos;
+                    auto &p2 = tet_vertices[tets[t_id][fp[3]]].pos;
+                    Vector3 v = (p2 - p1).normalized();
+                    for (int j = 0; j < 2; j++) {
+                        auto &p = tet_vertices[tets[t_id][fp[j]]].pos;
+                        Vector3 q = p1 + ((p - p1).dot(v)) * v;
+                        ns[j] = p - q;
                     }
-                    if(ns[0].dot(ns[1])>0)
+                    if (ns[0].dot(ns[1]) > 0)
                         continue;
 
-                    if (areas[fp[0]] + areas[fp[1]] - areas[fp[2]] - areas[fp[3]] > zero_area)
+                    if (std::abs(areas[fp[0]] + areas[fp[1]] - areas[fp[2]] - areas[fp[3]]) > zero_area)
                         continue;
 
                     std::array<int, 2> js = {{-1, -1}};
@@ -1460,12 +1475,12 @@ void floatTetWild::untangle(Mesh &mesh) {
                             tets[opp_t_id].is_surface_fs[k] = NOT_SURFACE;
                         }
                     }
-                    if(js[0]>=0)//fortest
+                    if (js[0] >= 0)//fortest
                         cnt++;
                     break;
                 }
             }
         }
     }
-    cout<<"fixed " + std::to_string(cnt) + " tangled element"<<endl;
+    cout << "fixed " + std::to_string(cnt) + " tangled element" << endl;
 }

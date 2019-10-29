@@ -399,7 +399,7 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         Mesh &mesh, std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
         AABBWrapper &tree, std::vector<int>& modified_t_ids, bool is_again) {
 
-    igl::Timer timer;
+//    igl::Timer timer;
     std::array<Vector3, 3> vs = {{input_vertices[input_faces[insert_f_id][0]],
                                          input_vertices[input_faces[insert_f_id][1]],
                                          input_vertices[input_faces[insert_f_id][2]]}};
@@ -408,10 +408,10 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     int t = get_t(vs[0], vs[1], vs[2]);
 
     /////
-    timer.start();
+//    timer.start();
     std::vector<int> cut_t_ids;
     find_cutting_tets(insert_f_id, input_vertices, input_faces, vs, mesh, cut_t_ids, is_again);
-    time_find_cutting_tets += timer.getElapsedTime();
+//    time_find_cutting_tets += timer.getElapsedTime();
 
     //fortest
     myassert(!cut_t_ids.empty(), "cut_t_ids.empty()!!!");
@@ -425,13 +425,13 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     //fortest
 
     /////
-    timer.start();
-    igl::Timer timer1;
-    timer1.start();
+//    timer.start();
+//    igl::Timer timer1;
+//    timer1.start();
     CutMesh cut_mesh(mesh, n, vs);
     cut_mesh.construct(cut_t_ids);
-    time_cut_mesh1 += timer1.getElapsedTime();
-    timer1.start();
+//    time_cut_mesh1 += timer1.getElapsedTime();
+//    timer1.start();
 //    bool is_expanded = false;//fortest
 
     if (cut_mesh.snap_to_plane()) {
@@ -444,19 +444,19 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //            cout << cnt_proj << "/" << cnt_all << endl;
         //fortest
     }
-    time_cut_mesh2 += timer1.getElapsedTime();
-    time_cut_mesh += timer.getElapsedTime();
+//    time_cut_mesh2 += timer1.getElapsedTime();
+//    time_cut_mesh += timer.getElapsedTime();
 
     /////
-    timer.start();
+//    timer.start();
     std::vector<Vector3> points;
     std::map<std::array<int, 2>, int> map_edge_to_intersecting_point;
     std::vector<int> subdivide_t_ids;
     if (!cut_mesh.get_intersecting_edges_and_points(points, map_edge_to_intersecting_point, subdivide_t_ids)) {
-        time_get_intersecting_edges_and_points += timer.getElapsedTime();
+//        time_get_intersecting_edges_and_points += timer.getElapsedTime();
         return false;
     }
-    time_get_intersecting_edges_and_points += timer.getElapsedTime();
+//    time_get_intersecting_edges_and_points += timer.getElapsedTime();
     //have to add all cut_t_ids
     vector_unique(cut_t_ids);
     std::vector<int> tmp;
@@ -469,26 +469,26 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
 //    time_get_intersecting_edges_and_points += timer.getElapsedTime();
 
     /////
-    timer.start();
+//    timer.start();
     std::vector<MeshTet> new_tets;
     std::vector<std::array<std::vector<int>, 4>> new_track_surface_fs;
 //    std::vector<int> modified_t_ids;
     if (!subdivide_tets(insert_f_id, mesh, cut_mesh, points, map_edge_to_intersecting_point, track_surface_fs,
                         cut_t_ids, is_mark_surface,
                         new_tets, new_track_surface_fs, modified_t_ids)) {
-        time_subdivide_tets += timer.getElapsedTime();
+//        time_subdivide_tets += timer.getElapsedTime();
 //        cout<<"FAIL subdivide_tets"<<endl;
         return false;
     }
-    time_subdivide_tets += timer.getElapsedTime();
+//    time_subdivide_tets += timer.getElapsedTime();
 
-    timer.start();
+//    timer.start();
     push_new_tets(mesh, track_surface_fs, points, new_tets, new_track_surface_fs, modified_t_ids, is_again);
-    time_push_new_tets += timer.getElapsedTime();
+//    time_push_new_tets += timer.getElapsedTime();
 
-    timer.start();
+//    timer.start();
     simplify_subdivision_result(insert_f_id, input_vertices.size(), mesh, tree, track_surface_fs, modified_t_ids);
-    time_simplify_subdivision_result += timer.getElapsedTime();
+//    time_simplify_subdivision_result += timer.getElapsedTime();
 
     return true;
 }
@@ -1580,10 +1580,10 @@ void floatTetWild::find_boundary_edges(const std::vector<Vector3> &input_vertice
     cout << "#boundary_e1 = " << cnt1 << endl;
     cout << "#boundary_e2 = " << cnt2 << endl;
 }
-double time_e1 = 0;
-double time_e2 = 0;
-double time_e3 = 0;
-double time_e4 = 0;
+//double time_e1 = 0;
+//double time_e2 = 0;
+//double time_e3 = 0;
+//double time_e4 = 0;
 
 bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                          std::vector<std::pair<std::array<int, 2>, std::vector<int>>>& b_edge_infos,
@@ -1592,10 +1592,10 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                                          std::vector<bool> &is_face_inserted, bool is_again,
                                          std::vector<std::array<int, 3>>& known_surface_fs,
                                          std::vector<std::array<int, 3>>& known_not_surface_fs) {
-    time_e1 = 0;
-    time_e2 = 0;
-    time_e3 = 0;
-    time_e4 = 0;
+//    time_e1 = 0;
+//    time_e2 = 0;
+//    time_e3 = 0;
+//    time_e4 = 0;
     igl::Timer timer;
 
     //fortest
@@ -1811,9 +1811,9 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
     logger().info("time5 = {}", time5);
     logger().info("time6 = {}", time6);
 
-    logger().info("time_e1 = {}", time_e1);
-    logger().info("time_e2 = {}", time_e2);
-    logger().info("time_e3 = {}", time_e3);
+//    logger().info("time_e1 = {}", time_e1);
+//    logger().info("time_e2 = {}", time_e2);
+//    logger().info("time_e3 = {}", time_e3);
 //    //fortest
 //    std::ofstream fout_e("b_edges1.obj");
 ////    std::ofstream fout_v("b_edges1_points.xyz");
@@ -1846,7 +1846,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         std::vector<int>& snapped_v_ids, std::vector<std::array<int, 3>>& cut_fs,
         bool is_again) {
 
-    igl::Timer timer;
+//    igl::Timer timer;
 
     auto is_cross = [](int a, int b) {
         if ((a == Predicates::ORI_POSITIVE && b == Predicates::ORI_NEGATIVE)
@@ -1865,7 +1865,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
     n.normalize();
     const Vector3 &pp = input_vertices[input_faces[n_f_ids.front()][0]];
 
-    timer.start();
+//    timer.start();
     std::vector<bool> is_visited(mesh.tets.size(), false);
     std::queue<int> t_ids_queue;
     ///find seed t_ids
@@ -1935,9 +1935,9 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
             is_visited[t_id] = true;
         }
     }
-    time_e1+=timer.getElapsedTimeInSec();
+//    time_e1+=timer.getElapsedTimeInSec();
 
-    timer.start();
+//    timer.start();
     std::vector<int> v_oris(mesh.tet_vertices.size(), Predicates::ORI_UNKNOWN);
     while (!t_ids_queue.empty()) {
         int t_id = t_ids_queue.front();
@@ -2064,9 +2064,9 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         }
     }
     vector_unique(cut_fs);
-    time_e2+=timer.getElapsedTimeInSec();
+//    time_e2+=timer.getElapsedTimeInSec();
 
-    timer.start();
+//    timer.start();
     std::vector<std::array<int, 2>> tet_edges;
     for (const auto &f:cut_fs) {
         for (int j = 0; j < 3; j++) {
@@ -2100,7 +2100,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
         }
     }
     vector_unique(snapped_v_ids);
-    time_e3+=timer.getElapsedTimeInSec();
+//    time_e3+=timer.getElapsedTimeInSec();
 
 //    //fortest
 //    Eigen::MatrixXd V(cut_fs.size() * 3, 3), C(cut_fs.size() * 3, 3);

@@ -1109,7 +1109,7 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
     }
 //    igl::writeSTL("before_bfs.stl", V_sf, F_sf);
 
-    if(mesh.params.correct_surface_orientation) {
+    if (mesh.params.correct_surface_orientation) {
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
         Eigen::VectorXi _1, _2;
@@ -1118,7 +1118,7 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
         F_sf.resize(0, 0);
         bfs_orient(F, F_sf, _1);
     }
-    igl::writeSTL(mesh.params.output_path + "_tracked_surface.stl", V_sf, F_sf);
+    igl::writeSTL(mesh.params.output_path + "_" + mesh.params.postfix + "_tracked_surface.stl", V_sf, F_sf);
 }
 
 void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree){

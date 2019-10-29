@@ -59,10 +59,12 @@ namespace floatTetWild {
     void find_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                              const std::vector<bool> &is_face_inserted, const std::vector<bool>& old_is_face_inserted,
                              std::vector<std::pair<std::array<int, 2>, std::vector<int>>> &b_edge_infos,
+                             std::vector<bool>& is_on_cut_edges,
                              std::vector<std::array<int, 2>>& b_edges);
 
     bool insert_boundary_edges(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                std::vector<std::pair<std::array<int, 2>, std::vector<int>>> &b_edge_infos,
+                               std::vector<bool>& is_on_cut_edges,
                                std::vector<std::array<std::vector<int>, 4>> &track_surface_fs, Mesh &mesh,
                                AABBWrapper &tree,
                                std::vector<bool> &is_face_inserted, bool is_again,

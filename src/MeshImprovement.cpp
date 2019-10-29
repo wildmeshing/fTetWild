@@ -393,8 +393,10 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
                     continue;
 
                 GEO::index_t prev_facet;
-                if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2, prev_facet))
+                if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2, prev_facet)) {
                     mesh.tet_vertices[v_id].is_on_boundary = false;
+                    mesh.tet_vertices[v_id].is_on_cut = false;
+                }
             }
         }
 

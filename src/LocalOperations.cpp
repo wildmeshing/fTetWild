@@ -463,6 +463,8 @@ bool floatTetWild::is_degenerate(const Vector3& v0, const Vector3& v1, const Vec
 bool floatTetWild::is_out_boundary_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree){
     if(mesh.is_input_all_inserted)
         return false;
+    if(!mesh.tet_vertices[v_id].is_on_cut)
+        return false;
 
     GEO::index_t prev_facet;
     if(tree.is_out_tmp_b_envelope(new_pos, mesh.params.eps_2/100, prev_facet))

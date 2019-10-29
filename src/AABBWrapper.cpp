@@ -41,9 +41,10 @@ void floatTetWild::AABBWrapper::init_b_mesh(const std::vector<Vector3>& input_ve
 
     std::vector<std::pair<std::array<int, 2>, std::vector<int>>> _;
     std::vector<std::array<int, 2>> b_edges;
+    std::vector<bool> _1;
     find_boundary_edges(input_vertices, input_faces,
             std::vector<bool>(input_faces.size(), true), std::vector<bool>(input_faces.size(), true),
-            _, b_edges);
+            _, _1, b_edges);
 
     if (b_edges.empty()) {
 //    if (b_edge_infos.empty()) {

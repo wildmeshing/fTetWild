@@ -78,6 +78,7 @@ public:
 
         bool is_on_surface = false;
         bool is_on_boundary = false;
+        bool is_on_cut = false;
         int on_boundary_e_id = -1;
         bool is_on_bbox = false;
         bool is_outside = false;

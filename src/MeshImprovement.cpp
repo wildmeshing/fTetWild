@@ -912,7 +912,7 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 
 //    check_envelope(mesh, tree);
 
-//    MeshIO::write_mesh("test.msh", mesh);
+//    MeshIO::write_mesh(mesh.params.output_path+"_"+mesh.params.postfix+"test.msh", mesh);
     output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");
 //    //pausee();
 
@@ -1427,10 +1427,12 @@ void floatTetWild::untangle(Mesh &mesh) {
                 cnt++;
             }
         } else {
-            if (cnt_on_surface <= 2)
+            if (cnt_on_surface < 2)
                 continue;
             if (std::abs(max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4]) <
                 zero_area) {
+                if (t.is_surface_fs[max_j] == NOT_SURFACE)
+                    continue;
                 for (int j = 0; j < 4; j++) {
                     if (j != max_j) {
                         t.is_surface_fs[j] = NOT_SURFACE;

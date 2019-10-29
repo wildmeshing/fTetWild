@@ -174,6 +174,9 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
     tet_vertices[v_id].is_on_bbox = is_bbox_edge(mesh, v1_id, v2_id, old_t_ids);
     tet_vertices[v_id].is_on_surface = is_surface_edge(mesh, v1_id, v2_id, old_t_ids);
     tet_vertices[v_id].is_on_boundary = is_boundary_edge(mesh, v1_id, v2_id);
+    if(!mesh.is_input_all_inserted && tet_vertices[v_id].is_on_boundary) {
+        tet_vertices[v_id].is_on_cut = (tet_vertices[v1_id].is_on_cut && tet_vertices[v2_id].is_on_cut);
+    }
 
     //update tets
     std::vector<int> new_t_ids;

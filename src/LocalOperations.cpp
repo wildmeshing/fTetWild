@@ -861,7 +861,7 @@ void floatTetWild::set_intersection_sorted(const std::vector<int>& s1, const std
 }
 
 void floatTetWild::pausee(std::string msg) {
-//    return;
+    return;
     if (!msg.empty())
         cout << msg << endl;
     cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;

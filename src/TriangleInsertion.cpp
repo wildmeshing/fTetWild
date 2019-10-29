@@ -321,7 +321,7 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 
     /////
     std::vector<std::array<int, 2>> b_edges2;
-    mark_surface_fs(input_vertices, input_faces, track_surface_fs, is_face_inserted,
+    mark_surface_fs(input_vertices, input_faces, input_tags, track_surface_fs, is_face_inserted,
                     known_surface_fs, known_not_surface_fs, b_edges2, mesh, tree);
     logger().info("mark_surface_fs done");
 
@@ -2193,6 +2193,7 @@ bool floatTetWild::insert_boundary_edges_get_intersecting_edges_and_points(
 }
 
 void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                   const std::vector<int> &input_tags,
                                    std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                                    const std::vector<bool> &is_face_inserted,
                                    const std::vector<std::array<int, 3>>& known_surface_fs,
@@ -2368,7 +2369,38 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //                }
                 //
 
-                //fortest
+
+//                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
+//                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
+//                std::array<Vector2, 4> cs = {{(tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3}};
+//                for (int k = 0; k < 3; k++)
+//                    cs[k + 1] = (tps_2d[k] + cs[0]) / 3;
+//                std::array<Vector2, 3> ps_2d;
+//                bool is_all_out = true;
+//                for (int f_id: f_ids) {
+//                    if (!is_face_inserted[f_id])
+//                        continue;
+//
+//                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][1]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
+//
+//                    bool is_in = false;
+//                    for (auto &c:cs) {
+//                        if (is_on_bounded_side(ps_2d, c)) {
+//                            is_in = true;
+//                            break;
+//                        }
+//                    }
+//                    if (is_in) {
+//                        ff_id = f_id;
+//                        is_all_out = false;
+//                        break;
+//                    }
+//                }
+//                if(is_all_out)
+//                    continue;
+//                //
                 double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
                 double dd = (mesh.params.dd + mesh.params.dd_simplification) / 2;
                 eps *= eps;
@@ -2378,7 +2410,6 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                     continue;
                 else
                     ff_id = track_surface_fs[t_id][j].front();
-                //fortest
 
 //                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
 //                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
@@ -2434,6 +2465,9 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
             }
 
             myassert(ff_id>=0, "ff_id<0!!!");//fortest
+
+            mesh.tets[t_id].surface_tags[j] = input_tags[ff_id];
+            mesh.tets[opp_t_id].surface_tags[k] = input_tags[ff_id];
 
             auto &fv1 = input_vertices[input_faces[ff_id][0]];
             auto &fv2 = input_vertices[input_faces[ff_id][1]];

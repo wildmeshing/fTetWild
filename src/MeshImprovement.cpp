@@ -1376,6 +1376,7 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
 }
 
 void floatTetWild::untangle(Mesh &mesh) {
+//    return;
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
     static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
@@ -1434,7 +1435,7 @@ void floatTetWild::untangle(Mesh &mesh) {
                 if (t.is_surface_fs[max_j] == NOT_SURFACE)
                     continue;
                 for (int j = 0; j < 4; j++) {
-                    if (j != max_j) {
+                    if (j != max_j && t.is_surface_fs[j] != NOT_SURFACE) {
                         t.is_surface_fs[j] = NOT_SURFACE;
                         int opp_t_id = get_opp_t_id(mesh, t_id, j);
                         if (opp_t_id >= 0) {

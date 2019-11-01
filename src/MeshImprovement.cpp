@@ -1489,3 +1489,81 @@ void floatTetWild::untangle(Mesh &mesh) {
     }
     cout << "fixed " + std::to_string(cnt) + " tangled element" << endl;
 }
+
+void floatTetWild::smooth_open_boundary(Mesh& mesh) {
+    mark_outside(mesh);
+
+    auto &tets = mesh.tets;
+    auto &tet_vertices = mesh.tet_vertices;
+
+    std::vector<std::array<int, 3>> faces;
+    for (auto &t: tets) {
+        if (!t.is_outside)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            std::array<int, 3> f = {{t[j], t[(j + 1) % 4], t[(j + 2) % 4]}};
+            std::sort(f.begin(), f.end());
+            faces.push_back(f);
+        }
+    }
+    std::sort(faces.begin(), faces.end());
+
+    std::vector<bool> is_b_fs(faces.size(), false);
+    std::vector<std::vector<int>> conn_b_fs(tet_vertices.size());
+//    bool is_boundary = true;
+//    for (int i = 0; i < faces.size() - 1; i++) {
+//        if (faces[i] != faces[i + 1]) {
+//            if(!is_boundary) {
+//                is_b_fs[i] = true;//not here, later
+//                is_boundary = true;
+//                for (int j = 0; j < 3; j++) {
+//                    if (!tet_vertices[faces[i][j]].is_on_surface)
+//                        conn_fs[faces[i][j]].push_back(i);
+//                }
+//            }
+//        } else
+//            is_boundary = false;
+//    }
+    //todo
+
+    ///laplacian
+    for (int v_id; v_id < tet_vertices.size(); v_id++) {
+        if (tet_vertices[v_id].is_outside)
+            continue;
+        if (conn_b_fs[v_id].empty())
+            continue;
+
+        std::vector<int> n_v_ids;
+        for (auto &f_id: conn_b_fs[v_id]) {
+            for (int j = 0; j < 3; j++)
+                n_v_ids.push_back(faces[f_id][j]);
+        }
+        vector_unique(n_v_ids);
+
+        Vector3 c(0, 0, 0);
+        for (int v_id: n_v_ids) {
+            c += tet_vertices[v_id].pos;
+        }
+        c /= n_v_ids.size();
+
+        static const int N = 5;
+        for (int n = 0; n < N; n++) {
+//            is_inverted()
+            //todo
+        }
+
+        tet_vertices[v_id].is_freezed = true;
+    }
+
+    ///regular smoothing
+    //todo
+
+    ///unfreeze
+    for (int v_id; v_id < tet_vertices.size(); v_id++) {
+        if (tet_vertices[v_id].is_outside)
+            continue;
+        if (conn_b_fs[v_id].empty())
+            continue;
+        tet_vertices[v_id].is_freezed = false;
+    }
+}

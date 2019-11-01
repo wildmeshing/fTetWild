@@ -20,6 +20,7 @@ namespace floatTetWild {
     void boolean_operation(Mesh& mesh, int op);
     void filter_outside(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);
+    void smooth_open_boundary(Mesh& mesh);
 
     void output_info(Mesh& mesh, const AABBWrapper& tree);
     void check_envelope(Mesh& mesh, const AABBWrapper& tree);

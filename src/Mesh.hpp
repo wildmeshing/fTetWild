@@ -108,6 +108,7 @@ public:
             quality = 0;
             scalar = 0;
             is_removed = false;
+            is_outside = false;
         }
 
         inline const Vector4i &pts_indices() const { return indices; }

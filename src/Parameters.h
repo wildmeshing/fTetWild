@@ -27,6 +27,8 @@ class Parameters
     bool is_quiet  = false;
     int  log_level = 0;
 
+    bool smooth_open_boundary = false;
+
     // it decides the scale of the box, presents the deviation of the box from the model
     //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)
     Scalar box_scale = 1 / 10.0;

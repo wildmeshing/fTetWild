@@ -1490,7 +1490,7 @@ void floatTetWild::untangle(Mesh &mesh) {
     cout << "fixed " + std::to_string(cnt) + " tangled element" << endl;
 }
 
-void floatTetWild::smooth_open_boundary(Mesh& mesh) {
+void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
     mark_outside(mesh);
 
     auto &tets = mesh.tets;
@@ -1498,7 +1498,7 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh) {
 
     std::vector<std::array<int, 3>> faces;
     for (auto &t: tets) {
-        if (!t.is_outside)
+        if (t.is_outside)
             continue;
         for (int j = 0; j < 4; j++) {
             std::array<int, 3> f = {{t[j], t[(j + 1) % 4], t[(j + 2) % 4]}};
@@ -1507,63 +1507,102 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh) {
         }
     }
     std::sort(faces.begin(), faces.end());
+    if (faces.empty())
+        return;
 
-    std::vector<bool> is_b_fs(faces.size(), false);
+    bool has_open_boundary = false;
     std::vector<std::vector<int>> conn_b_fs(tet_vertices.size());
-//    bool is_boundary = true;
-//    for (int i = 0; i < faces.size() - 1; i++) {
-//        if (faces[i] != faces[i + 1]) {
-//            if(!is_boundary) {
-//                is_b_fs[i] = true;//not here, later
-//                is_boundary = true;
-//                for (int j = 0; j < 3; j++) {
-//                    if (!tet_vertices[faces[i][j]].is_on_surface)
-//                        conn_fs[faces[i][j]].push_back(i);
-//                }
-//            }
-//        } else
-//            is_boundary = false;
-//    }
-    //todo
-
-    ///laplacian
-    for (int v_id; v_id < tet_vertices.size(); v_id++) {
-        if (tet_vertices[v_id].is_outside)
-            continue;
-        if (conn_b_fs[v_id].empty())
-            continue;
-
-        std::vector<int> n_v_ids;
-        for (auto &f_id: conn_b_fs[v_id]) {
-            for (int j = 0; j < 3; j++)
-                n_v_ids.push_back(faces[f_id][j]);
+    bool is_boundary = true;
+    for (int i = 0; i < faces.size() - 1; i++) {
+        if (faces[i] == faces[i + 1]) {
+            is_boundary = false;
+        } else {
+            if (is_boundary) {
+                has_open_boundary = true;
+                for (int j = 0; j < 3; j++) {
+                    if (!tet_vertices[faces[i][j]].is_on_surface)
+                        conn_b_fs[faces[i][j]].push_back(i);
+                }
+            }
+            is_boundary = true;
         }
-        vector_unique(n_v_ids);
-
-        Vector3 c(0, 0, 0);
-        for (int v_id: n_v_ids) {
-            c += tet_vertices[v_id].pos;
-        }
-        c /= n_v_ids.size();
-
-        static const int N = 5;
-        for (int n = 0; n < N; n++) {
-//            is_inverted()
-            //todo
-        }
-
-        tet_vertices[v_id].is_freezed = true;
     }
+    if (is_boundary) {
+        has_open_boundary = true;
+        for (int j = 0; j < 3; j++) {
+            if (!tet_vertices[faces.back()[j]].is_on_surface)
+                conn_b_fs[faces.back()[j]].push_back(faces.size() - 1);
+        }
+    }
+    if (!has_open_boundary)
+        return;
 
-    ///regular smoothing
-    //todo
+    const int IT = 3;
+    for (int it = 0; it < IT; it++) {
+        ///laplacian
+        int cnt = 0;
+        int cnt_s = 0;
+        for (int v_id = 0; v_id < tet_vertices.size(); v_id++) {
+            if (conn_b_fs[v_id].empty())
+                continue;
+            if (tet_vertices[v_id].is_on_surface)
+                continue;
+//            cout<<"ok111"<<endl;
 
-    ///unfreeze
-    for (int v_id; v_id < tet_vertices.size(); v_id++) {
-        if (tet_vertices[v_id].is_outside)
-            continue;
-        if (conn_b_fs[v_id].empty())
-            continue;
-        tet_vertices[v_id].is_freezed = false;
+            cnt++;
+            std::vector<int> n_v_ids;
+            for (auto &f_id: conn_b_fs[v_id]) {
+                for (int j = 0; j < 3; j++) {
+                    if (faces[f_id][j] != v_id)
+                        n_v_ids.push_back(faces[f_id][j]);
+                }
+            }
+            vector_unique(n_v_ids);
+
+            Vector3 c(0, 0, 0);
+            for (int n_v_id: n_v_ids) {
+                c += tet_vertices[n_v_id].pos;
+            }
+            c /= n_v_ids.size();
+
+            double dis = (c - tet_vertices[v_id].pos).norm();
+            Vector3 v = (c - tet_vertices[v_id].pos).normalized();
+            static const int N = 5;
+            Vector3 p;
+            for (int n = 0; n < N; n++) {
+                p = tet_vertices[v_id].pos + dis / pow(2, n) * v;
+                bool is_valid = true;
+                for (int t_id: tet_vertices[v_id].conn_tets) {
+                    int j = tets[t_id].find(v_id);
+                    if (is_inverted(mesh, t_id, j, p)) {
+                        is_valid = false;
+                        break;
+                    }
+                }
+                if (!is_valid)
+                    continue;
+
+                cnt_s++;
+                tet_vertices[v_id].pos = p;
+                for (int t_id: tet_vertices[v_id].conn_tets)
+                    tets[t_id].quality = get_quality(mesh, t_id);
+                break;
+            }
+
+            tet_vertices[v_id].is_freezed = true;
+        }
+        cout<<cnt<<"/"<<cnt_s<<endl;
+
+        ///regular smoothing
+        vertex_smoothing(mesh, tree);
+
+        ///unfreeze
+        for (int v_id; v_id < tet_vertices.size(); v_id++) {
+            if (conn_b_fs[v_id].empty())
+                continue;
+            if (tet_vertices[v_id].is_on_surface)
+                continue;
+            tet_vertices[v_id].is_freezed = false;
+        }
     }
 }

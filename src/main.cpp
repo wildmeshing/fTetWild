@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
     command_line.add_flag("--correct-surface-orientation", params.correct_surface_orientation, "");
 
     command_line.add_option("--envelope-log", params.envelope_log, "");
-
+    command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
@@ -371,9 +371,16 @@ int main(int argc, char **argv) {
     timer.start();
     correct_tracked_surface_orientation(mesh, tree);
     logger().info("correct_tracked_surface_orientation done");
-    if (boolean_op < 0)
-        filter_outside(mesh);
-    else
+    if (boolean_op < 0) {
+        if (params.smooth_open_boundary) {
+            smooth_open_boundary(mesh, tree);
+            for (auto &t: mesh.tets) {
+                if (t.is_outside)
+                    t.is_removed = true;
+            }
+        } else
+            filter_outside(mesh);
+    } else
         boolean_operation(mesh, boolean_op);
     stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                    mesh.get_max_energy(), mesh.get_avg_energy());

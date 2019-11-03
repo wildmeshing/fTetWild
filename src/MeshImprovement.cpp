@@ -1587,7 +1587,7 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
                     }
                     if (get_quality(p, tet_vertices[tets[t_id][(j + 1) % 4]].pos,
                                     tet_vertices[tets[t_id][(j + 2) % 4]].pos,
-                                    tet_vertices[tets[t_id][(j + 3) % 4]].pos) > mesh.params.stop_energy * 2) {
+                                    tet_vertices[tets[t_id][(j + 3) % 4]].pos) > mesh.params.stop_energy) {
                         is_valid = false;
                         break;
                     }

@@ -1620,14 +1620,14 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
 }
 
 void floatTetWild::manifold_surface(Mesh& mesh) {
-    mark_outside(mesh);
-
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
+    std::ofstream fout("nonmanifold_v.xyz");
+
     std::vector<std::array<int, 3>> faces;
     for (auto &t: tets) {
-        if (t.is_outside)
+        if (t.is_removed)
             continue;
         for (int j = 0; j < 4; j++) {
             std::array<int, 3> f = {{t[j], t[(j + 1) % 4], t[(j + 2) % 4]}};
@@ -1640,69 +1640,48 @@ void floatTetWild::manifold_surface(Mesh& mesh) {
         return;
 
     std::vector<std::array<int, 3>> b_faces;
-    bool has_open_boundary = false;
     bool is_boundary = true;
     for (int i = 0; i < faces.size() - 1; i++) {
         if (faces[i] == faces[i + 1]) {
             is_boundary = false;
         } else {
             if (is_boundary) {
-                has_open_boundary = true;
                 b_faces.push_back(faces[i]);
             }
             is_boundary = true;
         }
     }
     if (is_boundary) {
-        has_open_boundary = true;
         b_faces.push_back(faces.back());
     }
-    if (!has_open_boundary)
-        return;
 
-//    std::vector<std::array<int, 2>> b_edges;
-//    std::vector<std::vector<int>> conn_b_fs(tet_vertices.size());
-//    for (int i = 0; i < b_faces.size(); i++) {
-//        for (int j = 0; j < 3; j++) {
-//            conn_b_fs[b_faces[i][j]].push_back(i);
-//            if (b_faces[i][j] < b_faces[i][(j + 1) % 3])
-//                b_edges.push_back({{b_faces[i][j], b_faces[i][(j + 1) % 3]}});
-//            else
-//                b_edges.push_back({{b_faces[i][(j + 1) % 3], b_faces[i][j]}});
-//        }
-//    }
-//    vector_unique(b_edges);
-
-//    ///find non-manifold edges
-//    for(auto& e: b_edges){
-//        std::vector<int> n_f_ids;
-//        set_intersection(conn_b_fs[e[0]], conn_b_fs[e[1]], n_f_ids);
-//        if(n_f_ids.size()<=2)
-//            continue;
-//        //todo
-//    }
-
-    ///find non-manifold vertices
-    std::vector<int> b_v_ids;
+    std::vector<std::array<int, 2>> b_edges;
     for (int i = 0; i < b_faces.size(); i++) {
         for (int j = 0; j < 3; j++) {
-            b_v_ids.push_back(b_faces[i][j]);
+            if (b_faces[i][j] < b_faces[i][(j + 1) % 3])
+                b_edges.push_back({{b_faces[i][j], b_faces[i][(j + 1) % 3]}});
+            else
+                b_edges.push_back({{b_faces[i][(j + 1) % 3], b_faces[i][j]}});
         }
     }
-    vector_unique(b_v_ids);
+    vector_unique(b_edges);
+    cout << "b_edges.size = " << b_edges.size() << endl;
 
-    ///
-    for (int b_v_id: b_v_ids) {
+    ///find non-manifold edges
+    std::vector<int> fixed_v_ids;
+    int cnt = 0;
+    for (auto &e: b_edges) {
+        std::vector<int> n_t_ids;
+        set_intersection(tet_vertices[e[0]].conn_tets, tet_vertices[e[1]].conn_tets, n_t_ids);
         std::map<int, bool> is_visited;
-        int cnt = 0;
-        for (int t_id: tet_vertices[b_v_id].conn_tets) {
-            if (!tets[t_id].is_outside)
+        for (int t_id: n_t_ids) {
+            if (!tets[t_id].is_removed)
                 is_visited[t_id] = false;
         }
 
         std::vector<std::vector<int>> tet_groups;
-        for (int t_id: tet_vertices[b_v_id].conn_tets) {
-            if (tets[t_id].is_outside)
+        for (int t_id: n_t_ids) {
+            if (is_visited.find(t_id) == is_visited.end())
                 continue;
             if (is_visited[t_id])
                 continue;
@@ -1716,11 +1695,89 @@ void floatTetWild::manifold_surface(Mesh& mesh) {
                 tet_queue.pop();
                 tet_groups.back().push_back(t0_id);
 
-                int j = tets[t_id].find(b_v_id);
+                for (int j = 0; j < 4; j++) {
+                    if (tets[t0_id][j] == e[0] || tets[t0_id][j] == e[1])
+                        continue;
+                    int opp_t_id = get_opp_t_id(mesh, t0_id, j);
+                    if (is_visited.find(opp_t_id) != is_visited.end() && !is_visited[opp_t_id]) {
+                        tet_queue.push(opp_t_id);
+                        is_visited[opp_t_id] = true;
+                    }
+                }
+            }
+        }
+        if (tet_groups.size() < 2)
+            continue;
+
+        cout << "find a non-manifold edge! " << cnt++ << endl;
+//        cout<<e[0]<<" "<<e[1]<<endl;
+//        for(auto& g: tet_groups){
+//            vector_print(g);
+//        }
+//        pausee();
+
+        fixed_v_ids.push_back(e[0]);
+        fixed_v_ids.push_back(e[1]);
+        for (int i = 1; i < tet_groups.size(); i++) {
+            tet_vertices.push_back(tet_vertices[e[0]]);
+            tet_vertices.push_back(tet_vertices[e[1]]);
+            for (int t_id: tet_groups[i]) {
+                for (int j = 0; j < 4; j++) {
+                    if (tets[t_id][j] == e[0])
+                        tets[t_id][j] = tet_vertices.size() - 2;
+                    else if (tets[t_id][j] == e[1])
+                        tets[t_id][j] = tet_vertices.size() - 1;
+                }
+            }
+        }
+    }
+    vector_unique(fixed_v_ids);
+
+    ///find non-manifold vertices
+    std::vector<int> b_v_ids;
+    for (int i = 0; i < b_faces.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            b_v_ids.push_back(b_faces[i][j]);
+        }
+    }
+    vector_unique(b_v_ids);
+    std::vector<int> tmp;
+    std::set_difference(b_v_ids.begin(), b_v_ids.end(), fixed_v_ids.begin(), fixed_v_ids.end(), std::back_inserter(tmp));
+    b_v_ids = tmp;
+    cout << "b_v_ids.size = " << b_v_ids.size() << endl;
+
+    ///
+    cnt = 0;
+    for (int b_v_id: b_v_ids) {
+        std::map<int, bool> is_visited;
+        for (int t_id: tet_vertices[b_v_id].conn_tets) {
+            if (!tets[t_id].is_removed)
+                is_visited[t_id] = false;
+        }
+
+        std::vector<std::vector<int>> tet_groups;
+        for (int t_id: tet_vertices[b_v_id].conn_tets) {
+            if (is_visited.find(t_id) == is_visited.end())
+                continue;
+            if (is_visited[t_id])
+                continue;
+            is_visited[t_id] = true;
+
+            tet_groups.emplace_back();
+            std::queue<int> tet_queue;
+            tet_queue.push(t_id);
+            while (!tet_queue.empty()) {
+                int t0_id = tet_queue.front();
+                tet_queue.pop();
+                tet_groups.back().push_back(t0_id);
+
+                int j = tets[t0_id].find(b_v_id);
                 for (int k = 0; k < 3; k++) {
                     int opp_t_id = get_opp_t_id(mesh, t0_id, (j + 1 + k) % 4);
-                    if (!tets[opp_t_id].is_outside && !is_visited[t_id])
+                    if (is_visited.find(opp_t_id) != is_visited.end() && !is_visited[opp_t_id]) {
                         tet_queue.push(opp_t_id);
+                        is_visited[opp_t_id] = true;
+                    }
                 }
             }
         }
@@ -1728,7 +1785,20 @@ void floatTetWild::manifold_surface(Mesh& mesh) {
         if (tet_groups.size() < 2)
             continue;
 
-        cout<<"find a non-manifold vertex!"<<endl;
+        cout << "find a non-manifold vertex!" << cnt++ << endl;
+//        cout<<"b_v_id = "<<b_v_id<<endl;
+//        fout<<tet_vertices[b_v_id].pos[0]<<" "<<tet_vertices[b_v_id].pos[1]<<" "<<tet_vertices[b_v_id].pos[2]<<endl;
+//        for(auto& g: tet_groups){
+//            cout<<"group"<<endl;
+//            for(int t_id: g){
+//                cout<<"t"<<t_id<<": ";
+//                for(int j=0;j<4;j++)
+//                    cout<<tets[t_id][j]<<" ";
+//                cout<<endl;
+//            }
+//        }
+//        pausee();
+
         for (int i = 1; i < tet_groups.size(); i++) {
             tet_vertices.push_back(tet_vertices[b_v_id]);
             for (int t_id: tet_groups[i]) {
@@ -1737,4 +1807,6 @@ void floatTetWild::manifold_surface(Mesh& mesh) {
             }
         }
     }
+
+    fout.close();
 }

@@ -190,6 +190,7 @@ int main(int argc, char **argv) {
 
     command_line.add_option("--envelope-log", params.envelope_log, "");
     command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
+    command_line.add_flag("--manifold-surface", params.manifold_surface, "");
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
@@ -382,6 +383,9 @@ int main(int argc, char **argv) {
             filter_outside(mesh);
     } else
         boolean_operation(mesh, boolean_op);
+    if(params.manifold_surface){
+        manifold_surface(mesh);
+    }
     stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                    mesh.get_max_energy(), mesh.get_avg_energy());
     logger().info("after winding number");

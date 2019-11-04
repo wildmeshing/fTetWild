@@ -28,6 +28,7 @@ class Parameters
     int  log_level = 0;
 
     bool smooth_open_boundary = false;
+    bool manifold_surface = false;
 
     // it decides the scale of the box, presents the deviation of the box from the model
     //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)

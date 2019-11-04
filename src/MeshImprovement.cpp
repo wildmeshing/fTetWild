@@ -1618,3 +1618,72 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
         }
     }
 }
+
+void floatTetWild::manifold_surface(Mesh& mesh, const AABBWrapper& tree) {
+    mark_outside(mesh);
+
+    auto &tets = mesh.tets;
+    auto &tet_vertices = mesh.tet_vertices;
+
+    std::vector<std::array<int, 3>> faces;
+    for (auto &t: tets) {
+        if (t.is_outside)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            std::array<int, 3> f = {{t[j], t[(j + 1) % 4], t[(j + 2) % 4]}};
+            std::sort(f.begin(), f.end());
+            faces.push_back(f);
+        }
+    }
+    std::sort(faces.begin(), faces.end());
+    if (faces.empty())
+        return;
+
+    std::vector<std::array<int, 3>> b_faces;
+    bool has_open_boundary = false;
+    bool is_boundary = true;
+    for (int i = 0; i < faces.size() - 1; i++) {
+        if (faces[i] == faces[i + 1]) {
+            is_boundary = false;
+        } else {
+            if (is_boundary) {
+                has_open_boundary = true;
+                b_faces.push_back(faces[i]);
+            }
+            is_boundary = true;
+        }
+    }
+    if (is_boundary) {
+        has_open_boundary = true;
+        b_faces.push_back(faces.back());
+    }
+    if (!has_open_boundary)
+        return;
+
+    std::vector<std::array<int, 2>> b_edges;
+    std::vector<std::vector<int>> conn_b_fs(tet_vertices.size());
+    for (int i = 0; i < b_faces.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            conn_b_fs[b_faces[i][j]].push_back(i);
+            if (b_faces[i][j] < b_faces[i][(j + 1) % 3])
+                b_edges.push_back({{b_faces[i][j], b_faces[i][(j + 1) % 3]}});
+            else
+                b_edges.push_back({{b_faces[i][(j + 1) % 3], b_faces[i][j]}});
+        }
+    }
+    vector_unique(b_edges);
+
+//    ///find non-manifold edges
+//    for(auto& e: b_edges){
+//        std::vector<int> n_f_ids;
+//        set_intersection(conn_b_fs[e[0]], conn_b_fs[e[1]], n_f_ids);
+//        if(n_f_ids.size()<=2)
+//            continue;
+//        //todo
+//    }
+
+    ///find non-manifold vertices
+    //todo
+
+    ///
+}

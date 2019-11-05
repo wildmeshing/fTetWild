@@ -1816,6 +1816,9 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
         if (tet_groups.size() < 2)
             continue;
 
+        cout<<"find non-manifold edge "<<e[0]<<" "<<e[1]<<endl;
+        cout<<tet_groups.size()<<"/"<<n_t_ids.size()<<endl;
+
         //split
         std::vector<int> new_t_ids;
         std::vector<int> old_t_ids;

@@ -261,11 +261,10 @@ bool floatTetWild::is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, cons
         ps.push_back(ps[p0_id] * (j / N) + ps[p1_id] * (1 - j / N));
     }
 
-    GEO::index_t prev_facet;
     if(!mesh.is_input_all_inserted) {
-        return !tree.is_out_tmp_b_envelope(ps, mesh.params.eps_2, prev_facet);
+        return !tree.is_out_tmp_b_envelope(ps, mesh.params.eps_2);
     }else {
-        return !tree.is_out_b_envelope(ps, mesh.params.eps_2, prev_facet);
+        return !tree.is_out_b_envelope(ps, mesh.params.eps_2);
     }
 
 //    if(!mesh.is_input_all_inserted)

@@ -549,10 +549,13 @@ bool floatTetWild::is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scala
 }
 
 bool floatTetWild::is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id) {
-    return true;
-
-    if (mesh.tet_vertices[v1_id].on_boundary_e_id >= 0 && mesh.tet_vertices[v2_id].on_boundary_e_id
-        && mesh.tet_vertices[v1_id].on_boundary_e_id != mesh.tet_vertices[v2_id].on_boundary_e_id)
+    if (mesh.tet_vertices[v1_id].is_on_boundary && !mesh.tet_vertices[v2_id].is_on_boundary)
         return false;
     return true;
+
+
+//    if (mesh.tet_vertices[v1_id].on_boundary_e_id >= 0 && mesh.tet_vertices[v2_id].on_boundary_e_id
+//        && mesh.tet_vertices[v1_id].on_boundary_e_id != mesh.tet_vertices[v2_id].on_boundary_e_id)
+//        return false;
+//    return true;
 }

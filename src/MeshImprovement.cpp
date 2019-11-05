@@ -914,6 +914,14 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 
 //    MeshIO::write_mesh(mesh.params.output_path+"_"+mesh.params.postfix+"test.msh", mesh);
     output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");
+
+    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_vs.xyz");
+    for(auto& v: tet_vertices){
+        if(v.is_removed || !v.is_on_boundary)
+            continue;
+        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
+    }
+    fout.close();
 //    //pausee();
 
     return;
@@ -1492,7 +1500,19 @@ void floatTetWild::untangle(Mesh &mesh) {
 
 void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
     mark_outside(mesh);
+    smooth_open_boundary_aux(mesh, tree);
 
+    return;
+    for(int i=0;i<10;i++) {
+        mark_outside(mesh);
+        smooth_open_boundary_aux(mesh, tree);
+        for(auto& t: mesh.tets)
+            t.is_outside = false;
+    }
+    mark_outside(mesh);
+}
+
+void floatTetWild::smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree) {
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
@@ -1542,7 +1562,7 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
     if (!has_open_boundary)
         return;
 
-    const int IT = 5;
+    const int IT = 8;
     for (int it = 0; it < IT; it++) {
         ///laplacian
         int cnt = 0;
@@ -1605,15 +1625,19 @@ void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
         cout<<cnt<<"/"<<cnt_s<<endl;
 
         ///regular optimization
+        for(auto& v: tet_vertices){
+            if(v.is_on_surface)
+                v.is_freezed = true;
+        }
+        edge_collapsing(mesh, tree);
 //        edge_swapping(mesh);
-//        edge_collapsing(mesh, tree);
         vertex_smoothing(mesh, tree);
 //        vertex_smoothing(mesh, tree);
 
         ///unfreeze
         for (int v_id; v_id < tet_vertices.size(); v_id++) {
 //            if (is_b_vs[v_id])
-            if (!conn_b_fs[v_id].empty())
+//            if (!conn_b_fs[v_id].empty())
                 tet_vertices[v_id].is_freezed = false;
         }
     }

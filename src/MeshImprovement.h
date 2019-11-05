@@ -21,6 +21,7 @@ namespace floatTetWild {
     void filter_outside(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);
     void smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree);
+    void smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree);
     void manifold_surface(Mesh& mesh);
 
     void output_info(Mesh& mesh, const AABBWrapper& tree);

@@ -23,6 +23,8 @@ namespace floatTetWild {
     void smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree);
     void smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree);
     void manifold_surface(Mesh& mesh);
+    void manifold_edges(Mesh& mesh);
+    void manifold_vertices(Mesh& mesh);
 
     void output_info(Mesh& mesh, const AABBWrapper& tree);
     void check_envelope(Mesh& mesh, const AABBWrapper& tree);

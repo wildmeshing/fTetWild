@@ -148,13 +148,13 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
         Scalar max_energy, avg_energy;
         get_max_avg_energy(mesh, max_energy, avg_energy);
-        if (max_energy <= mesh.params.stop_energy && it_after_al_inserted > M)
+        if (max_energy <= mesh.params.stop_energy && mesh.is_input_all_inserted)
             break;
 
         if (mesh.params.stop_p > 0) {
             int p = get_max_p(mesh);
             cout << "p = " << p << endl;
-            if (p <= mesh.params.stop_p && it_after_al_inserted > M)
+            if (p <= mesh.params.stop_p && mesh.is_input_all_inserted)
                 break;
         }
 

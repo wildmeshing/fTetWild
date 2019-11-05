@@ -358,20 +358,20 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
         mesh.is_input_all_inserted = true;
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-//    ///fortest
-//    Eigen::MatrixXd V(input_vertices.size(), 3);
-//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), true), 3);
-//    for (int i = 0; i < input_vertices.size(); i++)
-//        V.row(i) = input_vertices[i];
-//    int cnt = 0;
-//    for (int i = 0; i < input_faces.size(); i++) {
-//        if (!is_face_inserted[i])
-//            continue;
-//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-//        cnt++;
-//    }
-//    igl::writeSTL("inserted.stl", V, F);
-//    ///fortest
+    ///fortest
+    Eigen::MatrixXd V(input_vertices.size(), 3);
+    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), false), 3);
+    for (int i = 0; i < input_vertices.size(); i++)
+        V.row(i) = input_vertices[i];
+    int cnt = 0;
+    for (int i = 0; i < input_faces.size(); i++) {
+        if (is_face_inserted[i])
+            continue;
+        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+        cnt++;
+    }
+    igl::writeSTL(mesh.params.output_path+"_"+mesh.params.postfix+"_uninserted.stl", V, F);
+    ///fortest
 
 //    //fortest
 //    std::ofstream fout("b_vs.xyz");
@@ -381,17 +381,20 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
 //        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
 //    }
 //    fout.close();
-//    //
-//    fout.open("b_es.obj");
-//    for(auto& e: b_edges1){
-//        fout<<"v "<<input_vertices[e[0]].transpose()<<endl;
-//        fout<<"v "<<input_vertices[e[1]].transpose()<<endl;
-//    }
-//    for(int i=0;i<b_edges1.size();i++){
-//        fout<<"l "<<i*2+1<<" "<<i*2+2<<endl;
-//    }
-//    fout.close();
-//    //fortest
+
+    //
+    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_es.obj");
+    for(int i=0;i<tree.tmp_b_mesh.vertices.nb();i++){
+        fout<<"v "<<tree.tmp_b_mesh.vertices.point(i)[0]<<" "
+                <<tree.tmp_b_mesh.vertices.point(i)[1]<<" "
+                <<tree.tmp_b_mesh.vertices.point(i)[2]<<endl;
+    }
+    for(int i=0;i<tree.tmp_b_mesh.facets.nb();i++) {
+        fout << "l " << tree.tmp_b_mesh.facets.vertex(i, 1) + 1 << " "
+             << tree.tmp_b_mesh.facets.vertex(i, 2) + 1 << endl;
+    }
+    fout.close();
+    //fortest
 
     pausee();
 }
@@ -2545,6 +2548,17 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
     cout<<"known_not_surface_fs.size = "<<known_not_surface_fs.size()<<endl;
     if(known_surface_fs.empty() && known_not_surface_fs.empty())
         return;
+
+//    Eigen::MatrixXd V(known_surface_fs.size()*3, 3);
+//    Eigen::MatrixXi F(known_surface_fs.size(), 3);
+//    for(int i=0;i<known_surface_fs.size();i++) {
+//        for (int j = 0; j < 3; j++)
+//            V.row(i * 3 + j) = mesh.tet_vertices[known_surface_fs[i][j]].pos;
+//        F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
+//    }
+//    igl::writeOFF("known_surface_fs.off",V, F);
+//    pausee("writing known_surface_fs.off");
+
 
     //b_edges
     std::vector<std::array<int, 2>> tmp_edges;

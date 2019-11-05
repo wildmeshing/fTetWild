@@ -13,7 +13,7 @@ namespace floatTetWild {
     bool is_edge_freezed(Mesh& mesh, int v1_id, int v2_id);
     bool is_collapsable_bbox(Mesh& mesh, int v1_id, int v2_id);
     bool is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scalar l_2);
-    bool is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id);
+    bool is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree);
 }
 
 #endif //FLOATTETWILD_EDGECOLLAPSING_H

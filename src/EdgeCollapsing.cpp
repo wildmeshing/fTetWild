@@ -36,7 +36,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
     std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
     for (auto &e:edges) {
         Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
-        if (is_collapsable_length(mesh, e[0], e[1], l_2) && is_collapsable_boundary(mesh, e[0], e[1])) {
+        if (is_collapsable_length(mesh, e[0], e[1], l_2) && is_collapsable_boundary(mesh, e[0], e[1], tree)) {
             ec_queue.push(ElementInQueue(e, l_2));
             ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
         }
@@ -72,7 +72,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
             if (!is_valid_edge(mesh, v_ids[0], v_ids[1]))
                 continue;
 
-            if(! is_collapsable_boundary(mesh, v_ids[0], v_ids[1]))
+            if(! is_collapsable_boundary(mesh, v_ids[0], v_ids[1], tree))
                 continue;
 
             Scalar weight = get_edge_length_2(mesh, v_ids[0], v_ids[1]);
@@ -548,8 +548,8 @@ bool floatTetWild::is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scala
     return false;
 }
 
-bool floatTetWild::is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id) {
-    if (mesh.tet_vertices[v1_id].is_on_boundary && !mesh.tet_vertices[v2_id].is_on_boundary)
+bool floatTetWild::is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree) {
+    if (mesh.tet_vertices[v1_id].is_on_boundary && !is_boundary_edge(mesh, v1_id, v2_id, tree))
         return false;
     return true;
 

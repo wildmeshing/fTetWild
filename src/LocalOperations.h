@@ -45,7 +45,7 @@ namespace floatTetWild {
 
     bool is_bbox_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
     bool is_surface_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
-    bool is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id);
+    bool is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree);
     bool is_valid_edge(const Mesh& mesh, int v1_id, int v2_id);
     bool is_valid_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
 

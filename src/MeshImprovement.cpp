@@ -296,7 +296,7 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     for (int i = 0; i < ops[0]; i++) {
         igl_timer.start();
         cout << "edge splitting..." << endl;
-        edge_splitting(mesh);
+        edge_splitting(mesh, tree);
         time = igl_timer.getElapsedTime();
         cout << "edge splitting done!" << endl;
         cout << "time = " << time << "s" << endl;

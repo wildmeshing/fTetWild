@@ -5,7 +5,7 @@
 
 #define TET_MODIFIED 100
 
-void floatTetWild::edge_splitting(Mesh& mesh) {
+void floatTetWild::edge_splitting(Mesh& mesh, const AABBWrapper& tree) {
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
@@ -64,7 +64,7 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
             continue;
 
         std::vector<std::array<int, 2>> new_edges;
-        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges, is_splittable))
+        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges, is_splittable, tree))
             suc_counter++;
         else
             is_repush = false;
@@ -99,7 +99,7 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
 }
 
 bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush,
-        std::vector<std::array<int, 2>>& new_edges, std::vector<bool>& is_splittable) {
+        std::vector<std::array<int, 2>>& new_edges, std::vector<bool>& is_splittable, const AABBWrapper& tree) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -173,7 +173,7 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
     tet_vertices[v_id].sizing_scalar = (tet_vertices[v1_id].sizing_scalar + tet_vertices[v2_id].sizing_scalar) / 2;
     tet_vertices[v_id].is_on_bbox = is_bbox_edge(mesh, v1_id, v2_id, old_t_ids);
     tet_vertices[v_id].is_on_surface = is_surface_edge(mesh, v1_id, v2_id, old_t_ids);
-    tet_vertices[v_id].is_on_boundary = is_boundary_edge(mesh, v1_id, v2_id);
+    tet_vertices[v_id].is_on_boundary = is_boundary_edge(mesh, v1_id, v2_id, tree);
     if(!mesh.is_input_all_inserted && tet_vertices[v_id].is_on_boundary) {
         tet_vertices[v_id].is_on_cut = (tet_vertices[v1_id].is_on_cut && tet_vertices[v2_id].is_on_cut);
     }

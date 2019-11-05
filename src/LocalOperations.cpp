@@ -244,34 +244,54 @@ bool floatTetWild::is_surface_edge(const Mesh& mesh, int v1_id, int v2_id, const
     return false;
 }
 
-bool floatTetWild::is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id) {
+bool floatTetWild::is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree) {
     if (!mesh.tet_vertices[v1_id].is_on_boundary || !mesh.tet_vertices[v2_id].is_on_boundary)
         return false;
 
-    if(!mesh.is_input_all_inserted)
-        return true;
-
-    int cnt = 0;
-    for (int t_id: mesh.tet_vertices[v1_id].conn_tets) {
-        std::array<int, 4> opp_js;
-        int ii = 0;
-        for (int j = 0; j < 4; j++) {
-            if (mesh.tets[t_id][j] == v1_id || mesh.tets[t_id][j] == v2_id)
-                continue;
-            opp_js[ii++] = j;
-        }
-        if (ii == 2) {
-            if (mesh.tets[t_id].is_surface_fs[opp_js[0]] != NOT_SURFACE)
-                cnt++;
-            if (mesh.tets[t_id].is_surface_fs[opp_js[1]] != NOT_SURFACE)
-                cnt++;
-            if (cnt > 2)
-                return false;
-        }
+    std::vector<GEO::vec3> ps;
+    ps.push_back(GEO::vec3(mesh.tet_vertices[v1_id].pos[0], mesh.tet_vertices[v1_id].pos[1],
+            mesh.tet_vertices[v1_id].pos[2]));
+    int p0_id = 0;
+    Scalar l = get_edge_length(mesh, v1_id, v2_id);
+    int N = l / mesh.params.dd + 1;
+    ps.push_back(GEO::vec3(mesh.tet_vertices[v2_id][0], mesh.tet_vertices[v2_id][1],
+                           mesh.tet_vertices[v2_id][2]));
+    int p1_id = ps.size() - 1;
+    for (Scalar j = 1; j < N - 1; j++) {
+        ps.push_back(ps[p0_id] * (j / N) + ps[p1_id] * (1 - j / N));
     }
-    if (cnt == 2)
-        return true;
-    return false;
+
+    GEO::index_t prev_facet;
+    if(!mesh.is_input_all_inserted) {
+        return !tree.is_out_tmp_b_envelope(ps, mesh.params.eps_2, prev_facet);
+    }else {
+        return !tree.is_out_b_envelope(ps, mesh.params.eps_2, prev_facet);
+    }
+
+//    if(!mesh.is_input_all_inserted)
+//        return true;
+//
+//    int cnt = 0;
+//    for (int t_id: mesh.tet_vertices[v1_id].conn_tets) {
+//        std::array<int, 4> opp_js;
+//        int ii = 0;
+//        for (int j = 0; j < 4; j++) {
+//            if (mesh.tets[t_id][j] == v1_id || mesh.tets[t_id][j] == v2_id)
+//                continue;
+//            opp_js[ii++] = j;
+//        }
+//        if (ii == 2) {
+//            if (mesh.tets[t_id].is_surface_fs[opp_js[0]] != NOT_SURFACE)
+//                cnt++;
+//            if (mesh.tets[t_id].is_surface_fs[opp_js[1]] != NOT_SURFACE)
+//                cnt++;
+//            if (cnt > 2)
+//                return false;
+//        }
+//    }
+//    if (cnt == 2)
+//        return true;
+//    return false;
 }
 
 bool floatTetWild::is_valid_edge(const Mesh& mesh, int v1_id, int v2_id) {
@@ -487,7 +507,7 @@ bool floatTetWild::is_out_boundary_envelope(const Mesh& mesh, int v_id, const Ve
     std::vector<int> b_v_ids;
     b_v_ids.reserve(tmp_b_v_ids.size());
     for(int b_v_id:tmp_b_v_ids){
-        if(is_boundary_edge(mesh, v_id, b_v_id))
+        if(is_boundary_edge(mesh, v_id, b_v_id, tree))
             b_v_ids.push_back(b_v_id);
     }
     if(b_v_ids.empty())

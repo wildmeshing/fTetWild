@@ -358,43 +358,43 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
         mesh.is_input_all_inserted = true;
     logger().info("#b_edge1 = {}, #b_edges2 = {}", b_edges1.size(), b_edges2.size());
 
-    ///fortest
-    Eigen::MatrixXd V(input_vertices.size(), 3);
-    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), false), 3);
-    for (int i = 0; i < input_vertices.size(); i++)
-        V.row(i) = input_vertices[i];
-    int cnt = 0;
-    for (int i = 0; i < input_faces.size(); i++) {
-        if (is_face_inserted[i])
-            continue;
-        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
-        cnt++;
-    }
-    igl::writeSTL(mesh.params.output_path+"_"+mesh.params.postfix+"_uninserted.stl", V, F);
-    ///fortest
-
-//    //fortest
-//    std::ofstream fout("b_vs.xyz");
-//    for(auto& v: mesh.tet_vertices){
-//        if(v.is_removed || !v.is_on_boundary)
+//    ///fortest
+//    Eigen::MatrixXd V(input_vertices.size(), 3);
+//    Eigen::MatrixXi F(std::count(is_face_inserted.begin(), is_face_inserted.end(), false), 3);
+//    for (int i = 0; i < input_vertices.size(); i++)
+//        V.row(i) = input_vertices[i];
+//    int cnt = 0;
+//    for (int i = 0; i < input_faces.size(); i++) {
+//        if (is_face_inserted[i])
 //            continue;
-//        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
+//        F.row(cnt) << input_faces[i][0], input_faces[i][1], input_faces[i][2];
+//        cnt++;
+//    }
+//    igl::writeSTL(mesh.params.output_path+"_"+mesh.params.postfix+"_uninserted.stl", V, F);
+//    ///fortest
+//
+////    //fortest
+////    std::ofstream fout("b_vs.xyz");
+////    for(auto& v: mesh.tet_vertices){
+////        if(v.is_removed || !v.is_on_boundary)
+////            continue;
+////        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
+////    }
+////    fout.close();
+//
+//    //
+//    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_es.obj");
+//    for(int i=0;i<tree.tmp_b_mesh.vertices.nb();i++){
+//        fout<<"v "<<tree.tmp_b_mesh.vertices.point(i)[0]<<" "
+//                <<tree.tmp_b_mesh.vertices.point(i)[1]<<" "
+//                <<tree.tmp_b_mesh.vertices.point(i)[2]<<endl;
+//    }
+//    for(int i=0;i<tree.tmp_b_mesh.facets.nb();i++) {
+//        fout << "l " << tree.tmp_b_mesh.facets.vertex(i, 1) + 1 << " "
+//             << tree.tmp_b_mesh.facets.vertex(i, 2) + 1 << endl;
 //    }
 //    fout.close();
-
-    //
-    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_es.obj");
-    for(int i=0;i<tree.tmp_b_mesh.vertices.nb();i++){
-        fout<<"v "<<tree.tmp_b_mesh.vertices.point(i)[0]<<" "
-                <<tree.tmp_b_mesh.vertices.point(i)[1]<<" "
-                <<tree.tmp_b_mesh.vertices.point(i)[2]<<endl;
-    }
-    for(int i=0;i<tree.tmp_b_mesh.facets.nb();i++) {
-        fout << "l " << tree.tmp_b_mesh.facets.vertex(i, 1) + 1 << " "
-             << tree.tmp_b_mesh.facets.vertex(i, 2) + 1 << endl;
-    }
-    fout.close();
-    //fortest
+//    //fortest
 
     pausee();
 }

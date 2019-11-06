@@ -323,6 +323,8 @@ void floatTetWild::insert_triangles_aux(const std::vector<Vector3> &input_vertic
     std::vector<std::array<int, 2>> b_edges2;
     mark_surface_fs(input_vertices, input_faces, input_tags, track_surface_fs, is_face_inserted,
                     known_surface_fs, known_not_surface_fs, b_edges2, mesh, tree);
+    //fortest: output and check
+//    output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_surface.stl");
     logger().info("mark_surface_fs done");
 
     /////
@@ -2540,9 +2542,6 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
             //
         }
     }
-
-//    fortest: output and check
-    output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_surface.stl");
 
     cout<<"known_surface_fs.size = "<<known_surface_fs.size()<<endl;
     cout<<"known_not_surface_fs.size = "<<known_not_surface_fs.size()<<endl;

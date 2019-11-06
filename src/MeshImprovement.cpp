@@ -1842,12 +1842,15 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
         for (int i = 1; i < tet_groups.size(); i++) {
             tet_vertices.push_back(tet_vertices[v_id]);
             int dup_v_id = tet_vertices.size() - 1;
+            tet_vertices[dup_v_id].conn_tets.clear();
             for (int old_t_id: tet_groups[i]) {
                 int new_t_id = new_t_ids[old_t_ids_map[old_t_id]];
                 int j = tets[old_t_id].find(v_id);
                 tets[old_t_id][j] = dup_v_id;
                 j = tets[new_t_id].find(v_id);
                 tets[new_t_id][j] = dup_v_id;
+                tet_vertices[dup_v_id].conn_tets.push_back(old_t_id);
+                tet_vertices[dup_v_id].conn_tets.push_back(new_t_id);
             }
         }
 

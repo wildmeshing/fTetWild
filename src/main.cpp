@@ -464,3 +464,14 @@ void connect_2_meshes(std::string m1, std::string m2, std::string m) {
 
     //pausee();
 }
+
+#include <igl/readMESH.h>
+void test_manifold(std::string& file_name){
+    Eigen::MatrixXd V;
+    Eigen::MatrixXi T, F;
+    igl::readMESH(file_name, V, T, F);
+
+    Mesh mesh;
+
+    manifold_surface(mesh);
+}

@@ -2373,37 +2373,37 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
                 //
 
 
-                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
-                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
-                std::array<Vector2, 4> cs = {{(tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3}};
-                for (int k = 0; k < 3; k++)
-                    cs[k + 1] = (tps_2d[k] + cs[0]) / 3;
-                std::array<Vector2, 3> ps_2d;
-                bool is_all_out = true;
-                for (int f_id: f_ids) {
-                    if (!is_face_inserted[f_id])
-                        continue;
-
-                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
-                                     to_2d(input_vertices[input_faces[f_id][1]], t),
-                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
-
-                    bool is_in = false;
-                    for (auto &c:cs) {
-                        if (is_on_bounded_side(ps_2d, c)) {
-                            is_in = true;
-                            break;
-                        }
-                    }
-                    if (is_in) {
-                        ff_id = f_id;
-                        is_all_out = false;
-                        break;
-                    }
-                }
-                if(is_all_out)
-                    continue;
-                //
+//                int t = get_t(tp1_3d, tp2_3d, tp3_3d);
+//                std::array<Vector2, 3> tps_2d = {{to_2d(tp1_3d, t), to_2d(tp2_3d, t), to_2d(tp3_3d, t)}};
+//                std::array<Vector2, 4> cs = {{(tps_2d[0] + tps_2d[1] + tps_2d[2]) / 3}};
+//                for (int k = 0; k < 3; k++)
+//                    cs[k + 1] = (tps_2d[k] + cs[0]) / 3;
+//                std::array<Vector2, 3> ps_2d;
+//                bool is_all_out = true;
+//                for (int f_id: f_ids) {
+//                    if (!is_face_inserted[f_id])
+//                        continue;
+//
+//                    ps_2d = {{to_2d(input_vertices[input_faces[f_id][0]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][1]], t),
+//                                     to_2d(input_vertices[input_faces[f_id][2]], t)}};
+//
+//                    bool is_in = false;
+//                    for (auto &c:cs) {
+//                        if (is_on_bounded_side(ps_2d, c)) {
+//                            is_in = true;
+//                            break;
+//                        }
+//                    }
+//                    if (is_in) {
+//                        ff_id = f_id;
+//                        is_all_out = false;
+//                        break;
+//                    }
+//                }
+//                if(is_all_out)
+//                    continue;
+//                //
                 double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
                 double dd = (mesh.params.dd + mesh.params.dd_simplification) / 2;
                 eps *= eps;

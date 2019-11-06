@@ -1782,13 +1782,9 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
         if (n_t_ids.empty())
             continue;
 
-        cout<<e[0]<<" "<<e[1]<<endl;
         std::map<int, bool> is_visited;
         for (int t_id: n_t_ids) {
             is_visited[t_id] = false;
-
-            cout<<t_id<<": ";
-            tets[t_id].print();
         }
 
         std::vector<std::vector<int>> tet_groups;
@@ -1815,7 +1811,7 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
                         tet_queue.push(opp_t_id);
                         is_visited[opp_t_id] = true;
                     } else {
-                        cout<<t0_id<<" "<<opp_t_id<<endl;
+//                        cout<<t0_id<<" "<<opp_t_id<<endl;
                     }
                 }
             }
@@ -1825,7 +1821,12 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
 
         cout<<"find non-manifold edge "<<e[0]<<" "<<e[1]<<endl;
         cout<<tet_groups.size()<<"/"<<n_t_ids.size()<<endl;
-        pausee();
+        cout<<e[0]<<" "<<e[1]<<endl;
+        for (int t_id: n_t_ids) {
+            cout<<t_id<<": ";
+            tets[t_id].print();
+        }
+//        pausee();
 
         //split
         std::vector<int> new_t_ids;
@@ -1839,9 +1840,12 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
         }
 
         //duplicate v_id
-        for (int i = 1; i < tet_groups.size(); i++) {
-            tet_vertices.push_back(tet_vertices[v_id]);
-            int dup_v_id = tet_vertices.size() - 1;
+        for (int i = 0; i < tet_groups.size(); i++) {
+            int dup_v_id = v_id;
+            if(i > 0) {
+                tet_vertices.push_back(tet_vertices[v_id]);
+                dup_v_id = tet_vertices.size() - 1;
+            }
             tet_vertices[dup_v_id].conn_tets.clear();
             for (int old_t_id: tet_groups[i]) {
                 int new_t_id = new_t_ids[old_t_ids_map[old_t_id]];
@@ -1853,6 +1857,22 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
                 tet_vertices[dup_v_id].conn_tets.push_back(new_t_id);
             }
         }
+
+//        for (int i = 0; i < old_t_ids.size(); i++) {
+//            cout<<"old_t "<<old_t_ids[i]<<":";
+//            tets[old_t_ids[i]].print();
+//            for(int j=0;j<4;j++) {
+//                cout << "\tv"<<tets[old_t_ids[i]][j]<<":";
+//                vector_print(tet_vertices[tets[old_t_ids[i]][j]].conn_tets);
+//            }
+//            cout<<"new_t "<<new_t_ids[i]<<":";
+//            tets[new_t_ids[i]].print();
+//            for(int j=0;j<4;j++) {
+//                cout << "\tv"<<tets[new_t_ids[i]][j]<<":";
+//                vector_print(tet_vertices[tets[new_t_ids[i]][j]].conn_tets);
+//            }
+//        }
+//        pausee();
 
         //push new edges into the queue
         old_t_ids.insert(old_t_ids.end(), new_t_ids.begin(), new_t_ids.end());
@@ -1953,6 +1973,8 @@ void floatTetWild::manifold_vertices(Mesh& mesh){
 
         if (tet_groups.size() < 2)
             continue;
+
+        cout<<"find non-manifold vertex "<<b_v_id<<endl;
 
         for (int i = 1; i < tet_groups.size(); i++) {
             tet_vertices.push_back(tet_vertices[b_v_id]);

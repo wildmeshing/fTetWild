@@ -384,11 +384,8 @@ int main(int argc, char **argv) {
     } else
         boolean_operation(mesh, boolean_op);
     if(params.manifold_surface){
+//        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
         manifold_surface(mesh);
-//        for (auto &t: mesh.tets) {
-//            if (t.is_outside)
-//                t.is_removed = true;
-//        }
     }
     stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
                    mesh.get_max_energy(), mesh.get_avg_energy());

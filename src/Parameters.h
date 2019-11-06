@@ -82,10 +82,12 @@ class Parameters
 
         eps_input = bbox_diag_length * eps_rel;
         dd        = eps_input / stage;
-        dd /= 2;
+//        dd /= 2;
         eps_delta = dd / std::sqrt(3);
         eps       = eps_input - eps_delta * stage;
         eps_2     = eps * eps;
+
+        dd /= 1.5;//tmp
 
         eps_coplanar = eps * 0.2;  // better to set it as eps-related
         if (eps_coplanar > bbox_diag_length * 1e-6)

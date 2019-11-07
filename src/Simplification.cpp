@@ -709,6 +709,87 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
     logger().debug("{}  faces are swapped!!", cnt);
 }
 
+void floatTetWild::flattening(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces,
+        const AABBWrapper& sf_tree, const Parameters& params){
+    std::vector<Vector3> ns(input_faces.size());
+    for (int i = 0; i < input_faces.size(); i++) {
+        ns[i] = ((input_vertices[input_faces[i][2]] - input_vertices[input_faces[i][0]]).cross(
+                input_vertices[input_faces[i][1]] - input_vertices[input_faces[i][0]])).normalized();
+    }
+
+    std::vector<std::vector<int>> conn_fs(input_vertices.size());
+    std::vector<std::array<int, 2>> edges;
+    edges.reserve(input_faces.size() * 6);
+    for (int i = 0; i < input_faces.size(); i++) {
+        auto &f = input_faces[i];
+        for (int j = 0; j < 3; j++) {
+            conn_fs[f[j]].push_back(i);
+            std::array<int, 2> e = {{f[j], f[mod3(j + 1)]}};
+            if (e[0] > e[1])
+                std::swap(e[0], e[1]);
+            edges.push_back(e);
+        }
+    }
+    vector_unique(edges);
+
+    auto needs_flattening = [](const Vector3& n1, const Vector3& n2){
+        double d = n1.dot(n2);
+        if(d<1-1e-5 && d>1-1e-3)//todo: experiment
+            return true;
+        return false;
+    };
+
+    for(auto& e: edges) {
+        std::vector<int> n_f_ids;
+        set_intersection(conn_fs[0], conn_fs[1], n_f_ids);
+        if (n_f_ids.size() != 2)
+            continue;
+
+        auto &n1 = ns[n_f_ids[0]];
+        auto &n2 = ns[n_f_ids[1]];
+        if (!needs_flattening(n1, n2))
+            continue;
+
+        std::vector<int> n_v_ids;
+        for (int f_id: n_f_ids) {
+            for (int j = 0; j < 3; j++) {
+                if (input_faces[f_id][j] != e[0] && input_faces[f_id][j] != e[1]) {
+                    n_v_ids.push_back(input_faces[f_id][j]);
+                    break;
+                }
+            }
+        }
+        assert(n_v_ids.size()==2 && n_v_ids[0]!=n_v_ids[1]);
+        Vector3 n = (n1 + n2) / 2;
+//        Vector3 p = (input_vertices[e[0]] + input_vertices[e[1]]) / 2;
+        Vector3 p = (input_vertices[n_v_ids[0]] + input_vertices[n_v_ids[1]]) / 2;
+
+        std::vector<int> all_f_ids;
+        std::array<Vector3, 2> old_ps;
+        for(int j=0;j<2;j++){
+            old_ps[j] = input_vertices[e[j]];
+            input_vertices[e[j]] -= n.dot(input_vertices[e[j]]-p)*n;
+            all_f_ids.insert(all_f_ids.end(), conn_fs[e[j]].begin(), conn_fs[e[j]].end());
+        }
+        vector_unique(all_f_ids);
+
+        bool is_valid = true;
+        for(int f_id: all_f_ids){
+            const std::array<Vector3, 3> tri = {{input_vertices[input_faces[f_id][0]],
+                                                        input_vertices[input_faces[f_id][1]],
+                                                        input_vertices[input_faces[f_id][2]]}};
+            if (is_out_envelope(tri, sf_tree, params)) {
+                is_valid = false;
+                break;
+            }
+        }
+        if(!is_valid){
+            for(int j=0;j<2;j++)
+                input_vertices[e[j]] = old_ps[j];
+        }
+    }
+}
+
 floatTetWild::Scalar floatTetWild::get_angle_cos(const Vector3& p, const Vector3& p1, const Vector3& p2) {
     Vector3 v1 = p1 - p;
     Vector3 v2 = p2 - p;

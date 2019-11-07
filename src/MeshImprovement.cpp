@@ -602,17 +602,6 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
 }
 
 void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
-    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_vs.xyz");
-    for(auto& v: mesh.tet_vertices){
-        if(v.is_removed || !v.is_on_boundary)
-            continue;
-//        GEO::index_t prev_facet;
-//        if (tree.is_out_tmp_b_envelope(v.pos, mesh.params.eps_2, prev_facet))
-//            cout<<"bad b_v"<<endl;
-        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
-    }
-    fout.close();
-
     if(mesh.params.is_quiet)
         return;
 
@@ -930,6 +919,17 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
 
 //    MeshIO::write_mesh(mesh.params.output_path+"_"+mesh.params.postfix+"test.msh", mesh);
     output_surface(mesh, mesh.params.output_path+"_"+mesh.params.postfix+"_opt");
+
+    std::ofstream fout(mesh.params.output_path+"_"+mesh.params.postfix+"_b_vs.xyz");
+    for(auto& v: mesh.tet_vertices){
+        if(v.is_removed || !v.is_on_boundary)
+            continue;
+//        GEO::index_t prev_facet;
+//        if (tree.is_out_tmp_b_envelope(v.pos, mesh.params.eps_2, prev_facet))
+//            cout<<"bad b_v"<<endl;
+        fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
+    }
+    fout.close();
 //    //pausee();
 
     return;

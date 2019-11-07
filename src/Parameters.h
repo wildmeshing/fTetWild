@@ -32,7 +32,7 @@ class Parameters
 
     // it decides the scale of the box, presents the deviation of the box from the model
     //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)
-    Scalar box_scale = 1 / 10.0;
+    Scalar box_scale = 1 / 15.0;
 
     // epsilon presents the tolerence permited (in % of the box diagonal)
     Scalar eps_rel = 1e-3;
@@ -82,12 +82,12 @@ class Parameters
 
         eps_input = bbox_diag_length * eps_rel;
         dd        = eps_input / stage;
-//        dd /= 2;
+        dd /= 1.5;
         eps_delta = dd / std::sqrt(3);
         eps       = eps_input - eps_delta * stage;
         eps_2     = eps * eps;
 
-        dd /= 1.5;//tmp
+//        dd /= 1.5;//tmp
 
         eps_coplanar = eps * 0.2;  // better to set it as eps-related
         if (eps_coplanar > bbox_diag_length * 1e-6)

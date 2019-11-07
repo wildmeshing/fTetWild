@@ -335,6 +335,8 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                 continue;
             if (!is_snapped[lv_id])
                 continue;
+            if(is_projected[lv_id])
+                continue;
 
             bool is_in = true;
             for (int gt_id: mesh.tet_vertices[gv_id].conn_tets) {
@@ -422,6 +424,7 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                             is_snapped.push_back(true);
                         else
                             is_snapped.push_back(false);
+                        is_projected.push_back(false);
                     } else
                         new_lv_id = map_v_ids[new_gv_id];
                     t[j] = new_lv_id;
@@ -493,17 +496,19 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
 }
 
 int floatTetWild::CutMesh::project_to_plane(int input_vertices_size) {
+    is_projected.resize(v_ids.size(), false);
+
     int cnt = 0;
     for (int i = 0; i < is_snapped.size(); i++) {
-        if (!is_snapped[i])
+        if (!is_snapped[i] || is_projected[i])
             continue;
         if (v_ids[i] < input_vertices_size)
             continue;
         Scalar dist = get_to_plane_dist(mesh.tet_vertices[v_ids[i]].pos);
-        if (std::abs(dist) <= 1e-9) {
-            cnt++;
-            continue;
-        }
+//        if (std::abs(dist) <= 1e-9) {
+//            cnt++;
+//            continue;
+//        }
         Vector3 proj_p = mesh.tet_vertices[v_ids[i]].pos - p_n * dist;
 //        cout << get_to_plane_dist(proj_p) << endl;
         bool is_snappable = true;
@@ -516,9 +521,11 @@ int floatTetWild::CutMesh::project_to_plane(int input_vertices_size) {
         }
         if (is_snappable) {
             mesh.tet_vertices[v_ids[i]].pos = proj_p;
+            is_projected[i] = true;
             cnt++;
         }
     }
+//    cout<<std::count(is_snapped.begin(), is_snapped.end(), true)<<"/"<<cnt<<endl;
     return cnt;
 }
 

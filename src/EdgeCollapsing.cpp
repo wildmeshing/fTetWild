@@ -102,6 +102,29 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
             }
 #if EC_POSTPROCESS
             else {
+//                //fortest
+//                int v1_id = v_ids[0];
+//                int v2_id = v_ids[1];
+////                std::vector<int> n12_t_ids;
+////                set_intersection(tet_vertices[v1_id].conn_tets, tet_vertices[v2_id].conn_tets, n12_t_ids);
+//
+//                Scalar old_max_quality = 0;
+//                std::vector<Scalar> new_qs;
+//                new_qs.reserve(tet_vertices[v1_id].conn_tets.size());
+//                for (int t_id:tet_vertices[v1_id].conn_tets) {
+//                    if (tets[t_id].quality > old_max_quality)
+//                        old_max_quality = tets[t_id].quality;
+//                }
+//                if(old_max_quality>5e9){
+//                    cout<<"resilt = "<<result<<endl;
+//                    cout<<"old_max_quality = "<<old_max_quality<<endl;
+//                    cout<<"e = "<<v1_id<<" "<<v2_id<<endl;
+//                }
+//                Eigen::MatrixXd V;
+//                Eigen::MatrixXi T;
+//
+//                //fortest
+
 //                if(weight<SCALAR_ZERO_2){
 //                    cout<<"len = "<<weight<<" but failed "<<result<<" "<<mesh.is_input_all_inserted<<endl;
 //                    //pausee();
@@ -289,8 +312,6 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
                 old_max_quality = tets[t_id].quality;
         }
     }
-//    if(old_max_quality>1e10)
-//        is_check_quality = false;
     for (int t_id:n1_t_ids) {
         int j = js_n1_t_ids[ii++];
         Scalar new_q = get_quality(tet_vertices[v2_id], tet_vertices[tets[t_id][mod4(j + 1)]],

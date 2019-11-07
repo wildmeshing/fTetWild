@@ -916,9 +916,8 @@ bool floatTetWild::is_energy_unstable(const std::array<Scalar, 12>& T, Scalar re
                                                           {{3, 2, 1, 0}}};
     Scalar res0;
     if (std::isinf(res))
-        res0 = 0;
-    else
-        res0 = res;
+        return true;
+
     for (int i = 0; i < combs.size(); i++) {
         std::array<Scalar, 12> tmp_T;
         for (int j = 0; j < 4; j++) {
@@ -930,7 +929,8 @@ bool floatTetWild::is_energy_unstable(const std::array<Scalar, 12>& T, Scalar re
             continue;
         if (res0 == 0)
             res0 = res1;
-        if (res1 - res0 > 10)
+//        if (res1 - res0 > 10)
+        if (abs(res1 - res0)/res0 > 0.01)
             return true;
     }
     return false;

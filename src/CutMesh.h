@@ -17,6 +17,7 @@ namespace floatTetWild {
 
         std::vector<Scalar> to_plane_dists;
         std::vector<bool> is_snapped;
+        std::vector<bool> is_projected;
 
         Mesh &mesh;
         const Vector3 &p_n;

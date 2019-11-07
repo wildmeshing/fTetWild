@@ -291,11 +291,10 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     double max_energy, avg_energy;
     double time;
 
-    untangle(mesh);
-
     for (int i = 0; i < ops[0]; i++) {
         igl_timer.start();
         cout << "edge splitting..." << endl;
+        untangle(mesh);
         edge_splitting(mesh, tree);
         time = igl_timer.getElapsedTime();
         cout << "edge splitting done!" << endl;
@@ -314,6 +313,7 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     for (int i = 0; i < ops[1]; i++) {
         igl_timer.start();
         cout << "edge collapsing..." << endl;
+        untangle(mesh);
         edge_collapsing(mesh, tree);
         time = igl_timer.getElapsedTime();
         cout << "edge collapsing done!" << endl;
@@ -332,6 +332,7 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
     for (int i = 0; i < ops[2]; i++) {
         igl_timer.start();
         cout << "edge swapping..." << endl;
+        untangle(mesh);
         edge_swapping(mesh);
         time = igl_timer.getElapsedTime();
         cout << "edge swapping done!" << endl;
@@ -475,6 +476,8 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
 
 #include <geogram/points/kd_tree.h>
 bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
+//    return false;
+
     cout << "updating sclaing field ..." << endl;
     bool is_hit_min_edge_length = false;
 
@@ -501,6 +504,8 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
     Scalar refine_scale = 0.5;
 //    Scalar min_refine_scale = mesh.epsilon / mesh.ideal_edge_length;
     Scalar min_refine_scale = mesh.params.min_edge_len_rel;
+//    if(!mesh.is_input_all_inserted)//fortest
+//        min_refine_scale = mesh.params.min_edge_len_rel * 100;
 
     const int N = -int(std::log2(min_refine_scale) - 1);
     std::vector<std::vector<int>> v_ids(N, std::vector<int>());
@@ -601,9 +606,9 @@ void floatTetWild::output_info(Mesh& mesh, const AABBWrapper& tree) {
     for(auto& v: mesh.tet_vertices){
         if(v.is_removed || !v.is_on_boundary)
             continue;
-        GEO::index_t prev_facet;
-        if (tree.is_out_tmp_b_envelope(v.pos, mesh.params.eps_2, prev_facet))
-            cout<<"bad b_v"<<endl;
+//        GEO::index_t prev_facet;
+//        if (tree.is_out_tmp_b_envelope(v.pos, mesh.params.eps_2, prev_facet))
+//            cout<<"bad b_v"<<endl;
         fout<<v.pos[0]<<" "<<v.pos[1]<<" "<<v.pos[2]<<endl;
     }
     fout.close();
@@ -1390,7 +1395,8 @@ void floatTetWild::untangle(Mesh &mesh) {
 //    return;
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
-    static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
+//    static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
+    static const Scalar zero_area = 1e-10;
     static const std::vector<std::array<int, 4>> face_pairs = {{{0, 1, 2, 3}},
                                                                {{0, 2, 1, 3}},
                                                                {{0, 3, 1, 2}}};
@@ -1401,7 +1407,8 @@ void floatTetWild::untangle(Mesh &mesh) {
         auto &t = tets[t_id];
         if (t.is_removed)
             continue;
-        if (t.quality < 1e10)
+        if (t.quality < 1e7)
+//        if (t.quality < 1e10)
             continue;
         int cnt_on_surface = 0;
         bool has_degenerate_face = false;
@@ -1423,6 +1430,19 @@ void floatTetWild::untangle(Mesh &mesh) {
         }
         if (cnt_on_surface == 0)
             continue;
+
+//        //fortest
+//        bool is_output = false;
+//        if(t.is_surface_fs[max_j] != NOT_SURFACE && cnt_on_surface>1 &&
+//                std::abs(max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4]) < zero_area*10){
+//            cout<<std::abs(max_area - areas[(max_j + 1) % 4] - areas[(max_j + 2) % 4] - areas[(max_j + 3) % 4])<<endl;
+//            cout<<"zero_area = "<<zero_area<<endl;
+//            cout<<"cnt_on_surface = "<<cnt_on_surface<<endl;
+//            is_output = true;
+//            pausee();
+//        }
+//        int old_cnt = cnt;
+//        //fortest
 
         if (has_degenerate_face) {
             if (t.is_surface_fs[max_j] != NOT_SURFACE && max_area > zero_area) {
@@ -1497,6 +1517,15 @@ void floatTetWild::untangle(Mesh &mesh) {
                 }
             }
         }
+
+//        //fortest
+//        if(is_output){
+//            if(old_cnt!=cnt) {
+//                cout<<"success"<<endl;
+//                pausee();
+//            }
+//        }
+//        //fortest
     }
     cout << "fixed " + std::to_string(cnt) + " tangled element" << endl;
 }

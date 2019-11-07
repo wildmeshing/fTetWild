@@ -596,6 +596,10 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
     std::vector<int> subdivide_t_ids;
     if (!cut_mesh.get_intersecting_edges_and_points(points, map_edge_to_intersecting_point, subdivide_t_ids)) {
 //        time_get_intersecting_edges_and_points += timer.getElapsedTime();
+        if(is_again){
+            if(is_uninserted_face_covered(insert_f_id, input_vertices, input_faces, cut_t_ids, mesh))
+                return true;
+        }
         cout<<"FAIL get_intersecting_edges_and_points"<<endl;
         return false;
     }
@@ -620,6 +624,10 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
                         cut_t_ids, is_mark_surface,
                         new_tets, new_track_surface_fs, modified_t_ids)) {
 //        time_subdivide_tets += timer.getElapsedTime();
+        if(is_again){
+            if(is_uninserted_face_covered(insert_f_id, input_vertices, input_faces, cut_t_ids, mesh))
+                return true;
+        }
         cout<<"FAIL subdivide_tets"<<endl;
         return false;
     }
@@ -2739,6 +2747,54 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //            cout<<"b_edges.push_back(e);"<<endl;
         }
     }
+}
+
+bool floatTetWild::is_uninserted_face_covered(int uninserted_f_id, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+        const std::vector<int>& cut_t_ids, Mesh &mesh){
+
+    std::array<Vector3, 3> vs = {{input_vertices[input_faces[uninserted_f_id][0]],
+                                         input_vertices[input_faces[uninserted_f_id][1]],
+                                         input_vertices[input_faces[uninserted_f_id][2]]}};
+    std::vector<GEO::vec3> ps;
+    sample_triangle(vs, ps, mesh.params.dd);
+
+    std::vector<int> n_t_ids;
+    for(int t_id: cut_t_ids) {
+        for (int j = 0; j < 4; j++)
+            n_t_ids.insert(n_t_ids.end(), mesh.tet_vertices[mesh.tets[t_id][j]].conn_tets.begin(),
+                           mesh.tet_vertices[mesh.tets[t_id][j]].conn_tets.end());
+    }
+    vector_unique(n_t_ids);
+
+    std::vector<std::array<int, 3>> faces;
+    for(int t_id: n_t_ids) {
+        for (int j = 0; j < 4; j++){
+            if(mesh.tets[t_id].is_surface_fs[j] != NOT_SURFACE) {
+                faces.push_back(
+                        {{mesh.tets[t_id][(j + 1) % 4], mesh.tets[t_id][(j + 2) % 4], mesh.tets[t_id][(j + 3) % 4]}});
+                std::sort(faces.back().begin(), faces.back().end());
+            }
+        }
+    }
+    vector_unique(faces);
+
+    for(auto& p: ps){
+        bool is_valid = false;
+        for(auto& f: faces) {
+            double dis_2 = GEO::Geom::point_triangle_squared_distance(p, to_geo_p(mesh.tet_vertices[f[0]].pos),
+                                                                      to_geo_p(mesh.tet_vertices[f[1]].pos),
+                                                                      to_geo_p(mesh.tet_vertices[f[2]].pos));
+            if (dis_2 < mesh.params.eps_2) {
+                is_valid = true;
+                break;
+            }
+        }
+        if(!is_valid)
+            return false;
+    }
+
+    cout<<"covered!!!!!!!"<<endl;
+    return true;
 }
 
 int floatTetWild::get_opp_t_id(int t_id, int j, const Mesh &mesh){

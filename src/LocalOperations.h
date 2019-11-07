@@ -20,6 +20,10 @@ namespace floatTetWild {
         return -1;
     }
 
+    inline GEO::vec3 to_geo_p(const Vector3& p){
+        return GEO::vec3(p[0], p[1], p[2]);
+    }
+
     void get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2>>& edges);
     void get_all_edges(const Mesh& mesh, const std::vector<int>& t_ids, std::vector<std::array<int, 2>>& edges, bool skip_freezed = false);
 

@@ -92,6 +92,9 @@ namespace floatTetWild {
             bool is_again);
 
     ///other
+    bool is_uninserted_face_covered(int uninserted_f_id, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                    const std::vector<int>& cut_t_ids, Mesh &mesh);
+
     void mark_surface_fs(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                          const std::vector<int> &input_tags,
                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,

@@ -1395,8 +1395,8 @@ void floatTetWild::untangle(Mesh &mesh) {
 //    return;
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
-//    static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
-    static const Scalar zero_area = 1e-10;
+    static const Scalar zero_area = 1e2 * SCALAR_ZERO_2;
+//    static const Scalar zero_area = 1e-10;
     static const std::vector<std::array<int, 4>> face_pairs = {{{0, 1, 2, 3}},
                                                                {{0, 2, 1, 3}},
                                                                {{0, 3, 1, 2}}};
@@ -1407,8 +1407,8 @@ void floatTetWild::untangle(Mesh &mesh) {
         auto &t = tets[t_id];
         if (t.is_removed)
             continue;
-        if (t.quality < 1e7)
-//        if (t.quality < 1e10)
+//        if (t.quality < 1e7)
+        if (t.quality < 1e10)
             continue;
         int cnt_on_surface = 0;
         bool has_degenerate_face = false;

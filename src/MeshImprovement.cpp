@@ -196,16 +196,20 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
             is_just_after_update = false;
 
         quality_queue.push_back(std::array<Scalar, 2>({{new_max_energy, new_avg_energy}}));
-        if (is_hit_min_edge_length && it_after_al_inserted > M && it > M + N) {
-            bool is_break = true;
-            for (int j = 0; j < N; j++) {
-                if (quality_queue[it - j][0] - quality_queue[it - j - 1][0] < 0) {
-                    is_break = false;
-                    break;
-                }
-            }
-            if (is_break)
+        if (is_hit_min_edge_length && mesh.is_input_all_inserted && it_after_al_inserted > M && it > M + N) {
+            if (quality_queue[it][0] - quality_queue[it - N][0] <= SCALAR_ZERO
+                && quality_queue[it][1] - quality_queue[it - N][1] <= SCALAR_ZERO)
                 break;
+
+//            bool is_break = true;
+//            for (int j = 0; j < N; j++) {
+//                if (quality_queue[it - j][0] - quality_queue[it - j - 1][0] < 0) {
+//                    is_break = false;
+//                    break;
+//                }
+//            }
+//            if (is_break)
+//                break;
 
 //            bool is_loop = true;
 //            for (int i = 0; i < M; i++) {
@@ -502,10 +506,7 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
     Scalar recover = 1.5;
     std::vector<Scalar> scale_multipliers(mesh.tet_vertices.size(), recover);
     Scalar refine_scale = 0.5;
-//    Scalar min_refine_scale = mesh.epsilon / mesh.ideal_edge_length;
-    Scalar min_refine_scale = mesh.params.min_edge_len_rel;
-//    if(!mesh.is_input_all_inserted)//fortest
-//        min_refine_scale = mesh.params.min_edge_len_rel * 100;
+    Scalar min_refine_scale = mesh.params.min_edge_len_rel / mesh.params.ideal_edge_length_rel;
 
     const int N = -int(std::log2(min_refine_scale) - 1);
     std::vector<std::vector<int>> v_ids(N, std::vector<int>());

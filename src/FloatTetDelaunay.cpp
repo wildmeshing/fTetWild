@@ -153,6 +153,10 @@ namespace floatTetWild {
         }
     }
 
+#include <igl/unique_rows.h>
+#include <floattetwild/Predicates.hpp>
+    extern "C" floatTetWild::Scalar orient3d(const floatTetWild::Scalar *pa, const floatTetWild::Scalar *pb, const floatTetWild::Scalar *pc, const floatTetWild::Scalar *pd);
+
 	void FloatTetDelaunay::tetrahedralize(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces, const AABBWrapper &tree,
 	        Mesh &mesh, std::vector<bool> &is_face_inserted) {
         const Parameters &params = mesh.params;
@@ -184,36 +188,44 @@ namespace floatTetWild {
 
         const int n_pts = input_vertices.size() + boxpoints.size() + voxel_points.size();
         tet_vertices.resize(n_pts);
-        std::vector<double> V_d;
-        V_d.resize(n_pts * 3);
+//        std::vector<double> V_d;
+//        V_d.resize(n_pts * 3);
 
         size_t index = 0;
         int offset = 0;
         for (int i = 0; i < input_vertices.size(); i++) {
             tet_vertices[offset + i].pos = input_vertices[i];
             // tet_vertices[offset + i].is_on_surface = true;
-            for (int j = 0; j < 3; j++)
-                V_d[index++] = input_vertices[i](j);
+//            for (int j = 0; j < 3; j++)
+//                V_d[index++] = input_vertices[i](j);
         }
         offset += input_vertices.size();
         for (int i = 0; i < boxpoints.size(); i++) {
             tet_vertices[i + offset].pos = boxpoints[i];
             // tet_vertices[i + offset].is_on_bbox = true;
-            for (int j = 0; j < 3; j++)
-                V_d[index++] = boxpoints[i](j);
+//            for (int j = 0; j < 3; j++)
+//                V_d[index++] = boxpoints[i](j);
         }
         offset += boxpoints.size();
         for (int i = 0; i < voxel_points.size(); i++) {
             tet_vertices[i + offset].pos = voxel_points[i];
             // tet_vertices[i + offset].is_on_bbox = false;
+//            for (int j = 0; j < 3; j++)
+//                V_d[index++] = voxel_points[i](j);
+        }
+
+        std::vector<double> V_d;
+        V_d.resize(n_pts * 3);
+        for(int i=0;i<tet_vertices.size();i++) {
             for (int j = 0; j < 3; j++)
-                V_d[index++] = voxel_points[i](j);
+                V_d[i * 3 + j] = tet_vertices[i].pos[j];
         }
 
         GEO::Delaunay::initialize();
         GEO::Delaunay_var T = GEO::Delaunay::create(3, "BDEL");
         T->set_vertices(n_pts, V_d.data());
         tets.resize(T->nb_cells());
+
         const auto &tet2v = T->cell_to_v();
         for (int i = 0; i < T->nb_cells(); i++) {
             for (int j = 0; j < 4; ++j) {
@@ -225,6 +237,62 @@ namespace floatTetWild {
             }
             std::swap(tets[i][1], tets[i][3]);
         }
+
+        //fortest
+        Eigen::MatrixXd VV(mesh.tet_vertices.size(), 3), VVo;
+        Eigen::VectorXi _1, _2;
+        for(int i=0;i<mesh.tet_vertices.size();i++){
+            VV.row(i) = mesh.tet_vertices[i].pos;
+        }
+        igl::unique_rows(VV, VVo, _1, _2);
+        cout<<VV.rows()<<" "<<VVo.rows()<<endl;
+        cout<<T->nb_vertices()<<endl;
+        cout<<mesh.tet_vertices.size()<<endl;
+
+        cout<<"T->nb_finite_cells() = "<<T->nb_finite_cells()<<endl;
+        cout<<"T->nb_cells() = "<<T->nb_cells()<<endl;
+        for (int i=0;i< mesh.tets.size();i++) {
+            auto &t = mesh.tets[i];
+            if (-GEO::PCK::orient_3d(mesh.tet_vertices[t[0]].pos.data(), mesh.tet_vertices[t[1]].pos.data(),
+                                     mesh.tet_vertices[t[2]].pos.data(), mesh.tet_vertices[t[3]].pos.data()) <= 0) {
+                cout << "inverted found!!!! 1" << endl;
+                cout<<i<<endl;
+            }
+        }
+        for (int i=0;i< mesh.tets.size();i++) {
+            auto &t = mesh.tets[i];
+            if (orient3d(mesh.tet_vertices[t[0]].pos.data(), mesh.tet_vertices[t[1]].pos.data(),
+                         mesh.tet_vertices[t[2]].pos.data(), mesh.tet_vertices[t[3]].pos.data()) <= 0) {
+                cout << "inverted found!!!! 2" << endl;
+                cout<<i<<endl;
+            }
+        }
+        for (int i=0;i< mesh.tets.size();i++) {
+            auto &t = mesh.tets[i];
+            if (is_inverted(mesh.tet_vertices[t[0]].pos, mesh.tet_vertices[t[1]].pos,
+                         mesh.tet_vertices[t[2]].pos, mesh.tet_vertices[t[3]].pos)) {
+                cout << "inverted found!!!! 3" << endl;
+                cout<<i<<endl;
+                t.print();
+                
+                cout<<std::setprecision(17)<<tet_vertices[t[0]].pos.transpose()<<endl;
+                cout<<tet_vertices[t[1]].pos.transpose()<<endl;
+                cout<<tet_vertices[t[2]].pos.transpose()<<endl;
+                cout<<tet_vertices[t[3]].pos.transpose()<<endl;
+
+                cout<<(tet_vertices[t[0]].pos[0] == tet_vertices[t[1]].pos[0])<<endl;
+                cout<<(tet_vertices[t[1]].pos[0] == tet_vertices[t[2]].pos[0])<<endl;
+                cout<<(tet_vertices[t[2]].pos[0] == tet_vertices[t[3]].pos[0])<<endl;
+
+                cout<<(tet_vertices[t[0]].pos[1] == tet_vertices[t[3]].pos[1])<<endl;
+                cout<<(tet_vertices[t[1]].pos[1] == tet_vertices[t[2]].pos[1])<<endl;
+
+                cout<<(tet_vertices[t[0]].pos[2] == tet_vertices[t[2]].pos[2])<<endl;
+                cout<<(tet_vertices[t[1]].pos[2] == tet_vertices[t[3]].pos[2])<<endl;
+            }
+        }
+        pausee();
+        //fortest
 
 //        //set opp_t_ids
 //        for(int t_id = 0;t_id<mesh.tets.size();t_id++) {

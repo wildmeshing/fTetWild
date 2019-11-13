@@ -107,6 +107,10 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
 void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
                                     const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
                                     Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
+    if(check_inversion(mesh)){
+        pausee("init inverted!!!");
+    }
+
     insert_triangles_aux(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
     return;
 
@@ -527,6 +531,11 @@ bool floatTetWild::insert_one_triangle(int insert_f_id, const std::vector<Vector
         const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
         Mesh &mesh, std::vector<std::array<std::vector<int>, 4>>& track_surface_fs,
         AABBWrapper &tree, bool is_again) {
+
+    cout<<insert_f_id<<endl;
+    if(check_inversion(mesh)){
+        pausee("inverted!!!");
+    }
 
 //    igl::Timer timer;
     std::array<Vector3, 3> vs = {{input_vertices[input_faces[insert_f_id][0]],
@@ -3070,4 +3079,19 @@ int floatTetWild::orient_rational(const Vector3_r& p1, const Vector3_r& p2, cons
         return Predicates::ORI_POSITIVE;
     else
         return Predicates::ORI_NEGATIVE;
+}
+
+int floatTetWild::check_inversion(Mesh &mesh) {
+    bool is_inv = false;
+    for (auto &t: mesh.tets) {
+        if (t.is_removed)
+            continue;
+        if (is_inverted(mesh.tet_vertices[t[0]].pos, mesh.tet_vertices[t[1]].pos, mesh.tet_vertices[t[2]].pos,
+                        mesh.tet_vertices[t[3]].pos)) {
+            cout<<"inverted found"<<endl;
+            is_inv = true;
+//            break;
+        }
+    }
+    return is_inv;
 }

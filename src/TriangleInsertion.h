@@ -116,6 +116,7 @@ namespace floatTetWild {
     typedef Eigen::Matrix<triwild::Rational, 3, 1> Vector3_r;
 
     int orient_rational(const Vector3_r &p1, const Vector3_r &p2, const Vector3_r &p3, const Vector3_r &p);
+    int check_inversion(Mesh &mesh);
 }
 
 

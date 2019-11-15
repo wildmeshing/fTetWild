@@ -153,9 +153,9 @@ namespace floatTetWild {
         }
     }
 
-#include <igl/unique_rows.h>
-#include <floattetwild/Predicates.hpp>
-    extern "C" floatTetWild::Scalar orient3d(const floatTetWild::Scalar *pa, const floatTetWild::Scalar *pb, const floatTetWild::Scalar *pc, const floatTetWild::Scalar *pd);
+//#include <igl/unique_rows.h>
+//#include <floattetwild/Predicates.hpp>
+//    extern "C" floatTetWild::Scalar orient3d(const floatTetWild::Scalar *pa, const floatTetWild::Scalar *pb, const floatTetWild::Scalar *pc, const floatTetWild::Scalar *pd);
 
 	void FloatTetDelaunay::tetrahedralize(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces, const AABBWrapper &tree,
 	        Mesh &mesh, std::vector<bool> &is_face_inserted) {

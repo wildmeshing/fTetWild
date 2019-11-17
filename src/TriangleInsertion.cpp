@@ -1360,6 +1360,10 @@ bool floatTetWild::subdivide_tets(int insert_f_id, Mesh& mesh, CutMesh& cut_mesh
             continue;
         }
 
+	const auto &configs = CutTable::get_tet_confs(config_id);
+	if(configs.empty())
+		continue;
+
         /////
         std::vector<Vector2i> my_diags;
         for (int j = 0; j < 4; j++) {

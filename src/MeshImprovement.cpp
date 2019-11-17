@@ -197,8 +197,8 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
         quality_queue.push_back(std::array<Scalar, 2>({{new_max_energy, new_avg_energy}}));
         if (is_hit_min_edge_length && mesh.is_input_all_inserted && it_after_al_inserted > M && it > M + N) {
-            if (quality_queue[it][0] - quality_queue[it - N][0] <= SCALAR_ZERO
-                && quality_queue[it][1] - quality_queue[it - N][1] <= SCALAR_ZERO)
+            if (quality_queue[it][0] - quality_queue[it - N][0] >= SCALAR_ZERO
+                && quality_queue[it][1] - quality_queue[it - N][1] >= SCALAR_ZERO)
                 break;
 
 //            bool is_break = true;

@@ -84,12 +84,12 @@ class Parameters
         ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
 
         eps_input = bbox_diag_length * eps_rel;
-        dd        = eps_input / stage;
-
+        dd        = eps_input;// / stage;
+	dd /= 1.5;
         double eps_usable = eps_input - dd / std::sqrt(3);
         eps_delta = eps_usable * 0.1;
         eps = eps_usable - eps_delta * (stage - 1);
-        dd /= 1.5;
+        //dd /= 1.5;
 
 //        dd /= 1.6;
 //        eps_delta = dd / std::sqrt(3);

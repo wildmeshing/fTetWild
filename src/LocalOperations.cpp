@@ -881,13 +881,13 @@ void floatTetWild::set_intersection_sorted(const std::vector<int>& s1, const std
 
 void floatTetWild::pausee(std::string msg) {
 //    return;
-    if (!msg.empty())
-        cout << msg << endl;
-    cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
-    char c = ' ';
-    std::cin >> c;
-    if (c == '0')
-        exit(0);
+    // if (!msg.empty())
+    //     cout << msg << endl;
+    // cout << "Is pausing... (Enter '0' to exit and other characters to continue.)" << endl;
+    // char c = ' ';
+    // std::cin >> c;
+    // if (c == '0')
+    //     exit(0);
 }
 
 bool floatTetWild::is_energy_unstable(const std::array<Scalar, 12>& T, Scalar res) {

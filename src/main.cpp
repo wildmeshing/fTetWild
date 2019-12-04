@@ -15,6 +15,7 @@
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/Statistics.h>
 #include <floattetwild/TriangleInsertion.h>
+#include <floattetwild/CSGTreeParser.hpp>
 
 #include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
     CLI::App command_line{"float-tetwild"};
     command_line.add_option("-i,--input", params.input_path,
                             "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)")->check(
-            CLI::ExistingFile)->required();
+            CLI::ExistingFile);
     command_line.add_option("-o,--output", params.output_path,
                             "Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')");
 
@@ -167,6 +168,7 @@ int main(int argc, char **argv) {
 //    const int INTERSECTION = 1;
 //    const int DIFFERENCE = 2;
     int boolean_op = -1;
+    std::string csg_file="";
     command_line.add_option("--op", boolean_op, "");
 
     command_line.add_option("-l,--lr", params.ideal_edge_length_rel,
@@ -191,6 +193,7 @@ int main(int argc, char **argv) {
     command_line.add_option("--envelope-log", params.envelope_log, "");
     command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
     command_line.add_flag("--manifold-surface", params.manifold_surface, "");
+    command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
@@ -267,22 +270,45 @@ int main(int argc, char **argv) {
         }
     }
 
-
     igl::Timer timer;
-
     GEO::Mesh sf_mesh;
-    if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
-        logger().error("Unable to load mesh at {}", params.input_path);
-        MeshIO::write_mesh(output_mesh_name, mesh, false);
-        return EXIT_FAILURE;
-    } else if (input_vertices.empty() || input_faces.empty()) {
-        MeshIO::write_mesh(output_mesh_name, mesh, false);
-        return EXIT_FAILURE;
-    }
+    json tree_with_ids;
 
-    if (input_tags.size() != input_faces.size()) {
-        input_tags.resize(input_faces.size());
-        std::fill(input_tags.begin(), input_tags.end(), 0);
+    if(!csg_file.empty())
+    {
+        json csg_tree = json({});
+		std::ifstream file(csg_file);
+
+		if (file.is_open())
+			file >> csg_tree;
+		else
+        {
+			logger().error("unable to open {} file", csg_file);
+            return EXIT_FAILURE;
+        }
+		file.close();
+
+        std::vector<std::string> meshes;
+
+        CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
+
+        if(!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
+            return EXIT_FAILURE;
+    }
+    else{
+        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
+            logger().error("Unable to load mesh at {}", params.input_path);
+            MeshIO::write_mesh(output_mesh_name, mesh, false);
+            return EXIT_FAILURE;
+        } else if (input_vertices.empty() || input_faces.empty()) {
+            MeshIO::write_mesh(output_mesh_name, mesh, false);
+            return EXIT_FAILURE;
+        }
+
+        if (input_tags.size() != input_faces.size()) {
+            input_tags.resize(input_faces.size());
+            std::fill(input_tags.begin(), input_tags.end(), 0);
+        }
     }
     AABBWrapper tree(sf_mesh);
 
@@ -372,7 +398,11 @@ int main(int argc, char **argv) {
     timer.start();
     correct_tracked_surface_orientation(mesh, tree);
     logger().info("correct_tracked_surface_orientation done");
-    if (boolean_op < 0) {
+    if(!csg_file.empty())
+        boolean_operation(mesh, tree_with_ids);
+    else if(boolean_op >= 0)
+        boolean_operation(mesh, boolean_op);
+    else {
         if (params.smooth_open_boundary) {
             smooth_open_boundary(mesh, tree);
             for (auto &t: mesh.tets) {
@@ -381,8 +411,7 @@ int main(int argc, char **argv) {
             }
         } else
             filter_outside(mesh);
-    } else
-        boolean_operation(mesh, boolean_op);
+    }
     if(params.manifold_surface){
 //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
         manifold_surface(mesh);

@@ -135,6 +135,7 @@ target_link_libraries(${PROJECT_NAME}
 		spdlog::spdlog
 		Threads::Threads
 		fast_winding_number
+		json
 		${GMP_LIBRARIES}
 		# ${MPFR_LIBRARIES}
 )

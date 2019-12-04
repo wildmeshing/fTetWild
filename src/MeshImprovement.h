@@ -3,6 +3,7 @@
 
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/AABBWrapper.h>
+#include <floattetwild/Types.hpp>
 
 namespace floatTetWild {
     void init(Mesh &mesh, AABBWrapper& tree);
@@ -18,6 +19,7 @@ namespace floatTetWild {
     void correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& tree);
     void get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::Dynamic, 3> &V, Eigen::Matrix<int, Eigen::Dynamic, 3> &F, int c_id = 0);
     void boolean_operation(Mesh& mesh, int op);
+    void boolean_operation(Mesh& mesh, const json &csg_tree_with_ids);
     void filter_outside(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);
     void smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree);

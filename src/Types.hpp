@@ -3,6 +3,8 @@
 
 #include <Eigen/Dense>
 
+#include <nlohmann/json.hpp>
+
 namespace floatTetWild {
 #ifdef FLOAT_TETWILD_USE_FLOAT
     typedef float Scalar;
@@ -15,6 +17,9 @@ namespace floatTetWild {
 #define SCALAR_ZERO_2 1e-16
 #define SCALAR_ZERO_3 1e-24
 #endif
+
+    // Json
+    using json = nlohmann::json;
 
     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixXs;
 

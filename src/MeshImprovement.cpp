@@ -8,6 +8,7 @@
 #include <floattetwild/Parameters.h>
 #include <floattetwild/MeshIO.hpp>
 #include <floattetwild/FastWindingNumber.hpp>
+#include <floattetwild/CSGTreeParser.hpp>
 
 #include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/TriangleInsertion.h>
@@ -1185,6 +1186,50 @@ void floatTetWild::correct_tracked_surface_orientation(Mesh &mesh, AABBWrapper& 
             }
         }
     }
+}
+
+void floatTetWild::boolean_operation(Mesh& mesh, const json &csg_tree_with_ids){
+    Eigen::MatrixXd C(mesh.get_t_num(), 3);
+    C.setZero();
+    int index = 0;
+    for (size_t i = 0; i < mesh.tets.size(); i++) {
+        if (mesh.tets[i].is_removed)
+            continue;
+        for (int j = 0; j < 4; j++)
+            C.row(index) += mesh.tet_vertices[mesh.tets[i][j]].pos.cast<double>();
+        C.row(index) /= 4.0;
+        index++;
+    }
+
+    int max_id = CSGTreeParser::get_max_id(csg_tree_with_ids);
+
+    Eigen::Matrix<Scalar, Eigen::Dynamic, 3> vs;
+    Eigen::Matrix<int, Eigen::Dynamic, 3> fs;
+
+    std::vector<Eigen::VectorXd> w(max_id+1);
+
+    for(int i = 0; i <= max_id; ++i){
+        get_tracked_surface(mesh, vs, fs, i);
+
+#if USE_FWN
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
+#else
+        igl::winding_number(Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
+#endif
+    }
+
+    int cnt = 0;
+    for (int t_id = 0; t_id < mesh.tets.size(); ++t_id) {
+        auto &t = mesh.tets[t_id];
+        if(t.is_removed)
+            continue;
+
+        bool keep = CSGTreeParser::keep_tet(csg_tree_with_ids, cnt, w);
+        t.is_removed = !keep;
+        cnt++;
+    }
+
+//    output_surface(mesh, "inner.stl");
 }
 
 void floatTetWild::boolean_operation(Mesh& mesh, int op){

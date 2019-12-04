@@ -83,6 +83,12 @@ endif()
 find_package(Threads REQUIRED)
 
 
+# Json
+float_tetwild_download_json()
+add_library(json INTERFACE)
+target_include_directories(json SYSTEM INTERFACE ${FLOAT_TETWILD_EXTERNAL}/json/include)
+
+
 
 # winding number
 float_tetwild_download_windingnumber()

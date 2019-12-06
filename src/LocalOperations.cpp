@@ -12,6 +12,7 @@
 #endif
 
 namespace floatTetWild {
+    bool use_old_energy = false;
     std::string envelope_log_csv = "";
 }
 
@@ -941,9 +942,25 @@ int cnt_large = 0;
 #include <floattetwild/Rational.h>
 Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     Scalar res = AMIPS_energy_aux(T);
-//    return res;
+    if(use_old_energy) {
+        return res;
+    }
 
     if (res > 1e8) {
+//        //fortest
+//        if (res > 1e10) {
+//            cout << std::setprecision(16) << res << endl;
+//            for (int i = 0; i < T.size(); i++) {
+//                if (i % 3 == 0)
+//                    cout << endl;
+//                cout << T[i] << ", ";
+//            }
+//            cout << endl;
+//            char c;
+//            cin >> c;
+//        }
+//        //fortest
+
 //        //fortest
 //        cnt_large++;
 //        if(!is_energy_unstable(T, res)){

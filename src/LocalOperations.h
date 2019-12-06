@@ -5,6 +5,7 @@
 #include <floattetwild/AABBWrapper.h>
 
 namespace floatTetWild {
+    extern bool use_old_energy;
     extern std::string envelope_log_csv;
 
     // void init_b_tree(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces, GEO::Mesh& b_mesh);

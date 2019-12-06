@@ -195,6 +195,8 @@ int main(int argc, char **argv) {
     command_line.add_flag("--manifold-surface", params.manifold_surface, "");
     command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
 
+    command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "");//tmp
+
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
 #endif

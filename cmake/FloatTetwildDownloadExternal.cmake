@@ -28,7 +28,7 @@ endfunction()
 function(float_tetwild_download_libigl)
     float_tetwild_download_project(libigl
         GIT_REPOSITORY https://github.com/libigl/libigl.git
-        GIT_TAG        f6b406427400ed7ddb56cfc2577b6af571827c8c
+        GIT_TAG        b0d7740e0b7e887a7e93601c4c557ecf762b389b
     )
 endfunction()
 
@@ -101,5 +101,13 @@ function(float_tetwild_download_aabbcc)
     float_tetwild_download_project(aabbcc
             GIT_REPOSITORY https://github.com/lohedges/aabbcc.git
             GIT_TAG        0c85e61362d384d70c71946826bfed0fb24a74ba
+            )
+endfunction()
+
+## winding number
+function(float_tetwild_download_windingnumber)
+    float_tetwild_download_project(windingnumber
+            GIT_REPOSITORY https://github.com/alecjacobson/WindingNumber.git
+            GIT_TAG        1e6081e52905575d8e98fb8b7c0921274a18752f
             )
 endfunction()

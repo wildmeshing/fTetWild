@@ -3,6 +3,41 @@
 #include <floattetwild/Predicates.hpp>
 #include <floattetwild/LocalOperations.h>
 
+bool floatTetWild::seg_line_intersection_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 2> &line, Scalar& t_seg){
+    //assumptions:
+    //segs are not degenerate
+    //not coplanar
+
+    const Scalar& x1 = seg[0][0];
+    const Scalar& y1 = seg[0][1];
+    const Scalar& x2 = seg[1][0];
+    const Scalar& y2 = seg[1][1];
+
+    const Scalar& x3 = line[0][0];
+    const Scalar& y3 = line[0][1];
+    const Scalar& x4 = line[1][0];
+    const Scalar& y4 = line[1][1];
+
+    Scalar n1 = (y3 - y4) * (x1 - x3) + (x4 - x3) * (y1 - y3);
+    Scalar d1 = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
+    if(d1 == 0)
+        return false;
+    t_seg = n1 / d1;
+//    Scalar n2 = (y1 - y2) * (x1 - x3) + (x2 - x1) * (y1 - y3);
+    Scalar d2 = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
+    if(d2 == 0) {
+//        cout<<"d2==0"<<endl;
+        return false;
+    }
+
+    if (t_seg < 0 || t_seg > 1){
+//        cout<<"t_seg = "<<t_seg<<endl;
+        return false;
+    }
+
+    return true;
+}
+
 bool floatTetWild::seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, const std::array<Vector2, 2> &seg2, Scalar& t2){
     //assumptions:
     //segs are not degenerate
@@ -35,6 +70,33 @@ bool floatTetWild::seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, c
     return true;
 }
 
+floatTetWild::Scalar floatTetWild::seg_seg_squared_dist_3d(const std::array<Vector3, 2> &s1, const std::array<Vector3, 2> &s2) {
+    Vector3 w0 = s1[0] - s2[0];
+    Vector3 u = (s1[1] - s1[0]).normalized();
+    Vector3 v = (s2[1] - s2[0]).normalized();
+    Scalar a = u.dot(u);
+    Scalar b = u.dot(v);
+    Scalar c = v.dot(v);
+    Scalar d = u.dot(w0);
+    Scalar e = v.dot(w0);
+
+    Scalar dd = a * c - b * b;
+    Scalar t1, t2;
+    if (dd == 0) {
+        t1 = 0;
+        t2 = d / b;
+    } else {
+        t1 = (b * e - c * d) / dd;
+        t2 = (a * e - b * d) / dd;
+    }
+
+    return (((1 - t1) * s1[0] + t1 * s1[1]) - ((1 - t2) * s2[0] + t2 * s2[1])).squaredNorm();
+}
+
+floatTetWild::Scalar floatTetWild::p_line_squared_dist_3d(const Vector3 &v, const Vector3 &a, const Vector3 &b) {
+    return ((b - a).cross(a - v)).squaredNorm() / (b - a).squaredNorm();
+}
+
 floatTetWild::Scalar floatTetWild::p_seg_squared_dist_3d(const Vector3 &v, const Vector3 &a, const Vector3 &b){
     Vector3 av = v-a;
     Vector3 ab = b-a;
@@ -44,7 +106,7 @@ floatTetWild::Scalar floatTetWild::p_seg_squared_dist_3d(const Vector3 &v, const
     if(bv.dot(-ab)<0)
         return bv.squaredNorm();
 
-    return (ab.cross(av)).squaredNorm()/ab.squaredNorm();
+    return (ab.cross(-av)).squaredNorm()/ab.squaredNorm();
 }
 
 bool floatTetWild::seg_plane_intersection(const Vector3& p1, const Vector3& p2, const Vector3& a, const Vector3& n,
@@ -345,6 +407,12 @@ floatTetWild::Vector2 floatTetWild::to_2d(const Vector3 &p, int t) {
     return Vector2(p[(t + 1) % 3], p[(t + 2) % 3]);
 }
 
+floatTetWild::Vector2 floatTetWild::to_2d(const Vector3 &p, const Vector3& n, const Vector3& pp, int t) {
+    Scalar dist = n.dot(p - pp);
+    Vector3 proj_p = p - dist * n;
+    return Vector2(proj_p[(t + 1) % 3], proj_p[(t + 2) % 3]);
+}
+
 bool floatTetWild::is_crossing(int s1, int s2) {
     if (s1 == Predicates::ORI_POSITIVE && s2 == Predicates::ORI_NEGATIVE
         || s2 == Predicates::ORI_POSITIVE && s1 == Predicates::ORI_NEGATIVE)
@@ -443,44 +511,47 @@ int floatTetWild::is_tri_tri_cutted_hint(const Vector3& p1, const Vector3& p2, c
     }
 
     if(is_debug){
-        p_1 = {{22, -27.478179999999998, 3.5}};
-        q_1 = {{25.5, -27.478179999999998, 0}};
-        r_1 = {{-25.5, -27.478179999999998, 0}};
-        p_2 = {{28.050000000000001, -30.028179999999999, -2.5500000000000003}};
-        q_2 = {{25.5, -13.183373550207467, 0}};
-        r_2 = {{25.5, -19.059304172821577, 0}};
-
-        cout<<"res = "<<tri_tri_intersection_test_3d(&p_1[0], &q_1[0], &r_1[0], &p_2[0], &q_2[0], &r_2[0], &coplanar, &s[0], &t[0])<<endl;
-        cout<<std::setprecision(17);
-        cout<<"s"<<endl;
-        cout<<s[0]<<" "<<s[1]<<" "<<s[2]<<endl;
-        cout<<"t"<<endl;
-        cout<<t[0]<<" "<<t[1]<<" "<<t[2]<<endl;
-        cout<<"coplanar = "<<coplanar<<endl;
-        cout<<"pqr 1"<<endl;
-        for(int j=0;j<3;j++)
-            cout<<p_1[j]<<" ";
-        cout<<endl;
-        for(int j=0;j<3;j++)
-            cout<<q_1[j]<<" ";
-        cout<<endl;
-        for(int j=0;j<3;j++)
-            cout<<r_1[j]<<" ";
-        cout<<endl;
-        cout<<"pqr 2"<<endl;
-        for(int j=0;j<3;j++)
-            cout<<p_2[j]<<" ";
-        cout<<endl;
-        for(int j=0;j<3;j++)
-            cout<<q_2[j]<<" ";
-        cout<<endl;
-        for(int j=0;j<3;j++)
-            cout<<r_2[j]<<" ";
-        cout<<endl;
+//        p_1 = {{22, -27.478179999999998, 3.5}};
+//        q_1 = {{25.5, -27.478179999999998, 0}};
+//        r_1 = {{-25.5, -27.478179999999998, 0}};
+//        p_2 = {{28.050000000000001, -30.028179999999999, -2.5500000000000003}};
+//        q_2 = {{25.5, -13.183373550207467, 0}};
+//        r_2 = {{25.5, -19.059304172821577, 0}};
+//
+//        cout<<"res = "<<tri_tri_intersection_test_3d(&p_1[0], &q_1[0], &r_1[0], &p_2[0], &q_2[0], &r_2[0], &coplanar, &s[0], &t[0])<<endl;
+//        cout<<std::setprecision(17);
+//        cout<<"s"<<endl;
+//        cout<<s[0]<<" "<<s[1]<<" "<<s[2]<<endl;
+//        cout<<"t"<<endl;
+//        cout<<t[0]<<" "<<t[1]<<" "<<t[2]<<endl;
+//        cout<<"coplanar = "<<coplanar<<endl;
+//        cout<<"pqr 1"<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<p_1[j]<<" ";
+//        cout<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<q_1[j]<<" ";
+//        cout<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<r_1[j]<<" ";
+//        cout<<endl;
+//        cout<<"pqr 2"<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<p_2[j]<<" ";
+//        cout<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<q_2[j]<<" ";
+//        cout<<endl;
+//        for(int j=0;j<3;j++)
+//            cout<<r_2[j]<<" ";
+//        cout<<endl;
         //pausee();
     }
 
     int result = tri_tri_intersection_test_3d(&p_1[0], &q_1[0], &r_1[0], &p_2[0], &q_2[0], &r_2[0], &coplanar, &s[0], &t[0]);
+    if(is_debug){
+        cout<<">>result = "<<result<<endl;
+    }
     if (result != 1) {
 //        if (coplanar != 0) {
 //            cout<<"CUT_EMPTY "<<result<<endl;
@@ -606,7 +677,7 @@ bool floatTetWild::is_tri_inside_tet(const std::array<Vector3, 3>& ps,
     return false;
 }
 
-bool floatTetWild::is_point_inside_tet(const Vector3& p, const Vector3& p0t, const Vector3& p1t, const Vector3& p2t, const Vector3& p3t) {
+bool floatTetWild::is_point_inside_tet(const Vector3& p, const Vector3& p0t, const Vector3& p1t, const Vector3& p2t, const Vector3& p3t) {///inside or on
     int cnt_pos = 0;
     int cnt_neg = 0;
 

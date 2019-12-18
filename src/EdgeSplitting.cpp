@@ -5,7 +5,7 @@
 
 #define TET_MODIFIED 100
 
-void floatTetWild::edge_splitting(Mesh& mesh) {
+void floatTetWild::edge_splitting(Mesh& mesh, const AABBWrapper& tree) {
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
@@ -54,13 +54,17 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
             tets.reserve(tets.size() + es_queue.size() * 6 * 2 - t_slots + 1);
     }
 
+    std::vector<bool> is_splittable(mesh.tets.size(), true);
     bool is_repush = true;
     while (!es_queue.empty()) {
         std::array<int, 2> v_ids = es_queue.top().v_ids;
         es_queue.pop();
 
+        if(tet_vertices[v_ids[0]].is_freezed && tet_vertices[v_ids[1]].is_freezed)
+            continue;
+
         std::vector<std::array<int, 2>> new_edges;
-        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges))
+        if (split_an_edge(mesh, v_ids[0], v_ids[1], is_repush, new_edges, is_splittable, tree))
             suc_counter++;
         else
             is_repush = false;
@@ -94,7 +98,8 @@ void floatTetWild::edge_splitting(Mesh& mesh) {
     cout<<"success = "<<suc_counter<<"("<<counter<<")"<<endl;
 }
 
-bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush, std::vector<std::array<int, 2>>& new_edges) {
+bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repush,
+        std::vector<std::array<int, 2>>& new_edges, std::vector<bool>& is_splittable, const AABBWrapper& tree) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -123,12 +128,40 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
     std::vector<int> old_t_ids;
     set_intersection(tet_vertices[v1_id].conn_tets, tet_vertices[v2_id].conn_tets, old_t_ids);
     for (int t_id: old_t_ids) {
+        if(!is_splittable[t_id]){
+            tet_vertices[v_id].is_removed = true;
+            return false;
+        }
         for (int j = 0; j < 4; j++) {
             if (tets[t_id][j] == v1_id || tets[t_id][j] == v2_id) {
 //                if (is_inverted(new_v, tet_vertices[tets[t_id][(j + 1) % 4]], tet_vertices[tets[t_id][(j + 2) % 4]],
 //                                tet_vertices[tets[t_id][(j + 1) % 4]]))
                 if(is_inverted(mesh, t_id, j, new_v.pos)) {
+                    for (int t_id1: old_t_ids)
+                        is_splittable[t_id1] = false;
                     tet_vertices[v_id].is_removed = true;
+
+//                    //fortest
+//                    cout<<"fail "<<v1_id<<" "<<v2_id<<endl;
+//                    cout<<"is_surface_edge = "<<is_surface_edge(mesh, v1_id, v2_id, old_t_ids)<<endl;
+//                    cout<<tet_vertices[v1_id].is_on_surface<<" "<<tet_vertices[v2_id].is_on_surface<<endl;
+//                    if(vector_contains(old_t_ids, 1260))
+//                        cout<<"contains 1260"<<endl;
+//                    for(int t_id: old_t_ids) {
+//                        cout << "t" << t_id << ": " << mesh.tets[t_id].quality << endl;
+//                        mesh.tets[t_id].print();
+//                        auto& t = tets[t_id];
+//                        for(int j=0;j<4;j++) {
+//                            cout << mesh.tet_vertices[mesh.tets[t_id][j]].pos.transpose() << endl;
+//                            cout << (int)mesh.tets[t_id].is_surface_fs[j] << endl;
+//                            cout<<get_area(tet_vertices[t[(j+1)%4]].pos, tet_vertices[t[(j+2)%4]].pos, tet_vertices[t[(j+3)%4]].pos)<<endl;
+//                        }
+//                    }
+//                    cout<<"v "<<tet_vertices[v1_id].pos.transpose()<<endl;
+//                    cout<<"v "<<tet_vertices[v2_id].pos.transpose()<<endl;
+//                    cout<<"l 1 2"<<endl;
+//                    pausee();
+//                    //fortest
                     return false;
                 }
             }
@@ -140,7 +173,10 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
     tet_vertices[v_id].sizing_scalar = (tet_vertices[v1_id].sizing_scalar + tet_vertices[v2_id].sizing_scalar) / 2;
     tet_vertices[v_id].is_on_bbox = is_bbox_edge(mesh, v1_id, v2_id, old_t_ids);
     tet_vertices[v_id].is_on_surface = is_surface_edge(mesh, v1_id, v2_id, old_t_ids);
-    tet_vertices[v_id].is_on_boundary = is_boundary_edge(mesh, v1_id, v2_id);
+    tet_vertices[v_id].is_on_boundary = is_boundary_edge(mesh, v1_id, v2_id, tree);
+    if(!mesh.is_input_all_inserted && tet_vertices[v_id].is_on_boundary) {
+        tet_vertices[v_id].is_on_cut = (tet_vertices[v1_id].is_on_cut && tet_vertices[v2_id].is_on_cut);
+    }
 
     //update tets
     std::vector<int> new_t_ids;
@@ -199,6 +235,9 @@ bool floatTetWild::split_an_edge(Mesh& mesh, int v1_id, int v2_id, bool is_repus
                 std::find(tet_vertices[v1_id].conn_tets.begin(), tet_vertices[v1_id].conn_tets.end(), old_t_ids[i]));
         tet_vertices[v1_id].conn_tets.push_back(new_t_ids[i]);
     }
+
+    if(mesh.tets.size()!=is_splittable.size())
+        is_splittable.resize(mesh.tets.size(), true);
 
 
     ////repush

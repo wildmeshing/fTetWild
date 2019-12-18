@@ -36,7 +36,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
     std::priority_queue<ElementInQueue, std::vector<ElementInQueue>, cmp_s> ec_queue;
     for (auto &e:edges) {
         Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
-        if (is_collapsable_length(mesh, e[0], e[1], l_2)) {
+        if (is_collapsable_length(mesh, e[0], e[1], l_2) && is_collapsable_boundary(mesh, e[0], e[1], tree)) {
             ec_queue.push(ElementInQueue(e, l_2));
             ec_queue.push(ElementInQueue({{e[1], e[0]}}, l_2));
         }
@@ -72,6 +72,9 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
             if (!is_valid_edge(mesh, v_ids[0], v_ids[1]))
                 continue;
 
+            if(! is_collapsable_boundary(mesh, v_ids[0], v_ids[1], tree))
+                continue;
+
             Scalar weight = get_edge_length_2(mesh, v_ids[0], v_ids[1]);
             if (weight != old_weight || !is_collapsable_length(mesh, v_ids[0], v_ids[1], weight))
                 continue;
@@ -99,6 +102,29 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
             }
 #if EC_POSTPROCESS
             else {
+//                //fortest
+//                int v1_id = v_ids[0];
+//                int v2_id = v_ids[1];
+////                std::vector<int> n12_t_ids;
+////                set_intersection(tet_vertices[v1_id].conn_tets, tet_vertices[v2_id].conn_tets, n12_t_ids);
+//
+//                Scalar old_max_quality = 0;
+//                std::vector<Scalar> new_qs;
+//                new_qs.reserve(tet_vertices[v1_id].conn_tets.size());
+//                for (int t_id:tet_vertices[v1_id].conn_tets) {
+//                    if (tets[t_id].quality > old_max_quality)
+//                        old_max_quality = tets[t_id].quality;
+//                }
+//                if(old_max_quality>5e9){
+//                    cout<<"resilt = "<<result<<endl;
+//                    cout<<"old_max_quality = "<<old_max_quality<<endl;
+//                    cout<<"e = "<<v1_id<<" "<<v2_id<<endl;
+//                }
+//                Eigen::MatrixXd V;
+//                Eigen::MatrixXi T;
+//
+//                //fortest
+
 //                if(weight<SCALAR_ZERO_2){
 //                    cout<<"len = "<<weight<<" but failed "<<result<<" "<<mesh.is_input_all_inserted<<endl;
 //                    //pausee();
@@ -233,7 +259,8 @@ void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
 }
 
 int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree,
-        std::vector<std::array<int, 2>>& new_edges, int ts, std::vector<int>& tet_tss) {
+        std::vector<std::array<int, 2>>& new_edges, int ts, std::vector<int>& tet_tss,
+        bool is_check_quality, bool is_update_tss) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -279,15 +306,17 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
     std::vector<Scalar> new_qs;
     new_qs.reserve(tet_vertices[v1_id].conn_tets.size());
     int ii = 0;
-    for (int t_id:tet_vertices[v1_id].conn_tets) {
-        if (tets[t_id].quality > old_max_quality)
-            old_max_quality = tets[t_id].quality;
+    if(is_check_quality) {
+        for (int t_id:tet_vertices[v1_id].conn_tets) {
+            if (tets[t_id].quality > old_max_quality)
+                old_max_quality = tets[t_id].quality;
+        }
     }
     for (int t_id:n1_t_ids) {
         int j = js_n1_t_ids[ii++];
         Scalar new_q = get_quality(tet_vertices[v2_id], tet_vertices[tets[t_id][mod4(j + 1)]],
                                    tet_vertices[tets[t_id][mod4(j + 2)]], tet_vertices[tets[t_id][mod4(j + 3)]]);
-        if (new_q > old_max_quality)
+        if (is_check_quality && new_q > old_max_quality)
             return EC_FAIL_QUALITY;
         new_qs.push_back(new_q);
     }
@@ -312,6 +341,8 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
     tet_vertices[v2_id].is_on_bbox = tet_vertices[v1_id].is_on_bbox || tet_vertices[v2_id].is_on_bbox;
     tet_vertices[v2_id].is_on_surface = tet_vertices[v1_id].is_on_surface || tet_vertices[v2_id].is_on_surface;
     tet_vertices[v2_id].is_on_boundary = tet_vertices[v1_id].is_on_boundary || tet_vertices[v2_id].is_on_boundary;
+    if(tet_vertices[v1_id].on_boundary_e_id >= 0)
+        tet_vertices[v2_id].on_boundary_e_id = tet_vertices[v1_id].on_boundary_e_id;
 
     //tets
     //update quality
@@ -451,7 +482,8 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
         tets[t_id][j] = v2_id;
 //        tet_vertices[v2_id].conn_tets.insert(t_id);
         tet_vertices[v2_id].conn_tets.push_back(t_id);
-        tet_tss[t_id] = ts;//update timestamp
+        if(is_update_tss)
+            tet_tss[t_id] = ts;//update timestamp
     }
     for (int t_id: n12_t_ids) {
         tets[t_id].is_removed = true;
@@ -535,4 +567,16 @@ bool floatTetWild::is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scala
     if (l_2 <= mesh.params.collapse_threshold_2 * sizing_scalar * sizing_scalar)
         return true;
     return false;
+}
+
+bool floatTetWild::is_collapsable_boundary(Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree) {
+    if (mesh.tet_vertices[v1_id].is_on_boundary && !is_boundary_edge(mesh, v1_id, v2_id, tree))
+        return false;
+    return true;
+
+
+//    if (mesh.tet_vertices[v1_id].on_boundary_e_id >= 0 && mesh.tet_vertices[v2_id].on_boundary_e_id
+//        && mesh.tet_vertices[v1_id].on_boundary_e_id != mesh.tet_vertices[v2_id].on_boundary_e_id)
+//        return false;
+//    return true;
 }

@@ -14,18 +14,23 @@ namespace floatTetWild {
     int is_tri_tri_cutted(const std::array<Vector3, 3> &f_tri, const std::array<Vector3, 3> &f_tet,
                           const std::array<int, 3>& oris_tri);
 
+    Scalar seg_seg_squared_dist_3d(const std::array<Vector3, 2> &s1, const std::array<Vector3, 2> &s2);
+
     Scalar p_seg_squared_dist_3d(const Vector3 &p, const Vector3 &a, const Vector3 &b);
+    Scalar p_line_squared_dist_3d(const Vector3 &p, const Vector3 &a, const Vector3 &b);
 
     bool is_p_inside_tri_2d(const Vector2& p, const std::array<Vector2, 3> &tri);
     bool is_seg_tri_cutted_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 3> &tri);
     bool is_tri_tri_cutted_2d(const std::array<Vector2, 3> &p_tet, const std::array<Vector2, 3> &p_tri);
 
     bool seg_seg_intersection_2d(const std::array<Vector2, 2> &seg1, const std::array<Vector2, 2> &seg2, Scalar& t2);
+    bool seg_line_intersection_2d(const std::array<Vector2, 2> &seg, const std::array<Vector2, 2> &line, Scalar& t_seg);
     bool seg_plane_intersection(const Vector3 &p1, const Vector3 &p2, const Vector3 &a, const Vector3 &n,
                                 Vector3 &p, Scalar &d1);
 
     int get_t(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2);
     Vector2 to_2d(const Vector3 &p, int t);
+    Vector2 to_2d(const Vector3 &p, const Vector3& n, const Vector3& pp, int t);
 
     bool is_crossing(int s1, int s2);
 

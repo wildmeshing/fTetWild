@@ -41,10 +41,15 @@ public:
 };
 
 #define NOT_SURFACE SCHAR_MAX//SHRT_MAX//INT_MAX
+#define KNOWN_NOT_SURFACE -SCHAR_MAX/2
+#define KNOWN_SURFACE SCHAR_MAX/2
+
 #define NO_SURFACE_TAG 0
 #define NOT_BBOX -1
 #define OPP_T_ID_UNKNOWN -2
 #define OPP_T_ID_BOUNDARY -1
+
+#define MAX_ENERGY 1e50
 
     using std::cout;
     using std::cin;
@@ -73,6 +78,8 @@ public:
 
         bool is_on_surface = false;
         bool is_on_boundary = false;
+        bool is_on_cut = false;
+        int on_boundary_e_id = -1;
         bool is_on_bbox = false;
         bool is_outside = false;
 
@@ -101,6 +108,7 @@ public:
             quality = 0;
             scalar = 0;
             is_removed = false;
+            is_outside = false;
         }
 
         inline const Vector4i &pts_indices() const { return indices; }
@@ -127,6 +135,10 @@ public:
                 if (indices[j] != v0_id && indices[j] != v1_id && indices[j] != v2_id)
                     return j;
             return -1;
+        }
+
+        inline void print() const {
+            cout<<indices[0]<<" "<<indices[1]<<" "<<indices[2]<<" "<<indices[3]<<endl;
         }
 
         std::array<char, 4> is_surface_fs = {{NOT_SURFACE, NOT_SURFACE, NOT_SURFACE, NOT_SURFACE}};

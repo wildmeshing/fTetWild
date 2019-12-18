@@ -21,12 +21,18 @@ class Parameters
     std::string envelope_log     = "";
     std::string envelope_log_csv = "";
 
+    bool not_sort_input = false;
+    bool correct_surface_orientation = false;
+
     bool is_quiet  = false;
     int  log_level = 0;
 
+    bool smooth_open_boundary = false;
+    bool manifold_surface = false;
+
     // it decides the scale of the box, presents the deviation of the box from the model
     //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)
-    Scalar box_scale = 1 / 10.0;
+    Scalar box_scale = 1 / 15.0;
 
     // epsilon presents the tolerence permited (in % of the box diagonal)
     Scalar eps_rel = 1e-3;
@@ -69,16 +75,26 @@ class Parameters
 
     bool init(Scalar bbox_diag_l)
     {
+        if(stage > 5)
+            stage = 5;
+
         bbox_diag_length = bbox_diag_l;
 
         ideal_edge_length   = bbox_diag_length * ideal_edge_length_rel;
         ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
 
         eps_input = bbox_diag_length * eps_rel;
-        dd        = eps_input / stage;
-        dd /= 2;
-        eps_delta = dd / std::sqrt(3);
-        eps       = eps_input - eps_delta * stage;
+        dd        = eps_input;// / stage;
+	dd /= 1.5;
+        double eps_usable = eps_input - dd / std::sqrt(3);
+        eps_delta = eps_usable * 0.1;
+        eps = eps_usable - eps_delta * (stage - 1);
+        //dd /= 1.5;
+
+//        dd /= 1.6;
+//        eps_delta = dd / std::sqrt(3);
+//        eps       = eps_input - eps_delta * stage;
+//        dd /= 1.2;
         eps_2     = eps * eps;
 
         eps_coplanar = eps * 0.2;  // better to set it as eps-related
@@ -92,7 +108,7 @@ class Parameters
         //            dd_simplification = dd;
 
         if (min_edge_len_rel < 0)
-            min_edge_len_rel = eps_rel * 2;
+            min_edge_len_rel = eps_rel;
         min_edge_length = bbox_diag_length * min_edge_len_rel;
 
         split_threshold      = ideal_edge_length * (4 / 3.0);

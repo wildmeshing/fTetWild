@@ -5,6 +5,7 @@
 #include <floattetwild/AABBWrapper.h>
 
 namespace floatTetWild {
+    extern bool use_old_energy;
     extern std::string envelope_log_csv;
     extern int envelope_log_csv_cnt;
 
@@ -12,13 +13,25 @@ namespace floatTetWild {
 
     int get_opp_t_id(const Mesh& mesh, int t_id, int j);
     void set_opp_t_id(Mesh& mesh, int t_id, int j);
+    inline int get_local_f_id(int t_id, int v1_id, int v2_id, int v3_id, Mesh &mesh) {
+        for (int j = 0; j < 4; j++) {
+            if (mesh.tets[t_id][j] != v1_id && mesh.tets[t_id][j] != v2_id && mesh.tets[t_id][j] != v3_id)
+                return j;
+        }
+        assert(false);
+        return -1;
+    }
+
+    inline GEO::vec3 to_geo_p(const Vector3& p){
+        return GEO::vec3(p[0], p[1], p[2]);
+    }
 
     void get_all_edges(const Mesh& mesh, std::vector<std::array<int, 2>>& edges);
     void get_all_edges(const Mesh& mesh, const std::vector<int>& t_ids, std::vector<std::array<int, 2>>& edges, bool skip_freezed = false);
 
     Scalar get_edge_length(const Mesh& mesh, int v1_id, int v2_id);
     Scalar get_edge_length_2(const Mesh& mesh, int v1_id, int v2_id);
-    
+
     Scalar get_quality(const Mesh& mesh, const MeshTet& t);
     Scalar get_quality(const Mesh& mesh, int t_id);
     Scalar get_quality(const MeshVertex& v0, const MeshVertex& v1, const MeshVertex& v2, const MeshVertex& v3);
@@ -30,6 +43,7 @@ namespace floatTetWild {
     bool is_inverted(const Mesh& mesh, int t_id, int j, const Vector3& new_p);
     bool is_inverted(const MeshVertex& v0, const MeshVertex& v1, const MeshVertex& v2, const MeshVertex& v3);
     bool is_inverted(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3);
+    bool is_degenerate(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3);
 
     bool is_out_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree);
     bool is_out_boundary_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree);
@@ -37,7 +51,7 @@ namespace floatTetWild {
 
     bool is_bbox_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
     bool is_surface_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
-    bool is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id);
+    bool is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, const AABBWrapper& tree);
     bool is_valid_edge(const Mesh& mesh, int v1_id, int v2_id);
     bool is_valid_edge(const Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& n12_t_ids);
 
@@ -47,20 +61,36 @@ namespace floatTetWild {
 
     void get_new_tet_slots(Mesh& mesh, int n, std::vector<int>& new_conn_tets);
 
+    inline Scalar get_area(const Vector3& a, const Vector3& b, const Vector3& c) {
+        return ((b - c).cross(a - c)).norm();
+    }
+
     template<typename T>
     void vector_unique(std::vector<T>& v){
         std::sort(v.begin(), v.end());
         v.erase(std::unique(v.begin(), v.end()), v.end());
     }
     template<typename T>
-    void vector_erase(std::vector<T>& v, const T& t){
-        v.erase(std::find(v.begin(), v.end(), t));
+    bool vector_erase(std::vector<T>& v, const T& t){
+        auto it = std::find(v.begin(), v.end(), t);
+        if(it == v.end())
+            return false;
+        v.erase(it);
+        return true;
     }
     template<typename T>
-    void vector_print(std::vector<T>& v, std::string s){
+    void vector_print(const std::vector<T>& v, std::string s = " "){
         for(auto i: v)
             cout<<i<<s;
         cout<<endl;
+    }
+    template<typename T>
+    bool vector_contains(const std::vector<T>& v, const T& t){
+        if(v.empty())
+            return false;
+        if(std::find(v.begin(), v.end(), t)!=v.end())
+            return true;
+        return false;
     }
     void set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, std::vector<int>& v);
     void set_intersection(const std::unordered_set<int>& s1, const std::unordered_set<int>& s2, std::unordered_set<int>& v);
@@ -68,7 +98,7 @@ namespace floatTetWild {
 
     void set_intersection(const std::vector<int>& s1, const std::vector<int>& s2, std::vector<int>& v);
     void set_intersection(const std::vector<int>& s1, const std::vector<int>& s2, const std::vector<int>& s3, std::vector<int>& v);
-
+    void set_intersection_sorted(const std::vector<int>& s1, const std::vector<int>& s2, const std::vector<int>& s3, std::vector<int>& v);
 
     inline int mod4(int j) {
 //        assert(j >= 0 && j < 7);
@@ -96,7 +126,7 @@ namespace floatTetWild {
         return j%2;
     }
 
-    void pausee();
+    void pausee(std::string msg = "");
 
     ///////////////
     class ElementInQueue{
@@ -122,6 +152,8 @@ namespace floatTetWild {
         }
     };
 
+    Scalar AMIPS_energy_aux(const std::array<Scalar, 12>& T);
+    bool is_energy_unstable(const std::array<Scalar, 12>& T, Scalar res);
     Scalar AMIPS_energy(const std::array<Scalar, 12>& T);
     void AMIPS_jacobian(const std::array<Scalar, 12>& T, Vector3& result_0);
     void AMIPS_hessian(const std::array<Scalar, 12>& T, Matrix3& result_0);

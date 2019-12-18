@@ -174,6 +174,7 @@ def tet_trace(table, v, tet, edges, track, original_faces, col, shrink):
                 )
             )
 
+    annotations = []
     return trace, annotations
 
 

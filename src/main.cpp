@@ -205,6 +205,10 @@ int main(int argc, char **argv) {
 
     command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "");//tmp
 
+    bool disable_wn = false;
+    command_line.add_flag("--disable-wn", disable_wn, "Disable winding number.");
+
+
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
 #endif
@@ -419,11 +423,12 @@ int main(int argc, char **argv) {
                 if (t.is_outside)
                     t.is_removed = true;
             }
-        } else
-            filter_outside(mesh);
+        } else {
+            if(!disable_wn)
+                filter_outside(mesh);
+        }
     }
     if(params.manifold_surface){
-//        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_non_manifold.msh", mesh, false);
         manifold_surface(mesh);
     }
     stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),

@@ -111,25 +111,27 @@ Options:
   -h,--help                   Print this help message and exit
   -i,--input TEXT:FILE        Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)
   -o,--output TEXT            Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')
-  --tag TEXT
-  --op INT
+  --tag TEXT                  
+  --op INT                    
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
-  --max-its INT
-  --stop-energy FLOAT
-  --stage INT
-  --stop-p INT
-  --postfix TEXT
+  --max-its INT               
+  --stop-energy FLOAT         
+  --stage INT                 
+  --stop-p INT                
+  --postfix TEXT              
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).
   -q,--is-quiet               Mute console output. (optional)
-  --skip-simplify
-  --not-sort-input
+  --skip-simplify             
+  --not-sort-input            
   --correct-surface-orientation
-  --envelope-log TEXT
-  --smooth-open-boundary
-  --manifold-surface
+  --envelope-log TEXT         
+  --smooth-open-boundary      
+  --manifold-surface          
   --csg TEXT:FILE             json file containg a csg tree
+  --use-old-energy            
+  --disable-wn                Disable winding number.
   --max-threads UINT          maximum number of threads used
 ```
 

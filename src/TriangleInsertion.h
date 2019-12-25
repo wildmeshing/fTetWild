@@ -23,6 +23,11 @@
 
 #include <floattetwild/Rational.h>
 namespace floatTetWild {
+    void match_surface_fs(const Mesh &mesh,
+                          const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                          std::vector<bool> &is_face_inserted,
+                          std::vector<std::array<std::vector<int>, 4>> &track_surface_fs);
+
     void insert_triangles(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                           const std::vector<int> &input_tags, Mesh &mesh,
                           std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again);
@@ -119,6 +124,7 @@ namespace floatTetWild {
     void check_track_surface_fs(Mesh &mesh, std::vector<std::array<std::vector<int>, 4>> &track_surface_fs,
                                 const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                 const std::vector<int> &sorted_f_ids);
+    Vector3 get_normal(const Vector3& a, const Vector3& b, const Vector3& c);
 
     //fortest
     typedef Eigen::Matrix<triwild::Rational, 3, 1> Vector3_r;

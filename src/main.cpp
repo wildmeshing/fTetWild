@@ -16,7 +16,6 @@
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/MeshIO.hpp>
 #include <floattetwild/FloatTetDelaunay.h>
-#include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/MeshImprovement.h>
 #include <floattetwild/Simplification.h>
@@ -367,7 +366,7 @@ int main(int argc, char **argv) {
 
     timer.start();
     simplify(input_vertices, input_faces, input_tags, tree, params, skip_simplify);
-    tree.init_b_mesh_and_tree(input_vertices, input_faces);
+    tree.init_b_mesh_and_tree(input_vertices, input_faces, mesh);
     logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),

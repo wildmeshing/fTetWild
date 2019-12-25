@@ -12,9 +12,6 @@
 
 #include <floattetwild/TriangleInsertion.h>
 
-#include <floattetwild/FloatTetCutting.h>
-#include <floattetwild/FloatTetCuttingCheck.h>
-#include <floattetwild/FloatTetCuttingParallel.h>
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/Predicates.hpp>
 #include <floattetwild/MeshIO.hpp>
@@ -73,6 +70,42 @@ std::vector<std::array<int, 3>> covered_tet_fs;//fortest
 //fortest
 
 ///two places to update quality: snapping tet vertices to plane, push new tets
+
+floatTetWild::Vector3 floatTetWild::get_normal(const Vector3& a, const Vector3& b, const Vector3& c) {
+    return ((b - c).cross(a - c)).normalized();
+}
+
+void floatTetWild::match_surface_fs(const Mesh &mesh,
+                                    const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
+                                    std::vector<bool> &is_face_inserted,
+                                    std::vector<std::array<std::vector<int>, 4>> &track_surface_fs){
+    auto comp = [](const std::array<int, 4> &a, const std::array<int, 4> &b) {
+        return std::tuple<int, int, int>(a[0], a[1], a[2]) < std::tuple<int, int, int>(b[0], b[1], b[2]);
+    };
+
+    std::vector<std::array<int, 4>> input_fs(input_faces.size());
+    for (int i = 0; i < input_faces.size(); i++) {
+        input_fs[i] = {{input_faces[i][0], input_faces[i][1], input_faces[i][2], i}};
+        std::sort(input_fs[i].begin(), input_fs[i].begin() + 3);
+    }
+    std::sort(input_fs.begin(), input_fs.end(), comp);
+
+    for (int i = 0; i < mesh.tets.size(); i++) {
+        auto &t = mesh.tets[i];
+        for (int j = 0; j < 4; j++) {
+            std::array<int, 3> f = {{t[mod4(j + 1)], t[mod4(j + 2)], t[mod4(j + 3)]}};
+            std::sort(f.begin(), f.end());
+            auto bounds = std::equal_range(input_fs.begin(), input_fs.end(),
+                                           std::array<int, 4>({{f[0], f[1], f[2], -1}}),
+                                           comp);
+            for (auto it = bounds.first; it != bounds.second; ++it) {
+                int f_id = (*it)[3];
+                is_face_inserted[f_id] = true;
+                track_surface_fs[i][j].push_back(f_id);
+            }
+        }
+    }
+}
 
 void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces,
                                     const Mesh &mesh, std::vector<int> &sorted_f_ids) {///use 38416, 232368 as example //todo: think why

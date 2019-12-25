@@ -29,13 +29,6 @@ set(SOURCES
 
 	FloatTetDelaunay.h
 	FloatTetDelaunay.cpp
-	FloatTetCutting.h
-	FloatTetCutting.cpp
-	FloatTetCuttingCheck.h
-	FloatTetCuttingCheck.cpp
-	FloatTetCuttingParallel.h
-	FloatTetCuttingParallel.cpp
-
 		TriangleInsertion.cpp
 		TriangleInsertion.h
 

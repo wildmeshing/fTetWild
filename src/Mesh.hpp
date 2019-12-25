@@ -175,6 +175,7 @@ public:
         int t_empty_start = 0;
         int v_empty_start = 0;
         bool is_limit_length = true;
+        bool is_closed = true;
 
         bool is_input_all_inserted = false;
 

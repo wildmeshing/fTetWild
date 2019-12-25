@@ -400,16 +400,25 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
                            std::count(is_face_inserted.begin(), is_face_inserted.end(),
                                       false));
 
-            for (int v_id = 0; v_id < mesh.tet_vertices.size(); v_id++) {
-                if (mesh.tet_vertices[v_id].is_removed)
-                    continue;
-                if (!mesh.tet_vertices[v_id].is_on_boundary)
-                    continue;
-
-                GEO::index_t prev_facet;
-                if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2, prev_facet)) {
+            if(mesh.is_input_all_inserted && mesh.is_closed){
+                for (int v_id = 0; v_id < mesh.tet_vertices.size(); v_id++) {
+                    if (mesh.tet_vertices[v_id].is_removed)
+                        continue;
                     mesh.tet_vertices[v_id].is_on_boundary = false;
                     mesh.tet_vertices[v_id].is_on_cut = false;
+                }
+            } else {
+                for (int v_id = 0; v_id < mesh.tet_vertices.size(); v_id++) {
+                    if (mesh.tet_vertices[v_id].is_removed)
+                        continue;
+                    if (!mesh.tet_vertices[v_id].is_on_boundary)
+                        continue;
+
+                    GEO::index_t prev_facet;
+                    if (tree.is_out_tmp_b_envelope(mesh.tet_vertices[v_id].pos, mesh.params.eps_2, prev_facet)) {
+                        mesh.tet_vertices[v_id].is_on_boundary = false;
+                        mesh.tet_vertices[v_id].is_on_cut = false;
+                    }
                 }
             }
         }

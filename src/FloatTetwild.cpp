@@ -7,11 +7,11 @@
 //
 
 #include <floattetwild/AABBWrapper.h>
-#include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/FloatTetDelaunay.h>
 #include <floattetwild/MeshImprovement.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/Simplification.h>
+#include <floattetwild/TriangleInsertion.h>
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/Statistics.h>
 #include <geogram/mesh/mesh_reorder.h>
@@ -64,12 +64,14 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     /////////////////////////////////////////////////
     // STEP 1: Preprocessing (mesh simplification) //
     /////////////////////////////////////////////////
+    Mesh mesh;
+    mesh.params = params;
 
     igl::Timer timer;
 
     timer.start();
-    simplify(input_vertices, input_faces, input_tags, tree, params, skip_simplify);
-    tree.init_b_mesh_and_tree(input_vertices, input_faces);
+    simplify(input_vertices, input_faces, input_tags, tree, mesh.params, skip_simplify);
+    tree.init_b_mesh_and_tree(input_vertices, input_faces, mesh);
     logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::preprocessing_id,
@@ -78,16 +80,13 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
                    input_faces.size(),
                    -1,
                    -1);
-    if (params.log_level <= 1) {
+    if (mesh.params.log_level <= 1) {
         output_component(input_vertices, input_faces, input_tags);
     }
 
     ///////////////////////////////////////
     // STEP 2: Volume tetrahedralization //
     ///////////////////////////////////////
-
-    Mesh mesh;
-    mesh.params = params;
 
     timer.start();
     std::vector<bool> is_face_inserted(input_faces.size(), false);
@@ -110,7 +109,7 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     /////////////////////
 
     timer.start();
-    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
+    insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
     logger().info("cutting {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::cutting_id,

@@ -140,7 +140,7 @@ namespace floatTetWild {
             voxels.reserve((n_voxels(0) + 1) * (n_voxels(1) + 1) * (n_voxels(2) + 1));
 
 //            const double sq_distg = std::min(params.ideal_edge_length / 2, 10 * params.eps);
-            const double sq_distg = 10 * params.eps;
+            const double sq_distg = 100 * params.eps_2;
             GEO::vec3 nearest_point;
 
             for (int i = 0; i <= n_voxels(0); ++i) {
@@ -149,11 +149,7 @@ namespace floatTetWild {
                     const Scalar py = (j == n_voxels(1)) ? max(1) : (min(1) + delta(1) * j);
                     for (int k = 0; k <= n_voxels(2); ++k) {
                         const Scalar pz = (k == n_voxels(2)) ? max(2) : (min(2) + delta(2) * k);
-
-                        const GEO::vec3 gp(px, py, pz);
-                        Scalar dist = sqrt(tree.project_to_sf(gp));
-
-                        if (dist > sq_distg)
+                        if (tree.get_sq_dist_to_sf(Vector3(px, py, pz)) > sq_distg)
                             voxels.emplace_back(px, py, pz);
                     }
                 }

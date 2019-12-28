@@ -530,6 +530,7 @@ int floatTetWild::CutMesh::project_to_plane(int input_vertices_size) {
         if (is_snappable) {
             mesh.tet_vertices[v_ids[i]].pos = proj_p;
             is_projected[i] = true;
+            to_plane_dists[i] = get_to_plane_dist(proj_p);
             cnt++;
         }
     }
@@ -540,6 +541,7 @@ int floatTetWild::CutMesh::project_to_plane(int input_vertices_size) {
 void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {
 //    return;
 
+    int cnt = 0;
     for (int i = a; i < b; i++) {
         const auto &t = tets[i];
         if (is_v_on_plane(t[0]) && is_v_on_plane(t[1]) && is_v_on_plane(t[2]) && is_v_on_plane(t[3])) {
@@ -551,6 +553,7 @@ void floatTetWild::CutMesh::revert_totally_snapped_tets(int a, int b) {
                 if (is_snapped[tmp_t[j]] == true) {
                     is_snapped[tmp_t[j]] = false;
 //                    //fortest
+//                    cnt++;
 //                    if(j!=0){
 //                        cout<<"snapping j!=0"<<endl;
 //                        pausee();

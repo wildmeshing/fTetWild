@@ -2001,10 +2001,15 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                             new_tets, new_track_surface_fs, modified_t_ids)) {
             bool is_inside_envelope = true;
             for (auto &f: cut_fs) {
+#ifdef STORE_SAMPLE_POINTS
                 std::vector<GEO::vec3> ps;
                 sample_triangle({{mesh.tet_vertices[f[0]].pos, mesh.tet_vertices[f[1]].pos,
                                          mesh.tet_vertices[f[2]].pos}}, ps, mesh.params.dd);
                 if (tree.is_out_sf_envelope(ps, mesh.params.eps_2)) {
+#else
+                if(sample_triangle_and_check_is_out({{mesh.tet_vertices[f[0]].pos, mesh.tet_vertices[f[1]].pos,
+                                         mesh.tet_vertices[f[2]].pos}}, mesh.params.dd, mesh.params.eps_2, tree, GEO::NO_FACET)){
+#endif
                     is_inside_envelope = false;
                     break;
                 }
@@ -2583,12 +2588,16 @@ void floatTetWild::mark_surface_fs(const std::vector<Vector3> &input_vertices, c
 //                if(is_all_out)
 //                    continue;
 //                //
-                double eps = (mesh.params.eps + mesh.params.eps_simplification) / 2;
+                double eps_2 = (mesh.params.eps + mesh.params.eps_simplification) / 2;
                 double dd = (mesh.params.dd + mesh.params.dd_simplification) / 2;
-                eps *= eps;
+                eps_2 *= eps_2;
+#ifdef STORE_SAMPLE_POINTS
                 std::vector<GEO::vec3> ps;
                 sample_triangle({{tp1_3d, tp2_3d, tp3_3d}}, ps, dd);
-                if (tree.is_out_sf_envelope(ps, eps))
+                if (tree.is_out_sf_envelope(ps, eps_2))
+#else
+                if(sample_triangle_and_check_is_out({{tp1_3d, tp2_3d, tp3_3d}}, dd, eps_2, tree, GEO::NO_FACET))
+#endif
                     continue;
                 else
                     ff_id = track_surface_fs[t_id][j].front();

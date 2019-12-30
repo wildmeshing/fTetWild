@@ -93,6 +93,10 @@ void connect_2_meshes(std::string m1, std::string m2, std::string m);
 
 //extern "C" void exactinit();
 int main(int argc, char **argv) {
+#ifdef STORE_SAMPLE_POINTS
+    cout<<"STORE_SAMPLE_POINTS defined"<<endl;
+#endif
+
 //    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
 //                     "/Users/yixinhu/Downloads/test_cutting/37627.stl");
 

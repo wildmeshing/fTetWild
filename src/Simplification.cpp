@@ -882,9 +882,13 @@ floatTetWild::Scalar floatTetWild::get_angle_cos(const Vector3& p, const Vector3
 }
 
 bool floatTetWild::is_out_envelope(const std::array<Vector3, 3>& vs, const AABBWrapper& tree, const Parameters& params) {
+#ifdef STORE_SAMPLE_POINTS
     std::vector<GEO::vec3> ps;
     sample_triangle(vs, ps, params.dd_simplification);
     return tree.is_out_sf_envelope(ps, params.eps_2_simplification);
+#else
+    return sample_triangle_and_check_is_out(vs, params.dd_simplification, params.eps_2_simplification, tree, GEO::NO_FACET);
+#endif
 
     // GEO::vec3 init_point(vs[0][0], vs[0][1], vs[0][2]);
     // GEO::vec3 nearest_point;

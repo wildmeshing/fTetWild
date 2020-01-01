@@ -18,7 +18,7 @@
 #include <floattetwild/FastWindingNumber.hpp>
 #include <floattetwild/CSGTreeParser.hpp>
 
-#include <floattetwild/FloatTetCutting.h>
+//#include <floattetwild/FloatTetCutting.h>
 #include <floattetwild/TriangleInsertion.h>
 #include <floattetwild/Statistics.h>
 

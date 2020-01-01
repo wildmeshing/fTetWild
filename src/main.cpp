@@ -471,6 +471,7 @@ int main(int argc, char **argv) {
     if (!params.envelope_log.empty()) {
         std::ofstream fout(params.envelope_log);
         fout << envelope_log_csv;
+        fout.close();
     }
 
     return EXIT_SUCCESS;

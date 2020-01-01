@@ -601,7 +601,7 @@ bool floatTetWild::is_out_boundary_envelope(const Mesh& mesh, int v_id, const Ve
 }
 
 #include <sstream>
-bool floatTetWild::is_out_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree) {
+bool floatTetWild::is_out_envelope(Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree) {
     GEO::index_t prev_facet;
     if(tree.is_out_sf_envelope(new_pos, mesh.params.eps_2, prev_facet))
         return true;
@@ -625,16 +625,23 @@ bool floatTetWild::is_out_envelope(const Mesh& mesh, int v_id, const Vector3& ne
 #else
                 bool is_out = sample_triangle_and_check_is_out(vs, mesh.params.dd, mesh.params.eps_2, tree, prev_facet);
 #endif
-                if(!mesh.params.envelope_log.empty() && envelope_log_csv_cnt < 1e5){
-                    std::ostringstream ss;
-                    ss<<std::setprecision(17);
-                    for(const auto& v: vs) {
-                         ss<<v[0]<<','<<v[1]<<','<<v[2]<<',';
+                if(!mesh.params.envelope_log.empty()){
+                    if(envelope_log_csv_cnt < 1e5) {
+                        std::ostringstream ss;
+                        ss << std::setprecision(17);
+                        for (const auto &v: vs) {
+                            ss << v[0] << ',' << v[1] << ',' << v[2] << ',';
+                        }
+                        ss << is_out << "\n";
+                        std::string tmp = ss.str();
+                        envelope_log_csv += tmp;
+                        envelope_log_csv_cnt += 1;
+                    } else {
+                        std::ofstream fout(mesh.params.envelope_log);
+                        fout << envelope_log_csv;
+                        fout.close();
+                        mesh.params.envelope_log = "";
                     }
-                    ss<<is_out<<"\n";
-                    std::string tmp = ss.str();
-                    envelope_log_csv += tmp;
-                    envelope_log_csv_cnt += 1;
                 }
                 if (is_out)
                     return true;

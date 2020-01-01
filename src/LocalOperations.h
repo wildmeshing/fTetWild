@@ -53,7 +53,7 @@ namespace floatTetWild {
     bool is_inverted(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3);
     bool is_degenerate(const Vector3& v0, const Vector3& v1, const Vector3& v2, const Vector3& v3);
 
-    bool is_out_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree);
+    bool is_out_envelope(Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree);
     bool is_out_boundary_envelope(const Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree);
     void sample_triangle(const std::array<Vector3, 3>& vs, std::vector<GEO::vec3>& ps, Scalar sampling_dist);
     bool sample_triangle_and_check_is_out(const std::array<Vector3, 3>& vs, Scalar sampling_dist,

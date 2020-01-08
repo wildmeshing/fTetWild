@@ -1144,7 +1144,7 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
     }
 //    igl::writeSTL("before_bfs.stl", V_sf, F_sf);
 
-    if (mesh.params.correct_surface_orientation) {
+    if (true || mesh.params.correct_surface_orientation) {
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
         Eigen::VectorXi _1, _2;

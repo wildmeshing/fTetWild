@@ -343,8 +343,8 @@ void floatTetWild::CutMesh::expand_new(std::vector<int> &cut_t_ids) {
                 continue;
             if (!is_snapped[lv_id])
                 continue;
-            if(is_projected[lv_id])
-                continue;
+//            if(is_projected[lv_id])
+//                continue;
 
             bool is_in = true;
             for (int gt_id: mesh.tet_vertices[gv_id].conn_tets) {

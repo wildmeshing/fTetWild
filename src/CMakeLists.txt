@@ -53,9 +53,10 @@ set(SOURCES
 	Parameters.h
 
 	Types.hpp
+		Types.cpp
 
 	Statistics.h
-)
+		)
 
 prepend_current_path(SOURCES)
 float_tetwild_copy_headers(${SOURCES})

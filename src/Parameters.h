@@ -108,9 +108,11 @@ class Parameters
         eps_coplanar = eps * 0.2;  // better to set it as eps-related
         if (eps_coplanar > bbox_diag_length * 1e-6)
             eps_coplanar = bbox_diag_length * 1e-6;
+        eps_coplanar /= snap_shrink;
         eps_2_coplanar = eps_coplanar * eps_coplanar;
 
-        eps_simplification   = eps * 0.8;
+//        eps_simplification   = eps * 0.8;
+        eps_simplification   = eps * eps_prep_r;
         eps_2_simplification = eps_simplification * eps_simplification;
         dd_simplification    = dd / eps * eps_simplification;
         //            dd_simplification = dd;

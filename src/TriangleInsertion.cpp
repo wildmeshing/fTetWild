@@ -149,6 +149,9 @@ void floatTetWild::insert_triangles(const std::vector<Vector3> &input_vertices,
                                     const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags,
                                     Mesh &mesh, std::vector<bool> &is_face_inserted, AABBWrapper &tree, bool is_again) {
     insert_triangles_aux(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, is_again);
+//    mesh.params.eps_coplanar = 1e-8;
+//    mesh.params.eps_2_coplanar = 1e-16;
+
     return;
 
     if (mesh.is_input_all_inserted)

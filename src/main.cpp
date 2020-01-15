@@ -212,6 +212,12 @@ int main(int argc, char **argv) {
     command_line.add_flag("--disable-wn", disable_wn, "Disable winding number.");
 
 
+    //fortest
+    command_line.add_option("--eps-zero", eps_zero, "");
+    command_line.add_option("--eps-prep-r", eps_prep_r, "");
+    command_line.add_option("--snap-shrink", snap_shrink, "");
+    //fortest
+
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
 #endif

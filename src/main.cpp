@@ -216,6 +216,8 @@ int main(int argc, char **argv) {
     command_line.add_option("--eps-zero", eps_zero, "");
     command_line.add_option("--eps-prep-r", eps_prep_r, "");
     command_line.add_option("--snap-shrink", snap_shrink, "");
+    if(eps_prep_r == 0)
+        skip_simplify = true;
     //fortest
 
 #ifdef LIBIGL_WITH_TETGEN

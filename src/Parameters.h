@@ -114,8 +114,8 @@ class Parameters
 //        eps_simplification   = eps * 0.8;
         eps_simplification   = eps * eps_prep_r;
         eps_2_simplification = eps_simplification * eps_simplification;
-        dd_simplification    = dd / eps * eps_simplification;
-        //            dd_simplification = dd;
+//        dd_simplification = dd * eps_simplification / eps;
+        dd_simplification = dd * 0.8;
 
         if (min_edge_len_rel < 0)
             min_edge_len_rel = eps_rel;

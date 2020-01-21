@@ -887,7 +887,8 @@ bool floatTetWild::is_out_envelope(const std::array<Vector3, 3>& vs, const AABBW
     sample_triangle(vs, ps, params.dd_simplification);
     return tree.is_out_sf_envelope(ps, params.eps_2_simplification);
 #else
-    return sample_triangle_and_check_is_out(vs, params.dd_simplification, params.eps_2_simplification, tree, GEO::NO_FACET);
+    GEO::index_t prev_facet = GEO::NO_FACET;
+    return sample_triangle_and_check_is_out(vs, params.dd_simplification, params.eps_2_simplification, tree, prev_facet);
 #endif
 
     // GEO::vec3 init_point(vs[0][0], vs[0][1], vs[0][2]);

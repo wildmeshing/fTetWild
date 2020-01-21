@@ -35,7 +35,7 @@ namespace floatTetWild {
 #define SCALAR_ZERO_3 eps_zero*eps_zero*eps_zero
 #endif
 
-#define STORE_SAMPLE_POINTS
+//#define STORE_SAMPLE_POINTS
 
     // Json
     using json = nlohmann::json;

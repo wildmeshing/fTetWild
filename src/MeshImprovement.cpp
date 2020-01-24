@@ -1150,7 +1150,7 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
         Eigen::VectorXi _1, _2;
         igl::remove_duplicate_vertices(V_sf, F_sf, -1, V, _1, _2, F);
         V_sf = V;
-        F_sf.resize(0, 0);
+        F_sf.resize(0, 3);
         bfs_orient(F, F_sf, _1);
     }
     igl::writeSTL(mesh.params.output_path + "_" + mesh.params.postfix + "_tracked_surface.stl", V_sf, F_sf);

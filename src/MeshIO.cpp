@@ -126,12 +126,13 @@ void write_mesh_aux(const std::string&              path,
 
         f << "Triangles" << std::endl << 0 << std::endl;
         f << "Tetrahedra" << std::endl << cnt_t << std::endl;
+        const std::array<int, 4> new_indices = {{0, 1, 3, 2}};
 
         for (const int i : t_ids) {
             if (skip_tet(i))
                 continue;
             for (int j = 0; j < 4; j++) {
-                f << old_2_new[mesh.tets[i][j]] + 1 << " ";
+                f << old_2_new[mesh.tets[i][new_indices[j]]] + 1 << " ";
             }
             f << 0 << std::endl;
         }

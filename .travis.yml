@@ -42,8 +42,8 @@ matrix:
 install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
 - eval "${MATRIX_EVAL}"
-- ccache --max-size=5.0G
-- ccache -V && ccache --show-stats && ccache --zero-stats
+# - ccache --max-size=5.0G
+# - ccache -V && ccache --show-stats && ccache --zero-stats
 
 script:
 - mkdir build
@@ -51,4 +51,4 @@ script:
 - cmake -DCMAKE_BUILD_TYPE=$CONFIG ${EXTRA_FLAGS} ..
 - make -j2
 - if [[ "$CONFIG" == "Release" ]]; then make test; fi
-- ccache --show-stats
+# - ccache --show-stats

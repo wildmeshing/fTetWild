@@ -29,6 +29,7 @@ namespace floatTetWild {
     void boolean_operation(Mesh& mesh, int op);
     void boolean_operation(Mesh& mesh, const json &csg_tree_with_ids);
     void filter_outside(Mesh& mesh, bool invert_faces = false);
+    void filter_outside_floodfill(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);
     void smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree);
     void smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree);

@@ -1381,6 +1381,49 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
     }
 }
 
+void floatTetWild::filter_outside_floodfill(Mesh& mesh, bool invert_faces) {
+    auto &tets = mesh.tets;
+    auto &tet_vertices = mesh.tet_vertices;
+
+    std::queue<int> t_queue;
+    for (int i = 0; i < tets.size(); i++) {
+        if (tets[i].is_removed)
+            continue;
+        for (int j = 0; j < 4; j++) {
+            if (tets[i].is_bbox_fs[j] != NOT_BBOX) {
+                t_queue.push(i);
+                tets[i].is_removed = true;
+                break;
+            }
+        }
+    }
+
+    while (!t_queue.empty()) {
+        int t_id = t_queue.front();
+        t_queue.pop();
+
+        for (int j = 0; j < 4; j++) {
+            if (tets[t_id].is_bbox_fs[j] != NOT_BBOX || tets[t_id].is_surface_fs[j] != NOT_SURFACE)
+                continue;
+            int n_t_id = get_opp_t_id(mesh, t_id, j);
+            if (n_t_id < 0 || tets[n_t_id].is_removed)
+                continue;
+            tets[n_t_id].is_removed = true;
+            t_queue.push(n_t_id);
+        }
+        for (int j = 0; j < 4; j++) {
+            vector_erase(tet_vertices[tets[t_id][j]].conn_tets, t_id);
+        }
+    }
+
+    for (int i = 0; i < tet_vertices.size(); i++) {
+        if (tet_vertices[i].is_removed)
+            continue;
+        if (tet_vertices[i].conn_tets.empty())
+            tet_vertices[i].is_removed = true;
+    }
+}
+
 void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
     Eigen::MatrixXd C(mesh.get_t_num(), 3);
     C.setZero();

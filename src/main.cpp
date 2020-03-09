@@ -87,7 +87,7 @@ protected:
 #include <geogram/basic/numeric.h>
 #include <geogram/basic/geometry.h>
 #include <floattetwild/Predicates.hpp>
-#include "LocalOperations.h"
+#include <floattetwild/LocalOperations.h>
 
 void connect_2_meshes(std::string m1, std::string m2, std::string m);
 

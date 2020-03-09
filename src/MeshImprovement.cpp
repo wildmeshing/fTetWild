@@ -1103,6 +1103,8 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
 }
 
 #include <floattetwild/bfs_orient.h>
+
+#undef IGL_STATIC_LIBRARY
 #include <igl/unique_rows.h>
 #include <igl/remove_duplicate_vertices.h>
 #include <floattetwild/TriangleInsertion.h>
@@ -1151,7 +1153,7 @@ void floatTetWild::get_tracked_surface(Mesh& mesh, Eigen::Matrix<Scalar, Eigen::
         igl::remove_duplicate_vertices(V_sf, F_sf, -1, V, _1, _2, F);
         V_sf = V;
         F_sf.resize(0, 3);
-        bfs_orient(F, F_sf, _1);
+        floatTetWild::bfs_orient(F, F_sf, _1);
     }
     igl::writeSTL(mesh.params.output_path + "_" + mesh.params.postfix + "_tracked_surface.stl", V_sf, F_sf);
 }

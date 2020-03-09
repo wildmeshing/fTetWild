@@ -85,21 +85,16 @@ include(FloatTetwildDependencies)
 # FloatTetwild library
 ################################################################################
 
-find_package(GMPfTetWild)
-IF(NOT ${GMP_FOUND})
-	MESSAGE(FATAL_ERROR "Cannot find GMP")
-ENDIF()
-
-# find_package(MPFR)
-# IF(NOT ${MPFR_FOUND})
-# 	MESSAGE(FATAL_ERROR "Cannot find MPFR")
-# ENDIF()
+#find_package(MPFR)
+#IF(NOT ${MPFR_FOUND})
+#	MESSAGE(FATAL_ERROR "Cannot find MPFR")
+#ENDIF()
 
 # add_library() can only be called without any source since CMake 3.11 ...
 add_library(${PROJECT_NAME} src/Logger.cpp)
 
 # Public include directory for FloatTetwild
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include "${FLOAT_TETWILD_EXTERNAL}/mpfr")
 
 # set(MESH_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 # target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_MESH_PATH=\"${MESH_PATH}\")
@@ -107,11 +102,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 
-# Use C++11
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-# if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-# 	target_compile_options(${PROJECT_NAME} PUBLIC "/Zc:__cplusplus")
-# endif()
+# Use C++14
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # target_compile_definitions(${PROJECT_NAME} PUBLIC -DEIGEN_STACK_ALLOCATION_LIMIT=8388608)
 
 if(FLOAT_TETWILD_WITH_SANITIZERS)
@@ -130,8 +122,6 @@ if(FLOAT_TETWILD_USE_FLOAT)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_USE_FLOAT)
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
-
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		igl::core
@@ -140,8 +130,7 @@ target_link_libraries(${PROJECT_NAME}
 		Threads::Threads
 		fast_winding_number
 		json
-		${GMP_LIBRARIES}
-		# ${MPFR_LIBRARIES}
+		#${MPFR_LIBRARIES}
 )
 if(FLOAT_TETWILD_ENABLE_TBB)
 	target_link_libraries(${PROJECT_NAME} PUBLIC tbb::tbb)

@@ -63,7 +63,7 @@ if(MPFR_INCLUDES)
   endif()
 endif()
 
-find_library(MPFR_LIBRARIES mpfr
+find_library(MPFR_LIBRARIES gmp
   PATHS $ENV{GMPDIR} $ENV{MPFRDIR} ${LIB_INSTALL_DIR})
 
 include(FindPackageHandleStandardArgs)

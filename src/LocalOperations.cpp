@@ -1069,13 +1069,14 @@ bool floatTetWild::is_energy_unstable(const std::array<Scalar, 12>& T, Scalar re
 
 int cnt_stable = 0;
 int cnt_large = 0;
-#include <floattetwild/Rational.h>
+//#include <floattetwild/Rational.h>
 Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     Scalar res = AMIPS_energy_aux(T);
-    if(use_old_energy) {
+    //if(use_old_energy) {
         return res;
-    }
+    //}
 
+/*
     if (res > 1e8) {
 //        //fortest
 //        if (res > 1e10) {
@@ -1137,6 +1138,7 @@ Scalar floatTetWild::AMIPS_energy(const std::array<Scalar, 12>& T) {
     } else {
         return res;
     }
+*/
 }
 
 Scalar floatTetWild::AMIPS_energy_aux(const std::array<Scalar, 12>& T) {

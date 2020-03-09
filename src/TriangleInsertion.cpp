@@ -36,12 +36,13 @@
 #include <bitset>
 #include <numeric>
 #include <unordered_map>
+#include <algorithm>
 
 
 #define III -1
 
 //fortest
-#include <floattetwild/Rational.h>
+//#include <floattetwild/Rational.h>
 double time_find_cutting_tets = 0;
 double time_find_cutting_tets1 = 0;
 double time_find_cutting_tets2 = 0;
@@ -139,7 +140,9 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
     if (mesh.params.not_sort_input)
         return;
 
-    std::random_shuffle(sorted_f_ids.begin(), sorted_f_ids.end());
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::shuffle(sorted_f_ids.begin(), sorted_f_ids.end(), generator);
 //    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
 //        return weights[a] < weights[b];
 //    });
@@ -3116,13 +3119,15 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
     }
 }
 
-int floatTetWild::orient_rational(const Vector3_r& p1, const Vector3_r& p2, const Vector3_r& p3, const Vector3_r& p){
-    auto nv = (p2-p1).cross(p3-p1);
-    triwild::Rational res = nv.dot(p-p1);
-    if(res == 0)
-        return Predicates::ORI_ZERO;
-    if(res < 0)
-        return Predicates::ORI_POSITIVE;
-    else
-        return Predicates::ORI_NEGATIVE;
-}
+
+//int floatTetWild::orient_rational(const Vector3_r& p1, const Vector3_r& p2, const Vector3_r& p3, const Vector3_r& p){
+//    auto nv = (p2-p1).cross(p3-p1);
+//    triwild::Rational res = nv.dot(p-p1);
+//    if(res == 0)
+//        return Predicates::ORI_ZERO;
+//    if(res < 0)
+//        return Predicates::ORI_POSITIVE;
+//    else
+//        return Predicates::ORI_NEGATIVE;
+//}
+

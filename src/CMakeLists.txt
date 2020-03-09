@@ -6,6 +6,9 @@ set(SOURCES
 	auto_table.hpp
 	auto_table.cpp
 
+	CSGTreeParser.hpp
+	CSGTreeParser.cpp
+
 	LocalOperations.h
 	LocalOperations.cpp
 	EdgeSplitting.h
@@ -26,12 +29,11 @@ set(SOURCES
 
 	FloatTetDelaunay.h
 	FloatTetDelaunay.cpp
-	FloatTetCutting.h
-	FloatTetCutting.cpp
-	FloatTetCuttingCheck.h
-	FloatTetCuttingCheck.cpp
-	FloatTetCuttingParallel.h
-	FloatTetCuttingParallel.cpp
+		TriangleInsertion.cpp
+		TriangleInsertion.h
+
+		CutMesh.cpp
+		CutMesh.h
 
 	intersections.h
 	intersections.cpp

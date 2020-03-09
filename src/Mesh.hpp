@@ -1,3 +1,11 @@
+// This file is part of fTetWild, a software for generating tetrahedral meshes.
+//
+// Copyright (C) 2019 Yixin Hu <yixin.hu@nyu.edu>
+// This Source Code Form is subject to the terms of the Mozilla Public License
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at http://mozilla.org/MPL/2.0/.
+//
+
 #pragma once
 
 #include <floattetwild/Parameters.h>
@@ -41,10 +49,15 @@ public:
 };
 
 #define NOT_SURFACE SCHAR_MAX//SHRT_MAX//INT_MAX
+#define KNOWN_NOT_SURFACE -SCHAR_MAX/2
+#define KNOWN_SURFACE SCHAR_MAX/2
+
 #define NO_SURFACE_TAG 0
 #define NOT_BBOX -1
 #define OPP_T_ID_UNKNOWN -2
 #define OPP_T_ID_BOUNDARY -1
+
+#define MAX_ENERGY 1e50
 
     using std::cout;
     using std::cin;
@@ -73,6 +86,8 @@ public:
 
         bool is_on_surface = false;
         bool is_on_boundary = false;
+        bool is_on_cut = false;
+        int on_boundary_e_id = -1;
         bool is_on_bbox = false;
         bool is_outside = false;
 
@@ -101,6 +116,7 @@ public:
             quality = 0;
             scalar = 0;
             is_removed = false;
+            is_outside = false;
         }
 
         inline const Vector4i &pts_indices() const { return indices; }
@@ -129,6 +145,10 @@ public:
             return -1;
         }
 
+        inline void print() const {
+            cout<<indices[0]<<" "<<indices[1]<<" "<<indices[2]<<" "<<indices[3]<<endl;
+        }
+
         std::array<char, 4> is_surface_fs = {{NOT_SURFACE, NOT_SURFACE, NOT_SURFACE, NOT_SURFACE}};
         std::array<char, 4> is_bbox_fs = {{NOT_BBOX, NOT_BBOX, NOT_BBOX, NOT_BBOX}};
         std::array<int, 4> opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};
@@ -155,6 +175,7 @@ public:
         int t_empty_start = 0;
         int v_empty_start = 0;
         bool is_limit_length = true;
+        bool is_closed = true;
 
         bool is_input_all_inserted = false;
 

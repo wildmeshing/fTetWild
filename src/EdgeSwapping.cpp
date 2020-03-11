@@ -1,3 +1,11 @@
+// This file is part of fTetWild, a software for generating tetrahedral meshes.
+//
+// Copyright (C) 2019 Yixin Hu <yixin.hu@nyu.edu>
+// This Source Code Form is subject to the terms of the Mozilla Public License
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at http://mozilla.org/MPL/2.0/.
+//
+
 #include <floattetwild/EdgeSwapping.h>
 #include <floattetwild/LocalOperations.h>
 
@@ -45,6 +53,9 @@ void floatTetWild::edge_swapping(Mesh& mesh) {
         std::array<int, 2> v_ids = es_queue.top().v_ids;
         es_queue.pop();
 
+        if(tet_vertices[v_ids[0]].is_freezed && tet_vertices[v_ids[1]].is_freezed)
+            continue;
+
         std::vector<int> n12_t_ids;
         set_intersection(tet_vertices[v_ids[0]].conn_tets, tet_vertices[v_ids[1]].conn_tets, n12_t_ids);
         if (!is_swappable(v_ids[0], v_ids[1], n12_t_ids))
@@ -57,17 +68,21 @@ void floatTetWild::edge_swapping(Mesh& mesh) {
                 break;
         }
 
+        bool is_success = false;
         std::vector<std::array<int, 2>> new_edges;
         if (n12_t_ids.size() == 3 && remove_an_edge_32(mesh, v_ids[0], v_ids[1], n12_t_ids, new_edges)) {
             suc_counter3++;
+            is_success = true;
 //            output_info(mesh);
         }
         if (n12_t_ids.size() == 4 && remove_an_edge_44(mesh, v_ids[0], v_ids[1], n12_t_ids, new_edges)) {
             suc_counter4++;
+            is_success = true;
 //            output_info(mesh);
         }
         if (n12_t_ids.size() == 5 && remove_an_edge_56(mesh, v_ids[0], v_ids[1], n12_t_ids, new_edges)) {
             suc_counter5++;
+            is_success = true;
 //            output_info(mesh);
         }
 
@@ -242,6 +257,12 @@ bool floatTetWild::remove_an_edge_32(Mesh& mesh, int v1_id, int v2_id, const std
 }
 
 bool floatTetWild::remove_an_edge_44(Mesh& mesh, int v1_id, int v2_id, const std::vector<int>& old_t_ids, std::vector<std::array<int, 2>>& new_edges) {
+//    bool is_check = false;
+//    if(v1_id == 482 && v2_id == 504){
+//        is_check = true;
+//        pausee("v1_id == 482 && v2_id == 504");
+//    }
+
     const int N = 4;
     if (old_t_ids.size() != N)
         return false;
@@ -335,12 +356,17 @@ bool floatTetWild::remove_an_edge_44(Mesh& mesh, int v1_id, int v2_id, const std
         std::vector<Scalar> tmp_new_qs;
         for (auto &t: tmp_new_tets) {
             Scalar q = get_quality(tet_vertices[t[0]], tet_vertices[t[1]], tet_vertices[t[2]], tet_vertices[t[3]]);
-            if (q >= old_max_quality)
-                return false;
+            if (q >= old_max_quality) {
+                is_break = true;
+                break;
+//                return false;
+            }
             if (q > new_max_quality)
                 new_max_quality = q;
             tmp_new_qs.push_back(q);
         }
+        if (is_break)
+            continue;
 
         is_valid = true;
         old_max_quality = new_max_quality;

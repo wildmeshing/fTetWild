@@ -85,11 +85,16 @@ include(FloatTetwildDependencies)
 # FloatTetwild library
 ################################################################################
 
+#find_package(MPFR)
+#IF(NOT ${MPFR_FOUND})
+#	MESSAGE(FATAL_ERROR "Cannot find MPFR")
+#ENDIF()
+
 # add_library() can only be called without any source since CMake 3.11 ...
 add_library(${PROJECT_NAME} src/Logger.cpp)
 
 # Public include directory for FloatTetwild
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include "${FLOAT_TETWILD_EXTERNAL}/mpfr")
 
 # set(MESH_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 # target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_MESH_PATH=\"${MESH_PATH}\")
@@ -123,6 +128,9 @@ target_link_libraries(${PROJECT_NAME}
 		geogram::geogram
 		spdlog::spdlog
 		Threads::Threads
+		fast_winding_number
+		json
+		#${MPFR_LIBRARIES}
 )
 if(FLOAT_TETWILD_ENABLE_TBB)
 	target_link_libraries(${PROJECT_NAME} PUBLIC tbb::tbb)

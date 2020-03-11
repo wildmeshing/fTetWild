@@ -1,5 +1,5 @@
-bin.nosync/
-bin_rel.nosync/
+bin*/
+*.code-workspace
 *.sublime-project
 3rdparty*
 .idea*

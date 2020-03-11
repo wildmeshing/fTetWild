@@ -71,6 +71,8 @@ TEST_CASE("tri_tri_intersection_test_3d_floating", "[predicates]") {
       s, t
       );
 
+
+
     REQUIRE(coplanar == 0);
-    REQUIRE(res == 0);
+    REQUIRE(res == 666);
 }

@@ -1,3 +1,11 @@
+// This file is part of fTetWild, a software for generating tetrahedral meshes.
+//
+// Copyright (C) 2019 Yixin Hu <yixin.hu@nyu.edu>
+// This Source Code Form is subject to the terms of the Mozilla Public License
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at http://mozilla.org/MPL/2.0/.
+//
+
 #include <floattetwild/Simplification.h>
 #include <floattetwild/Logger.hpp>
 #include <floattetwild/LocalOperations.h>
@@ -5,6 +13,7 @@
 #include <igl/remove_duplicate_vertices.h>
 #include <igl/writeOFF.h>
 #include <igl/Timer.h>
+#include <igl/unique_rows.h>
 
 #ifdef FLOAT_TETWILD_USE_TBB
 #include <tbb/task_scheduler_init.h>
@@ -32,13 +41,11 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
     igl::Timer timer;
     timer.start();
     collapsing(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
-    timer.stop();
-    std::cout<<"collapsing "<<timer.getElapsedTimeInSec()<<std::endl;
+    std::cout<<"collapsing "<<timer.getElapsedTime()<<std::endl;
 
-    swapping(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
     timer.start();
-    timer.stop();
-    std::cout<<"swapping "<<timer.getElapsedTimeInSec()<<std::endl;
+    swapping(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
+    std::cout<<"swapping "<<timer.getElapsedTime()<<std::endl;
 
     //clean up vs, fs
     //v
@@ -82,6 +89,8 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
     }
     input_faces = new_input_faces;
     input_tags = new_input_tags;
+
+//    flattening(input_vertices, input_faces, tree, params);
 
     remove_duplicates(input_vertices, input_faces, input_tags);
 
@@ -138,9 +147,33 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     for (int i = 0; i < input_faces.size(); i++)
         F_tmp.row(i) = input_faces[i];
 
+    //
     Eigen::VectorXi IV, _;
     igl::remove_duplicate_vertices(V_tmp, F_tmp, SCALAR_ZERO, V_in, IV, _, F_in);
-
+    //
+    for (int i = 0; i < F_in.rows(); i++) {
+        int j_min = 0;
+        for (int j = 1; j < 3; j++) {
+            if (F_in(i, j) < F_in(i, j_min))
+                j_min = j;
+        }
+        if (j_min == 0)
+            continue;
+        int v0_id = F_in(i, j_min);
+        int v1_id = F_in(i, (j_min + 1) % 3);
+        int v2_id = F_in(i, (j_min + 2) % 3);
+        F_in.row(i) << v0_id, v1_id, v2_id;
+    }
+    F_tmp.resize(0, 0);
+    Eigen::VectorXi IF;
+    igl::unique_rows(F_in, F_tmp, IF, _);
+    F_in = F_tmp;
+    std::vector<int> old_input_tags = input_tags;
+    input_tags.resize(IF.rows());
+    for (int i = 0; i < IF.rows(); i++) {
+        input_tags[i] = old_input_tags[IF(i)];
+    }
+    //
     if (V_in.rows() == 0 || F_in.rows() == 0)
         return false;
 
@@ -151,12 +184,14 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
     input_vertices.resize(V_in.rows());
     input_faces.clear();
     input_faces.reserve(F_in.rows());
-    std::vector<int> old_input_tags = input_tags;
+    old_input_tags = input_tags;
     input_tags.clear();
     for (int i = 0; i < V_in.rows(); i++)
         input_vertices[i] = V_in.row(i);
     for (int i = 0; i < F_in.rows(); i++) {
         if (F_in(i, 0) == F_in(i, 1) || F_in(i, 0) == F_in(i, 2) || F_in(i, 2) == F_in(i, 1))
+            continue;
+        if (i > 0 && (F_in(i, 0) == F_in(i - 1, 0) && F_in(i, 1) == F_in(i - 1, 2) && F_in(i, 2) == F_in(i - 1, 1)))
             continue;
         //check area
         Vector3 u = V_in.row(F_in(i, 1)) - V_in.row(F_in(i, 0));
@@ -684,6 +719,157 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
     logger().debug("{}  faces are swapped!!", cnt);
 }
 
+void floatTetWild::flattening(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces,
+        const AABBWrapper& sf_tree, const Parameters& params) {
+    std::vector<Vector3> ns(input_faces.size());
+    for (int i = 0; i < input_faces.size(); i++) {
+        ns[i] = ((input_vertices[input_faces[i][2]] - input_vertices[input_faces[i][0]]).cross(
+                input_vertices[input_faces[i][1]] - input_vertices[input_faces[i][0]])).normalized();
+    }
+
+    std::vector<std::vector<int>> conn_fs(input_vertices.size());
+    std::vector<std::array<int, 2>> edges;
+    edges.reserve(input_faces.size() * 6);
+    for (int i = 0; i < input_faces.size(); i++) {
+        auto &f = input_faces[i];
+        for (int j = 0; j < 3; j++) {
+            conn_fs[f[j]].push_back(i);
+            std::array<int, 2> e = {{f[j], f[mod3(j + 1)]}};
+            if (e[0] > e[1])
+                std::swap(e[0], e[1]);
+            edges.push_back(e);
+        }
+    }
+    vector_unique(edges);
+
+    auto needs_flattening = [](const Vector3 &n1, const Vector3 &n2) {
+        if(n1.dot(n2)>0.98) {
+            cout << std::setprecision(17) << n1.dot(n2) << endl;
+            cout << n1.norm() << " " << n2.norm() << endl;
+        }
+        return true;
+
+        double d = std::abs(n1.dot(n2) - 1);
+        cout<<n1.dot(n2)<<endl;
+        if (d > 1e-15 && d < 1e-5)
+            return true;
+        return false;
+    };
+
+    std::vector<int> f_tss(input_faces.size(), 0);
+    int ts = 0;
+    std::queue<std::array<int, 5>> edge_queue;
+    for (auto &e: edges) {
+        std::vector<int> n_f_ids;
+        set_intersection(conn_fs[e[0]], conn_fs[e[1]], n_f_ids);
+        if (n_f_ids.size() != 2)
+            continue;
+        if (!needs_flattening(ns[n_f_ids[0]], ns[n_f_ids[1]]))
+            continue;
+        edge_queue.push({{e[0], e[1], n_f_ids[0], n_f_ids[1], ts}});
+    }
+
+    while (!edge_queue.empty()) {
+        std::array<int, 2> e = {{edge_queue.front()[0], edge_queue.front()[1]}};
+        std::array<int, 2> n_f_ids = {{edge_queue.front()[2], edge_queue.front()[3]}};
+        int e_ts = edge_queue.front().back();
+        edge_queue.pop();
+
+        std::vector<int> all_f_ids;
+        for (int j = 0; j < 2; j++)
+            all_f_ids.insert(all_f_ids.end(), conn_fs[e[j]].begin(), conn_fs[e[j]].end());
+        vector_unique(all_f_ids);
+
+        bool is_valid = true;
+        for(int f_id: all_f_ids){
+            if(f_tss[f_id]>e_ts) {
+                is_valid = false;
+                break;
+            }
+        }
+        if(!is_valid)
+            continue;
+
+        auto &n1 = ns[n_f_ids[0]];
+        auto &n2 = ns[n_f_ids[1]];
+//        if(n_f_ids[0] == 61 && n_f_ids[0] == 62 || n_f_ids[0] == 62 && n_f_ids[0] == 61){
+//            cout<<n1<<endl;
+//            cout<<n2<<endl;
+//            cout<<n1.dot(n2)<<endl;
+//            pausee();
+//        }
+        std::vector<int> n_v_ids;
+        for (int f_id: n_f_ids) {
+            for (int j = 0; j < 3; j++) {
+                if (input_faces[f_id][j] != e[0] && input_faces[f_id][j] != e[1]) {
+                    n_v_ids.push_back(input_faces[f_id][j]);
+                    break;
+                }
+            }
+        }
+        assert(n_v_ids.size() == 2 && n_v_ids[0] != n_v_ids[1]);
+        Vector3 n = (n1 + n2) / 2;
+//        Vector3 p = (input_vertices[e[0]] + input_vertices[e[1]]) / 2;
+        Vector3 p = (input_vertices[n_v_ids[0]] + input_vertices[n_v_ids[1]]) / 2;
+
+        std::array<Vector3, 2> old_ps;
+        for (int j = 0; j < 2; j++) {
+            old_ps[j] = input_vertices[e[j]];
+            input_vertices[e[j]] -= n.dot(input_vertices[e[j]] - p) * n;
+        }
+//        cout<<"ok1"<<endl;
+
+        is_valid = true;
+        for (int f_id: all_f_ids) {
+            const std::array<Vector3, 3> tri = {{input_vertices[input_faces[f_id][0]],
+                                                        input_vertices[input_faces[f_id][1]],
+                                                        input_vertices[input_faces[f_id][2]]}};
+            if (is_out_envelope(tri, sf_tree, params)) {
+                is_valid = false;
+                break;
+            }
+        }
+        if (!is_valid) {
+            for (int j = 0; j < 2; j++)
+                input_vertices[e[j]] = old_ps[j];
+        }
+//        cout<<"ok2"<<endl;
+
+        ///update
+        //
+        ns[n_f_ids[0]] = n;
+        ns[n_f_ids[1]] = n;
+        //
+        ts++;
+//        for (int f_id: all_f_ids)
+//            f_tss[f_id] = ts;
+        //
+//        std::vector<std::array<int, 2>> new_edges;
+//        for (int f_id: all_f_ids) {
+//            for (int j = 0; j < 3; j++) {
+//                if (input_faces[f_id][j] < input_faces[f_id][(j + 1) % 3])
+//                    new_edges.push_back({{input_faces[f_id][j], input_faces[f_id][(j + 1) % 3]}});
+//                else
+//                    new_edges.push_back({{input_faces[f_id][(j + 1) % 3], input_faces[f_id][j]}});
+//            }
+//        }
+//        vector_unique(new_edges);
+//        for(auto& new_e: new_edges){
+//            if(new_e == e)
+//                continue;
+//            std::vector<int> new_n_f_ids;
+//            set_intersection(conn_fs[new_e[0]], conn_fs[new_e[1]], new_n_f_ids);
+//            if (new_n_f_ids.size() != 2)
+//                continue;
+//            if (!needs_flattening(ns[new_n_f_ids[0]], ns[new_n_f_ids[1]]))
+//                continue;
+//            edge_queue.push({{new_e[0], new_e[1], new_n_f_ids[0], new_n_f_ids[1], ts}});
+//        }
+    }
+
+    cout << "flattening " << ts << " faces" << endl;
+}
+
 floatTetWild::Scalar floatTetWild::get_angle_cos(const Vector3& p, const Vector3& p1, const Vector3& p2) {
     Vector3 v1 = p1 - p;
     Vector3 v2 = p2 - p;
@@ -696,9 +882,14 @@ floatTetWild::Scalar floatTetWild::get_angle_cos(const Vector3& p, const Vector3
 }
 
 bool floatTetWild::is_out_envelope(const std::array<Vector3, 3>& vs, const AABBWrapper& tree, const Parameters& params) {
+#ifdef STORE_SAMPLE_POINTS
     std::vector<GEO::vec3> ps;
     sample_triangle(vs, ps, params.dd_simplification);
     return tree.is_out_sf_envelope(ps, params.eps_2_simplification);
+#else
+    GEO::index_t prev_facet = GEO::NO_FACET;
+    return sample_triangle_and_check_is_out(vs, params.dd_simplification, params.eps_2_simplification, tree, prev_facet);
+#endif
 
     // GEO::vec3 init_point(vs[0][0], vs[0][1], vs[0][2]);
     // GEO::vec3 nearest_point;
@@ -757,6 +948,8 @@ void floatTetWild::check_surface(std::vector<Vector3>& input_vertices, std::vect
 
 void floatTetWild::output_component(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces,
         const std::vector<int>& input_tags){
+    return;
+
     Eigen::MatrixXd V(input_vertices.size(), 3);
     for(int i=0;i<input_vertices.size();i++)
         V.row(i) = input_vertices[i];

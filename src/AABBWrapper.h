@@ -21,6 +21,16 @@ namespace floatTetWild {
         //// initialization
         inline Scalar get_sf_diag() const { return GEO::bbox_diagonal(sf_mesh); }
 
+        inline void get_bbox(Vector3 &bbox_min, Vector3 &bbox_max) const {
+            double xyzmin[3];
+            double xyzmax[3];
+            GEO::get_bbox(sf_mesh, xyzmin, xyzmax);
+            for (int i = 0; i < 3; ++i) {
+                bbox_min[i] = xyzmin[i];
+                bbox_max[i] = xyzmax[i];
+            }            
+        };
+
         AABBWrapper(const GEO::Mesh &sf_mesh) : sf_mesh(sf_mesh), sf_tree(sf_mesh) {}
 
         void init_b_mesh_and_tree(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, Mesh &mesh);

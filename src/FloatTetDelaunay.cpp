@@ -155,6 +155,28 @@ namespace floatTetWild {
                 }
             }
         }
+
+        void initialize_fields(Mesh &mesh) {
+
+            cout << "initializing fields ..." << endl;
+
+            for (int i = 0; i < mesh.tet_vertices.size(); ++i) {
+                auto& v = mesh.tet_vertices[i];
+                if (v.is_removed)
+                    continue;
+
+                LocalBBox bbox;
+                if (mesh.params.get_local_bbox(v.pos, bbox)) {
+                    v.ideal_edge_length = bbox.ideal_edge_length;
+                    v.split_threshold_2 = bbox.split_threshold_2;
+                    v.collapse_threshold_2 = bbox.collapse_threshold_2;
+                } else {
+                    v.ideal_edge_length = mesh.params.ideal_edge_length;
+                    v.split_threshold_2 = mesh.params.split_threshold_2;
+                    v.collapse_threshold_2 = mesh.params.collapse_threshold_2;
+                }
+            }
+        }
     }
 
 //#include <igl/unique_rows.h>
@@ -332,6 +354,8 @@ namespace floatTetWild {
         //match bbox 8 facets: should be -1 and 0~5
 //        match_surface_fs(mesh, input_vertices, input_faces, is_face_inserted);
         match_bbox_fs(mesh, min, max);
+
+        initialize_fields(mesh);
 
 //        MeshIO::write_mesh("delaunay.msh", mesh);
     }

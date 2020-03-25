@@ -9,6 +9,9 @@ set(SOURCES
 	CSGTreeParser.hpp
 	CSGTreeParser.cpp
 
+	InputFilesParser.hpp
+	InputFilesParser.cpp
+
 	LocalOperations.h
 	LocalOperations.cpp
 	EdgeSplitting.h

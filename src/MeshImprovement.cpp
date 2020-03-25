@@ -500,10 +500,13 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
 bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
 //    return false;
 
+    auto &tets = mesh.tets;
+    auto &tet_vertices = mesh.tet_vertices;
+
     cout << "updating sclaing field ..." << endl;
     bool is_hit_min_edge_length = false;
 
-    Scalar radius0 = mesh.params.ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
+//    Scalar radius0 = mesh.params.ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
 //    if(is_hit_min)
 //        radius0 *= 2;
 
@@ -522,20 +525,20 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
 
     cout << "filter_energy = " << filter_energy << endl;
     Scalar recover = 1.5;
-    std::vector<Scalar> scale_multipliers(mesh.tet_vertices.size(), recover);
+    std::vector<Scalar> scale_multipliers(tet_vertices.size(), recover);
     Scalar refine_scale = 0.5;
     Scalar min_refine_scale = mesh.params.min_edge_len_rel / mesh.params.ideal_edge_length_rel;
 
     const int N = -int(std::log2(min_refine_scale) - 1);
     std::vector<std::vector<int>> v_ids(N, std::vector<int>());
-    for (int i = 0; i < mesh.tet_vertices.size(); i++) {
-        auto &v = mesh.tet_vertices[i];
+    for (int i = 0; i < tet_vertices.size(); i++) {
+        auto &v = tet_vertices[i];
         if (v.is_removed)
             continue;
 
         bool is_refine = false;
         for (int t_id: v.conn_tets) {
-            if (mesh.tets[t_id].quality > filter_energy)
+            if (tets[t_id].quality > filter_energy)
                 is_refine = true;
         }
         if (!is_refine)
@@ -551,17 +554,15 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
         if (v_ids[n].size() == 0)
             continue;
 
-        Scalar radius = radius0 / std::pow(2, n);
-
         std::unordered_set<int> is_visited;
         std::queue<int> v_queue;
 
         std::vector<double> pts;//geogram needs double []
         pts.reserve(v_ids[n].size() * 3);
         for (int i = 0; i < v_ids[n].size(); i++) {
-            pts.push_back(mesh.tet_vertices[v_ids[n][i]].pos[0]);
-            pts.push_back(mesh.tet_vertices[v_ids[n][i]].pos[1]);
-            pts.push_back(mesh.tet_vertices[v_ids[n][i]].pos[2]);
+            pts.push_back(tet_vertices[v_ids[n][i]].pos[0]);
+            pts.push_back(tet_vertices[v_ids[n][i]].pos[1]);
+            pts.push_back(tet_vertices[v_ids[n][i]].pos[2]);
 
             v_queue.push(v_ids[n][i]);
             is_visited.insert(v_ids[n][i]);
@@ -574,34 +575,39 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
         while (!v_queue.empty()) {
             int v_id = v_queue.front();
             v_queue.pop();
+            
+            Scalar radius0 = tet_vertices[v_id].ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
+            //    if(is_hit_min)
+            //        radius0 *= 2;
+            Scalar radius = radius0 / std::pow(2, n);
 
-            for (int t_id:mesh.tet_vertices[v_id].conn_tets) {
+            for (int t_id:tet_vertices[v_id].conn_tets) {
                 for (int j = 0; j < 4; j++) {
-                    if (is_visited.find(mesh.tets[t_id][j]) != is_visited.end())
+                    if (is_visited.find(tets[t_id][j]) != is_visited.end())
                         continue;
                     GEO::index_t _;
                     double sq_dist;
-                    const double p[3] = {mesh.tet_vertices[mesh.tets[t_id][j]].pos[0],
-                                         mesh.tet_vertices[mesh.tets[t_id][j]].pos[1],
-                                         mesh.tet_vertices[mesh.tets[t_id][j]].pos[2]};
+                    const double p[3] = {tet_vertices[tets[t_id][j]].pos[0],
+                                         tet_vertices[tets[t_id][j]].pos[1],
+                                         tet_vertices[tets[t_id][j]].pos[2]};
                     nnsearch->get_nearest_neighbors(1, p, &_, &sq_dist);
                     Scalar dis = sqrt(sq_dist);
 
                     if (dis < radius) {
-                        v_queue.push(mesh.tets[t_id][j]);
+                        v_queue.push(tets[t_id][j]);
                         Scalar new_ss = (dis / radius) * (1 - refine_scale) + refine_scale;
-                        if (new_ss < scale_multipliers[mesh.tets[t_id][j]])
-                            scale_multipliers[mesh.tets[t_id][j]] = new_ss;
+                        if (new_ss < scale_multipliers[tets[t_id][j]])
+                            scale_multipliers[tets[t_id][j]] = new_ss;
                     }
-                    is_visited.insert(mesh.tets[t_id][j]);
+                    is_visited.insert(tets[t_id][j]);
                 }
             }
         }
     }
 
     // update scalars
-    for (int i=0;i< mesh.tet_vertices.size();i++) {
-        auto& v = mesh.tet_vertices[i];
+    for (int i=0;i< tet_vertices.size();i++) {
+        auto& v = tet_vertices[i];
         if (v.is_removed)
             continue;
         Scalar new_scale = v.sizing_scalar * scale_multipliers[i];
@@ -614,6 +620,25 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
             v.sizing_scalar = min_refine_scale;
         } else
             v.sizing_scalar = new_scale;
+    }
+
+    // update parameters
+    for (int i = 0; i < tet_vertices.size(); ++i) {
+      auto& v = tet_vertices[i];
+      if (v.is_removed)
+        continue;
+
+      LocalBBox bbox;
+      if (mesh.params.get_local_bbox(v.pos, bbox)) {
+        v.ideal_edge_length = bbox.ideal_edge_length;
+        v.split_threshold_2 = bbox.split_threshold_2;
+        v.collapse_threshold_2 = bbox.collapse_threshold_2;
+      }
+      else {
+        v.ideal_edge_length = mesh.params.ideal_edge_length;
+        v.split_threshold_2 = mesh.params.split_threshold_2;
+        v.collapse_threshold_2 = mesh.params.collapse_threshold_2;
+      }
     }
 
     cout << "is_hit_min_edge_length = " << is_hit_min_edge_length << endl;

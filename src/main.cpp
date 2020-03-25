@@ -23,6 +23,7 @@
 #include <floattetwild/Statistics.h>
 #include <floattetwild/TriangleInsertion.h>
 #include <floattetwild/CSGTreeParser.hpp>
+#include <floattetwild/InputFilesParser.hpp>
 
 #include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
@@ -180,6 +181,7 @@ int main(int argc, char **argv) {
 //    const int DIFFERENCE = 2;
     int boolean_op = -1;
     std::string csg_file="";
+    std::string inputs_file_name = "";
     command_line.add_option("--op", boolean_op, "");
 
     command_line.add_option("-l,--lr", params.ideal_edge_length_rel,
@@ -205,6 +207,8 @@ int main(int argc, char **argv) {
     command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
     command_line.add_flag("--manifold-surface", params.manifold_surface, "");
     command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
+    command_line.add_option("--inputs", inputs_file_name,
+                            "json file containing multiple input data")->check(CLI::ExistingFile);
 
     command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "");//tmp
 
@@ -277,6 +281,11 @@ int main(int argc, char **argv) {
     std::vector<Vector3i> input_faces;
     std::vector<int> input_tags;
 
+    std::vector<Vector3> input_bbox_mins;
+    std::vector<Vector3> input_bbox_maxes;
+    std::vector<Scalar> input_bbox_diag_lengths;
+    std::vector<Scalar> input_ideal_edge_lengths;
+
     if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
         std::string line;
@@ -296,22 +305,48 @@ int main(int argc, char **argv) {
     if(!csg_file.empty())
     {
         json csg_tree = json({});
-		std::ifstream file(csg_file);
+        std::ifstream file(csg_file);
 
-		if (file.is_open())
-			file >> csg_tree;
-		else
+        if (file.is_open())
+			      file >> csg_tree;
+        else
         {
-			logger().error("unable to open {} file", csg_file);
+            logger().error("unable to open {} file", csg_file);
             return EXIT_FAILURE;
         }
-		file.close();
+        file.close();
 
         std::vector<std::string> meshes;
 
         CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
 
         if(!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
+            return EXIT_FAILURE;
+    }
+    else if(!inputs_file_name.empty())
+    {
+        InputFilesParser parser;
+        json inputs_file = json({});
+        std::ifstream file(inputs_file_name);
+
+        if (file.is_open())
+            file >> inputs_file;
+        else {
+            logger().error("unable to open {} file", inputs_file_name);
+            return EXIT_FAILURE;
+        }
+        file.close();
+
+        std::vector<std::string> meshes;
+
+        parser.get_meshes(inputs_file, meshes);
+
+        if(parser.load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags)) {
+            input_bbox_mins = parser.bbox_mins;
+            input_bbox_maxes = parser.bbox_maxes;
+            input_bbox_diag_lengths = parser.bbox_diag_lengths;     
+            input_ideal_edge_lengths = parser.ideal_edge_lengths;
+        } else
             return EXIT_FAILURE;
     }
     else{
@@ -330,6 +365,10 @@ int main(int argc, char **argv) {
         }
     }
     AABBWrapper tree(sf_mesh);
+
+    params.set_local_bboxes(input_bbox_mins, input_bbox_maxes, input_bbox_diag_lengths,
+      input_ideal_edge_lengths);
+    std::sort(params.local_bboxes.begin(), params.local_bboxes.end());
 
     if (!params.init(tree.get_sf_diag())) {
         return EXIT_FAILURE;

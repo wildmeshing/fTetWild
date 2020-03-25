@@ -17,6 +17,50 @@
 #include <geogram/mesh/mesh.h>
 
 namespace floatTetWild {
+
+class LocalBBox
+{
+public:
+    LocalBBox(const Vector3& input_bbox_min, const Vector3& input_bbox_max, const Scalar input_bbox_diag_length) :
+        bbox_min(input_bbox_min),
+        bbox_max(input_bbox_max),
+        bbox_diag_length(input_bbox_diag_length),
+        ideal_edge_length_rel(1 / 20.0) {}
+
+    LocalBBox() {}
+
+    bool operator<(const LocalBBox &another) const {
+        return ideal_edge_length < another.ideal_edge_length;
+    };
+
+    bool init() {
+        if (ideal_edge_length > 0.0) {
+            ideal_edge_length_rel = ideal_edge_length / bbox_diag_length;
+        } else {
+            ideal_edge_length = bbox_diag_length * ideal_edge_length_rel;
+        }
+        ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
+
+        split_threshold      = ideal_edge_length * (4 / 3.0);
+        collapse_threshold   = ideal_edge_length * (4 / 5.0);
+        split_threshold_2    = split_threshold * split_threshold;
+        collapse_threshold_2 = collapse_threshold * collapse_threshold;
+        
+        return true;
+    }
+
+    Vector3 bbox_min;
+    Vector3 bbox_max;
+    Scalar  bbox_diag_length;
+    Scalar  ideal_edge_length_rel;
+    Scalar  ideal_edge_length;
+    Scalar  ideal_edge_length_2;
+    Scalar  split_threshold;
+    Scalar  collapse_threshold;
+    Scalar  split_threshold_2;
+    Scalar  collapse_threshold_2;
+};
+
 class Parameters
 {
   public:
@@ -81,6 +125,38 @@ class Parameters
     Scalar eps_2_simplification;
     Scalar dd_simplification;
 
+    std::vector<LocalBBox> local_bboxes;
+
+    void set_local_bboxes(std::vector<Vector3> &bbox_mins, std::vector<Vector3> &bbox_maxes,
+                          std::vector<Scalar> &bbox_diag_lengths, std::vector<Scalar> &ideal_edge_lengths)
+    {
+        for (int b_id = 0; b_id < bbox_diag_lengths.size(); ++b_id) {
+            LocalBBox bbox(bbox_mins[b_id], bbox_maxes[b_id], bbox_diag_lengths[b_id]);
+
+            if (!ideal_edge_lengths.empty())
+                bbox.ideal_edge_length = ideal_edge_lengths[b_id];
+            else
+                bbox.ideal_edge_length = 0.0;
+
+            bbox.init();
+            local_bboxes.push_back(bbox);            
+        }
+    }
+
+    bool get_local_bbox(const Vector3 &pt, LocalBBox& lbbox)
+    {
+        for (auto &bbox: local_bboxes) {
+            if (bbox.bbox_min[0] <= pt[0] && pt[0] <= bbox.bbox_max[0] &&
+                bbox.bbox_min[1] <= pt[1] && pt[1] <= bbox.bbox_max[1] &&
+                bbox.bbox_min[2] <= pt[2] && pt[2] <= bbox.bbox_max[2]) {
+
+                lbbox = bbox;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool init(Scalar bbox_diag_l)
     {
         if(stage > 5)
@@ -92,8 +168,8 @@ class Parameters
         ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
 
         eps_input = bbox_diag_length * eps_rel;
-        dd        = eps_input;// / stage;
-	dd /= 1.5;
+        dd  = eps_input;// / stage;
+        dd /= 1.5;
         double eps_usable = eps_input - dd / std::sqrt(3);
         eps_delta = eps_usable * 0.1;
         eps = eps_usable - eps_delta * (stage - 1);

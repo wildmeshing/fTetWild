@@ -96,6 +96,10 @@ public:
 
         Scalar sizing_scalar = 1;
 
+        Scalar ideal_edge_length;
+        Scalar split_threshold_2;
+        Scalar collapse_threshold_2;
+
         Scalar scalar = 0;
     };
 

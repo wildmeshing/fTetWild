@@ -25,11 +25,11 @@ namespace floatTetWild {
             if(iter == existings.end()) {
                 meshes.push_back(name);
 
-                Scalar ideal_edge_length = -1;
-                if (file["ideal_edge_length"].is_number())
-                    ideal_edge_length = file["ideal_edge_length"];
+                Scalar target_edge_length = -1;
+                if (file["target_edge_length"].is_number())
+                    target_edge_length = file["target_edge_length"];
                 
-                ideal_edge_lengths.push_back(ideal_edge_length);
+                target_edge_lengths.push_back(target_edge_length);
 
                 existings[name] = index++;
             }
@@ -40,7 +40,6 @@ namespace floatTetWild {
     {
         bbox_mins.clear();
         bbox_maxes.clear();
-        bbox_diag_lengths.clear();
 
         std::vector<std::vector<Vector3>> Vs;
         std::vector<std::vector<Vector3i>> Fs;
@@ -58,7 +57,6 @@ namespace floatTetWild {
                 return false;
             }
             AABBWrapper tree(tmp_mesh);
-            bbox_diag_lengths.push_back(tree.get_sf_diag());
 
             Vector3 bbox_min, bbox_max;
             tree.get_bbox(bbox_min, bbox_max);

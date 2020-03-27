@@ -572,9 +572,7 @@ bool floatTetWild::is_collapsable_bbox(Mesh& mesh, int v1_id, int v2_id) {
 
 bool floatTetWild::is_collapsable_length(Mesh& mesh, int v1_id, int v2_id, Scalar l_2) {
     Scalar sizing_scalar = (mesh.tet_vertices[v1_id].sizing_scalar + mesh.tet_vertices[v2_id].sizing_scalar) / 2;
-    Scalar collapse_threshold_2 = (mesh.tet_vertices[v1_id].collapse_threshold_2 + mesh.tet_vertices[v2_id].collapse_threshold_2) / 2;
-    if (l_2 <= collapse_threshold_2 * sizing_scalar * sizing_scalar)
-    //if (l_2 <= mesh.params.collapse_threshold_2 * sizing_scalar * sizing_scalar)
+    if (l_2 <= mesh.params.collapse_threshold_2 * sizing_scalar * sizing_scalar)
         return true;
     return false;
 }

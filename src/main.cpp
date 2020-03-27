@@ -283,8 +283,7 @@ int main(int argc, char **argv) {
 
     std::vector<Vector3> input_bbox_mins;
     std::vector<Vector3> input_bbox_maxes;
-    std::vector<Scalar> input_bbox_diag_lengths;
-    std::vector<Scalar> input_ideal_edge_lengths;
+    std::vector<Scalar> target_edge_lengths;
 
     if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
@@ -344,8 +343,7 @@ int main(int argc, char **argv) {
         if(parser.load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags)) {
             input_bbox_mins = parser.bbox_mins;
             input_bbox_maxes = parser.bbox_maxes;
-            input_bbox_diag_lengths = parser.bbox_diag_lengths;     
-            input_ideal_edge_lengths = parser.ideal_edge_lengths;
+            target_edge_lengths = parser.target_edge_lengths;
         } else
             return EXIT_FAILURE;
     }
@@ -366,13 +364,13 @@ int main(int argc, char **argv) {
     }
     AABBWrapper tree(sf_mesh);
 
-    params.set_local_bboxes(input_bbox_mins, input_bbox_maxes, input_bbox_diag_lengths,
-      input_ideal_edge_lengths);
-    std::sort(params.local_bboxes.begin(), params.local_bboxes.end());
-
     if (!params.init(tree.get_sf_diag())) {
         return EXIT_FAILURE;
     }
+
+    params.set_local_bboxes(input_bbox_mins, input_bbox_maxes, 
+                            target_edge_lengths, params.ideal_edge_length);
+    std::sort(params.local_bboxes.begin(), params.local_bboxes.end());
 
 #ifdef LIBIGL_WITH_TETGEN
     if(run_tet_gen)

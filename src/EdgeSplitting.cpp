@@ -31,9 +31,7 @@ void floatTetWild::edge_splitting(Mesh& mesh, const AABBWrapper& tree) {
     for (auto& e:edges) {
         Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
         Scalar sizing_scalar = (tet_vertices[e[0]].sizing_scalar + tet_vertices[e[1]].sizing_scalar) / 2;
-        Scalar split_threshold_2 = (tet_vertices[e[0]].split_threshold_2 + tet_vertices[e[1]].split_threshold_2) / 2;
-        if (l_2 > split_threshold_2 * sizing_scalar * sizing_scalar)
-        //if (l_2 > mesh.params.split_threshold_2 * sizing_scalar * sizing_scalar)
+        if (l_2 > mesh.params.split_threshold_2 * sizing_scalar * sizing_scalar)
             es_queue.push(ElementInQueue(e, l_2));
     }
     edges.clear();
@@ -82,8 +80,7 @@ void floatTetWild::edge_splitting(Mesh& mesh, const AABBWrapper& tree) {
         for (auto &e:new_edges) {
             Scalar l_2 = get_edge_length_2(mesh, e[0], e[1]);
             Scalar sizing_scalar = (tet_vertices[e[0]].sizing_scalar + tet_vertices[e[1]].sizing_scalar) / 2;
-            Scalar split_threshold_2 = (tet_vertices[e[0]].split_threshold_2 + tet_vertices[e[1]].split_threshold_2) / 2;
-            if (l_2 > split_threshold_2 * sizing_scalar * sizing_scalar) {
+            if (l_2 > mesh.params.split_threshold_2 * sizing_scalar * sizing_scalar) {
                 es_queue.push(ElementInQueue(e, l_2));
             }
         }

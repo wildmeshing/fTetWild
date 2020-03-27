@@ -33,7 +33,7 @@ public:
     std::vector<Vector3> bbox_mins;
     std::vector<Vector3> bbox_maxes;
     std::vector<Scalar>  bbox_diag_lengths;
-    std::vector<Scalar>  ideal_edge_lengths;
+    std::vector<Scalar>  target_edge_lengths;
 
 private:
     void get_meshes_aux(const json &input_files_node, std::vector<std::string> &meshes);

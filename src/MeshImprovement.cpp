@@ -235,12 +235,21 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
     ////postprocessing
     cout << "//////////////// postprocessing ////////////////" << endl;
-    for (auto &v:mesh.tet_vertices) {
+    for (int i = 0; i < mesh.tet_vertices.size(); ++i) {
+        auto& v = mesh.tet_vertices[i];
         if (v.is_removed)
-            continue;
-        v.sizing_scalar = 1;
+          continue;
+
+        LocalBBox bbox;
+        if (mesh.params.get_local_bbox(v.pos, bbox)) {
+            v.sizing_scalar = bbox.sizing_scalar;
+        }
+        else {
+            v.sizing_scalar = 1;
+        }
     }
-    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 0}}));
+    //operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({ {0, 1, 0, 0, 0} }));
+    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({ {1, 1, 1, 1, 0} }));
 }
 
 void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {
@@ -506,7 +515,7 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
     cout << "updating sclaing field ..." << endl;
     bool is_hit_min_edge_length = false;
 
-//    Scalar radius0 = mesh.params.ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
+    Scalar radius0 = mesh.params.ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
 //    if(is_hit_min)
 //        radius0 *= 2;
 
@@ -554,6 +563,8 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
         if (v_ids[n].size() == 0)
             continue;
 
+        Scalar radius = radius0 / std::pow(2, n);
+
         std::unordered_set<int> is_visited;
         std::queue<int> v_queue;
 
@@ -575,11 +586,6 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
         while (!v_queue.empty()) {
             int v_id = v_queue.front();
             v_queue.pop();
-            
-            Scalar radius0 = tet_vertices[v_id].ideal_edge_length * 1.8;//increasing the radius would increase the #v in output
-            //    if(is_hit_min)
-            //        radius0 *= 2;
-            Scalar radius = radius0 / std::pow(2, n);
 
             for (int t_id:tet_vertices[v_id].conn_tets) {
                 for (int j = 0; j < 4; j++) {
@@ -620,25 +626,6 @@ bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
             v.sizing_scalar = min_refine_scale;
         } else
             v.sizing_scalar = new_scale;
-    }
-
-    // update parameters
-    for (int i = 0; i < tet_vertices.size(); ++i) {
-      auto& v = tet_vertices[i];
-      if (v.is_removed)
-        continue;
-
-      LocalBBox bbox;
-      if (mesh.params.get_local_bbox(v.pos, bbox)) {
-        v.ideal_edge_length = bbox.ideal_edge_length;
-        v.split_threshold_2 = bbox.split_threshold_2;
-        v.collapse_threshold_2 = bbox.collapse_threshold_2;
-      }
-      else {
-        v.ideal_edge_length = mesh.params.ideal_edge_length;
-        v.split_threshold_2 = mesh.params.split_threshold_2;
-        v.collapse_threshold_2 = mesh.params.collapse_threshold_2;
-      }
     }
 
     cout << "is_hit_min_edge_length = " << is_hit_min_edge_length << endl;

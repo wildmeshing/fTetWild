@@ -248,8 +248,16 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
             v.sizing_scalar = 1;
         }
     }
-    //operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({ {0, 1, 0, 0, 0} }));
-    operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({ {1, 1, 1, 1, 0} }));
+
+    const int maxIter = 10;
+    for (int i = 0; i < maxIter; ++i) {
+        operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({ {1, 1, 1, 1, 0} }));
+
+        Scalar new_max_energy, new_avg_energy;
+        get_max_avg_energy(mesh, new_max_energy, new_avg_energy);
+        if(new_max_energy < 10)
+            break;
+    }
 }
 
 void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {

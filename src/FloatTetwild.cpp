@@ -67,6 +67,8 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     Mesh mesh;
     mesh.params = params;
 
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Preprocess, 0.0); }
+
     igl::Timer timer;
 
     timer.start();
@@ -84,9 +86,13 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
         output_component(input_vertices, input_faces, input_tags);
     }
 
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Preprocess, 1.0); }
+
     ///////////////////////////////////////
     // STEP 2: Volume tetrahedralization //
     ///////////////////////////////////////
+
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Delaunay, 0.0); }
 
     timer.start();
     std::vector<bool> is_face_inserted(input_faces.size(), false);
@@ -104,9 +110,13 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
                    -1,
                    -1);
 
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Delaunay, 1.0); }
+
     /////////////////////
     // STEP 3: Cutting //
     /////////////////////
+
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Cut, 0.0); }
 
     timer.start();
     insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
@@ -120,9 +130,13 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
                    mesh.get_avg_energy(),
                    std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Cut, 1.0); }
+
     //////////////////////////////////////
     // STEP 4: Volume mesh optimization //
     //////////////////////////////////////
+
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Optimize, 0.0); }
 
     timer.start();
     optimization(
@@ -136,9 +150,13 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
                    mesh.get_max_energy(),
                    mesh.get_avg_energy());
 
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Optimize, 1.0); }
+
     /////////////////////////////////
     // STEP 5: Interior extraction //
     /////////////////////////////////
+
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Extract, 0.0); }
 
     timer.start();
     if (boolean_op < 0) {
@@ -160,6 +178,8 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     logger().info("");
 
     MeshIO::extract_volume_mesh(mesh, V, T, false);
+
+    if (mesh.params.user_callback) { mesh.params.user_callback(Step::Extract, 1.0); }
 
     if (!params.log_path.empty()) {
         std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");

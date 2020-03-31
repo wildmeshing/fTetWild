@@ -151,8 +151,8 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
     bool is_hit_min_edge_length = false;
     std::vector<std::array<Scalar, 2>> quality_queue;
     int cnt_increase_epsilon = mesh.params.stage - 1;
+    double first_iter_energy = 0.0;
     for (int it = 0; it < mesh.params.max_its; it++) {
-        if (mesh.params.user_callback) { mesh.params.user_callback(Step::Optimize, (double)it/(double)mesh.params.max_its); }
 
         if (mesh.is_input_all_inserted)
             it_after_al_inserted++;
@@ -161,6 +161,17 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         get_max_avg_energy(mesh, max_energy, avg_energy);
         if (max_energy <= mesh.params.stop_energy && mesh.is_input_all_inserted)
             break;
+
+        if (mesh.params.user_callback) {
+            if (0 == it) {
+                mesh.params.user_callback(Step::Optimize, 0.0);
+                first_iter_energy = max_energy;
+            }
+            else {
+                double progress = std::max(0.0, 1.0 - (log(max_energy) - log(mesh.params.stop_energy)) / (log(first_iter_energy) - log(mesh.params.stop_energy)));
+                mesh.params.user_callback(Step::Optimize, progress);
+            }
+        }
 
         if (mesh.params.stop_p > 0) {
             int p = get_max_p(mesh);

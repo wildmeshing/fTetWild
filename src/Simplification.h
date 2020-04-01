@@ -15,7 +15,7 @@
 namespace floatTetWild {
     void simplify(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags,
             const AABBWrapper& tree, const Parameters& params, bool skip_simplify = false);
-    bool remove_duplicates(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags);
+    bool remove_duplicates(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags, const Parameters& params);
     void collapsing(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, const AABBWrapper& sf_tree, const Parameters& params,
                     std::vector<bool>& is_v_removed, std::vector<bool>& is_f_removed, std::vector<std::unordered_set<int>>& conn_fs);
     void swapping(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, const AABBWrapper& sf_tree, const Parameters& params,

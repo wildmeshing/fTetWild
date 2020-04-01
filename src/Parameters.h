@@ -86,6 +86,8 @@ enum class Step;
     Scalar eps_2_simplification;
     Scalar dd_simplification;
 
+    bool use_general_wn = true;
+
     // User callback called between every step. The first argument is an integer
     // indicating what substep is currently being performed. The second argument
     // is a very loose percentage (between 0 and 1) indicating the progress of

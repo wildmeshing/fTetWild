@@ -27,7 +27,7 @@
 #include <igl/Timer.h>
 #include <igl/winding_number.h>
 
-#define USE_FWN true
+//#define USE_FWN true
 
 void floatTetWild::init(Mesh &mesh, AABBWrapper& tree) {
     cout << "initializing..." << endl;
@@ -1228,11 +1228,10 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json &csg_tree_with_ids){
     for(int i = 0; i <= max_id; ++i){
         get_tracked_surface(mesh, vs, fs, i);
 
-#if USE_FWN
+    if(!mesh.params.use_general_wn)
         floatTetWild::fast_winding_number(Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
-#else
+    else
         igl::winding_number(Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
-#endif
     }
 
     int cnt = 0;
@@ -1275,13 +1274,13 @@ void floatTetWild::boolean_operation(Mesh& mesh, int op){
     }
 
     Eigen::VectorXd w1, w2;
-#if USE_FWN
-    floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
-    floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
-#else
-    igl::winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
-    igl::winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
-#endif
+    if(!mesh.params.use_general_wn) {
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+    }else {
+        igl::winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
+        igl::winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+    }
 
 
     int cnt = 0;
@@ -1332,11 +1331,10 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
         F.col(1) = F.col(2).eval();
         F.col(2) = tmp;
     }
-#if USE_FWN
-    floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-#else
-    igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-#endif
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
+        igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
     index = 0;
     int n_tets = 0;
@@ -1447,11 +1445,10 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
         F.col(2) = tmp;
     }
     Eigen::VectorXd W;
-#if USE_FWN
-    floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-#else
-    igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-#endif
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
+        igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
     index = 0;
     int n_tets = 0;

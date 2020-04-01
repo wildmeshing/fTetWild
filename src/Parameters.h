@@ -81,6 +81,8 @@ class Parameters
     Scalar eps_2_simplification;
     Scalar dd_simplification;
 
+    bool use_general_wn = true;
+
     bool init(Scalar bbox_diag_l)
     {
         if(stage > 5)

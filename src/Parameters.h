@@ -12,12 +12,17 @@
 #include <floattetwild/Types.hpp>
 
 #include <array>
+#include <functional>
 #include <vector>
 
 #include <geogram/mesh/mesh.h>
 
 namespace floatTetWild {
-class Parameters
+
+// Forward declaration
+enum class Step;
+
+    class Parameters
 {
   public:
     std::string log_path    = "";
@@ -29,14 +34,14 @@ class Parameters
     std::string envelope_log     = "";
     std::string envelope_log_csv = "";
 
-    bool not_sort_input = false;
+    bool not_sort_input              = false;
     bool correct_surface_orientation = false;
 
     bool is_quiet  = false;
     int  log_level = 2;
 
     bool smooth_open_boundary = false;
-    bool manifold_surface = false;
+    bool manifold_surface     = false;
 
     // it decides the scale of the box, presents the deviation of the box from the model
     //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)
@@ -81,9 +86,21 @@ class Parameters
     Scalar eps_2_simplification;
     Scalar dd_simplification;
 
+    bool use_general_wn = true;
+
+    // User callback called between every step. The first argument is an integer
+    // indicating what substep is currently being performed. The second argument
+    // is a very loose percentage (between 0 and 1) indicating the progress of
+    // the current step.
+    //
+    // Cancellation can be achieved by throwing an exception within this callback.
+    //
+    // Codes for the step corresponding to the first argument:
+    std::function<void(Step, double)> user_callback;
+
     bool init(Scalar bbox_diag_l)
     {
-        if(stage > 5)
+        if (stage > 5)
             stage = 5;
 
         bbox_diag_length = bbox_diag_l;
@@ -92,18 +109,18 @@ class Parameters
         ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
 
         eps_input = bbox_diag_length * eps_rel;
-        dd        = eps_input;// / stage;
-	dd /= 1.5;
+        dd        = eps_input;  // / stage;
+        dd /= 1.5;
         double eps_usable = eps_input - dd / std::sqrt(3);
-        eps_delta = eps_usable * 0.1;
-        eps = eps_usable - eps_delta * (stage - 1);
-        //dd /= 1.5;
+        eps_delta         = eps_usable * 0.1;
+        eps               = eps_usable - eps_delta * (stage - 1);
+        // dd /= 1.5;
 
-//        dd /= 1.6;
-//        eps_delta = dd / std::sqrt(3);
-//        eps       = eps_input - eps_delta * stage;
-//        dd /= 1.2;
-        eps_2     = eps * eps;
+        //        dd /= 1.6;
+        //        eps_delta = dd / std::sqrt(3);
+        //        eps       = eps_input - eps_delta * stage;
+        //        dd /= 1.2;
+        eps_2 = eps * eps;
 
         eps_coplanar = eps * 0.2;  // better to set it as eps-related
         if (eps_coplanar > bbox_diag_length * 1e-6)
@@ -139,4 +156,14 @@ class Parameters
         return true;
     }
 };
+
+// Different steps of the pipeline
+enum class Step {
+    Preprocess = 0,
+    Delaunay = 1,
+    Cut = 2,
+    Optimize = 3,
+    Extract = 4,
+};
+
 }  // namespace floatTetWild

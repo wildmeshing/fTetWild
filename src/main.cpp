@@ -212,6 +212,7 @@ int main(int argc, char **argv) {
     command_line.add_flag("--disable-wn", disable_wn, "Disable winding number.");
     bool use_floodfill = false;
     command_line.add_flag("--use-floodfill", use_floodfill, "Use flood-fill to extract interior volume.");
+    command_line.add_flag("--use-general-wn", params.use_general_wn, "Use general winding number.");
 
 
 #ifdef LIBIGL_WITH_TETGEN

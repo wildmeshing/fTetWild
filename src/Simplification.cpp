@@ -26,7 +26,8 @@
 
 void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags,
         const AABBWrapper& tree, const Parameters& params, bool skip_simplify) {
-    remove_duplicates(input_vertices, input_faces, input_tags);
+
+    remove_duplicates(input_vertices, input_faces, input_tags, params);
     if (skip_simplify)
         return;
 
@@ -92,7 +93,7 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
 
 //    flattening(input_vertices, input_faces, tree, params);
 
-    remove_duplicates(input_vertices, input_faces, input_tags);
+    remove_duplicates(input_vertices, input_faces, input_tags, params);
 
     logger().info("#v = {}", input_vertices.size());
     logger().info("#f = {}", input_faces.size());
@@ -126,7 +127,7 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
 //    }
 }
 
-bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags) {
+bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, std::vector<int>& input_tags, const Parameters& params) {
 //    std::vector<size_t> indices(input_vertices.size());
 //    for(size_t i=0;i<input_vertices.size();i++)
 //        indices[i] = i;
@@ -149,7 +150,7 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
 
     //
     Eigen::VectorXi IV, _;
-    igl::remove_duplicate_vertices(V_tmp, F_tmp, SCALAR_ZERO, V_in, IV, _, F_in);
+    igl::remove_duplicate_vertices(V_tmp, F_tmp, SCALAR_ZERO * params.bbox_diag_length, V_in, IV, _, F_in);
     //
     for (int i = 0; i < F_in.rows(); i++) {
         int j_min = 0;
@@ -197,7 +198,7 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
         Vector3 u = V_in.row(F_in(i, 1)) - V_in.row(F_in(i, 0));
         Vector3 v = V_in.row(F_in(i, 2)) - V_in.row(F_in(i, 0));
         Vector3 area = u.cross(v);
-        if (area.norm() / 2 <= SCALAR_ZERO)
+        if (area.norm() / 2 <= SCALAR_ZERO * params.bbox_diag_length)
             continue;
         input_faces.push_back(F_in.row(i));
         input_tags.push_back(old_input_tags[i]);

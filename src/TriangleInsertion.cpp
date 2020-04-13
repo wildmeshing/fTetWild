@@ -3101,8 +3101,8 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
                 }
                 F.row(i) << i * 3, i * 3 + 1, i * 3 + 2;
             }
-            igl::writeOFF(std::to_string(i) + "_covered_tet_fs_" + std::to_string(f_id) + "_"
-                          + std::to_string(is_inside) + ".off", V, F, C);
+            //igl::writeOFF(std::to_string(i) + "_covered_tet_fs_" + std::to_string(f_id) + "_"
+            //              + std::to_string(is_inside) + ".off", V, F, C);
         }
         {
             Eigen::MatrixXd V(3, 3), C(3, 3);
@@ -3112,8 +3112,8 @@ void floatTetWild::check_track_surface_fs(Mesh &mesh, std::vector<std::array<std
                 C.row(j) << 255, 0, 0;
             }
             F.row(0) << 0, 1, 2;
-            igl::writeOFF(std::to_string(i) + "_covered_input_f_" + std::to_string(f_id) + "_"
-                          + std::to_string(is_inside) + ".off", V, F, C);
+            //igl::writeOFF(std::to_string(i) + "_covered_input_f_" + std::to_string(f_id) + "_"
+            //              + std::to_string(is_inside) + ".off", V, F, C);
         }
 //        pausee();
     }

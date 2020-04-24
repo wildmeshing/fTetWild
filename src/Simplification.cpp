@@ -42,12 +42,10 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
     igl::Timer timer;
     timer.start();
     collapsing(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
-    std::cout<<"collapsing "<<timer.getElapsedTime()<<std::endl;
-
+    
     timer.start();
     swapping(input_vertices, input_faces, tree, params, v_is_removed, f_is_removed, conn_fs);
-    std::cout<<"swapping "<<timer.getElapsedTime()<<std::endl;
-
+    
     //clean up vs, fs
     //v
     std::vector<int> map_v_ids(input_vertices.size(), -1);
@@ -745,13 +743,13 @@ void floatTetWild::flattening(std::vector<Vector3>& input_vertices, std::vector<
 
     auto needs_flattening = [](const Vector3 &n1, const Vector3 &n2) {
         if(n1.dot(n2)>0.98) {
-            cout << std::setprecision(17) << n1.dot(n2) << endl;
-            cout << n1.norm() << " " << n2.norm() << endl;
+            //cout << std::setprecision(17) << n1.dot(n2) << endl;
+            //cout << n1.norm() << " " << n2.norm() << endl;
         }
         return true;
 
         double d = std::abs(n1.dot(n2) - 1);
-        cout<<n1.dot(n2)<<endl;
+        //cout<<n1.dot(n2)<<endl;
         if (d > 1e-15 && d < 1e-5)
             return true;
         return false;
@@ -868,7 +866,7 @@ void floatTetWild::flattening(std::vector<Vector3>& input_vertices, std::vector<
 //        }
     }
 
-    cout << "flattening " << ts << " faces" << endl;
+    //cout << "flattening " << ts << " faces" << endl;
 }
 
 floatTetWild::Scalar floatTetWild::get_angle_cos(const Vector3& p, const Vector3& p1, const Vector3& p2) {

@@ -141,18 +141,6 @@ enum class Step;
         split_threshold_2    = split_threshold * split_threshold;
         collapse_threshold_2 = collapse_threshold * collapse_threshold;
 
-        std::cout << "bbox_diag_length = " << bbox_diag_length << std::endl;
-        std::cout << "ideal_edge_length = " << ideal_edge_length << std::endl;
-
-        std::cout << "stage = " << stage << std::endl;
-        std::cout << "eps_input = " << eps_input << std::endl;
-        std::cout << "eps = " << eps << std::endl;
-        std::cout << "eps_simplification = " << eps_simplification << std::endl;
-        std::cout << "eps_coplanar = " << eps_coplanar << std::endl;
-
-        std::cout << "dd = " << dd << std::endl;
-        std::cout << "dd_simplification = " << dd_simplification << std::endl;
-
         return true;
     }
 };

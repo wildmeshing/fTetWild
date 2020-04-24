@@ -31,7 +31,7 @@ class Random
 public:
     static int next(int min, int max)
     {
-        static std::mt19937 gen(42);
+        std::mt19937 gen(42);
         int res = (gen()-std::mt19937::min())/double(std::mt19937::max()-std::mt19937::min())*(max-min)+min;
 
         return res;

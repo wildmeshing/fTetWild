@@ -140,9 +140,8 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3> &input_vertices, 
     if (mesh.params.not_sort_input)
         return;
 
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::shuffle(sorted_f_ids.begin(), sorted_f_ids.end(), generator);
+    std::shuffle(sorted_f_ids.begin(), sorted_f_ids.end(), std::mt19937());
+
 //    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
 //        return weights[a] < weights[b];
 //    });

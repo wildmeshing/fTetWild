@@ -942,7 +942,7 @@ void floatTetWild::check_envelope(Mesh& mesh, const AABBWrapper& tree) {
                 if(tree.is_out_sf_envelope(ps, mesh.params.eps_2)){
 //                Scalar d = tree.dist_sf_envelope(ps, check_eps);
 //                if (d > mesh.params.eps_2) {
-                    cout << "out of envelope!" << endl;
+                    //cout << "out of envelope!" << endl;
 //                    cout << d << ", eps_input = " << check_eps << endl;
 //                    //pausee();
                 }
@@ -957,13 +957,13 @@ void floatTetWild::check_envelope(Mesh& mesh, const AABBWrapper& tree) {
         std::vector<GEO::vec3> ps = {GEO::vec3(v.pos[0], v.pos[1], v.pos[2])};
         Scalar d = tree.dist_sf_envelope(ps, check_eps);
         if (d > mesh.params.eps_2) {
-            cout << "v out of envelope!" << endl;
-            cout << d << ", eps_input = " << check_eps << endl;
+            //cout << "v out of envelope!" << endl;
+            //cout << d << ", eps_input = " << check_eps << endl;
             //pausee();
         }
     }
 
-    cout<<"envelope check done"<<endl;
+    //cout<<"envelope check done"<<endl;
 }
 
 int floatTetWild::get_max_p(const Mesh &mesh)
@@ -1602,7 +1602,6 @@ void floatTetWild::untangle(Mesh &mesh) {
 //        }
 //        //fortest
     }
-    cout << "fixed " + std::to_string(cnt) + " tangled element" << endl;
 }
 
 void floatTetWild::smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree) {
@@ -1923,13 +1922,6 @@ void floatTetWild::manifold_edges(Mesh& mesh) {
         if (tet_groups.size() < 2)
             continue;
 
-        cout<<"find non-manifold edge "<<e[0]<<" "<<e[1]<<endl;
-        cout<<tet_groups.size()<<"/"<<n_t_ids.size()<<endl;
-        cout<<e[0]<<" "<<e[1]<<endl;
-        for (int t_id: n_t_ids) {
-            cout<<t_id<<": ";
-            tets[t_id].print();
-        }
 //        pausee();
 
         //split

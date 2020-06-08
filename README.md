@@ -17,13 +17,11 @@
 ## Dataset
 Here is pre-generated tetmeshes and the extracted surface meshes for research-purpose usage. **Please kindly cite our paper when using our pre-generated data.**
 
-- Input: [Thingi10k](https://ten-thousand-models.appspot.com/)
+- 10k Input: [Thingi10k](https://ten-thousand-models.appspot.com/)
+- 10k Output:
+[10k tetmeshes](https://drive.google.com/file/d/13zmGxikHiiSv9-eu8wZDTOWtPmR-KV5b/view?usp=sharing)
 
-<!-- - Output:
-[10k tetmeshes](https://drive.google.com/file/d/17AZwaQaj_nxdCIUpiGFCQ7_khNQxfG4Y/view?usp=sharing),
-[10k surface meshes](https://drive.google.com/open?id=1E_C1uVoG1ZGF3pfDpHFKIS8Qqd2VXLZQ)
-
-- Figures in the paper: [Input/output & scripts](https://drive.google.com/file/d/1P4wFOGOEebNp4pT-s4sFhl9GTSQcG0n_/view?usp=sharing) -->
+- Figures in the paper: [Input/output & scripts](https://drive.google.com/file/d/1qTukYF3N05jLxKxYQK5tNOUdFAr_0sf1/view?usp=sharing) 
 
 ## Installation via CMake
 

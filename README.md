@@ -75,6 +75,7 @@ We support `.mesh/.msh` format output. The default output format is `.msh` with 
 
 
 ### Features
+
 Our software is quite easy to use. Basically, users only need to provide a surface triangle mesh as input and our mesher would output a tetrahedral mesh by using default settings. If you want to customize your own tetmeshes, we also provide some options.
 
 - Envelope of size *epsilon*
@@ -94,6 +95,11 @@ Our mesher stops optimizing the mesh when maximum energy is smaller than filteri
 - Maximum number of optimization passes
 
 Our mesher stops optimizing the mesh when the maximum number of passes is reached. The default number is 80.
+
+- Sizing field
+Users can provide a background tetmesh in .msh format with vertex scalar field values stored. The scalar field values is used for controlling edge length. The scalars inside an element of the background mesh are linearly interpolated.
+
+💡 [Here](https://drive.google.com/file/d/1qp0iAnfGGj-NK-zkVVsvfvkG7JcZ1vNU/view?usp=sharing) is an example including input surface mesh, background mesh and output tetmeshes with/without sizing control.
 
 - Smoothing open regions
 
@@ -130,12 +136,11 @@ Options:
   --csg TEXT:FILE             json file containg a csg tree
   --use-old-energy            
   --disable-wn                Disable winding number.
+  --use-floodfill             Use flood-fill to extract interior volume.
+  --use-general-wn            Use general winding number.
+  --bg-mesh TEXT:FILE         Background mesh for sizing field (.msh file).
   --max-threads UINT          maximum number of threads used
 ```
-
-<!--### Tips
-TODO :)-->
-
 
 ## Acknowledgements
 

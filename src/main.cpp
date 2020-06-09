@@ -214,6 +214,8 @@ int main(int argc, char **argv) {
     command_line.add_flag("--use-floodfill", use_floodfill, "Use flood-fill to extract interior volume.");
     command_line.add_flag("--use-general-wn", params.use_general_wn, "Use general winding number.");
 
+    command_line.add_option("--bg-mesh", params.background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
+
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");

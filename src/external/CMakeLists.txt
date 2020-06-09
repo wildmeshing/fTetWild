@@ -9,6 +9,8 @@ set(SOURCES
 
 	MshSaver.h
 	MshSaver.cpp
+	MshLoader.h
+	MshLoader.cpp
 	Exception.h
 
 	triangle_triangle_intersection.cpp

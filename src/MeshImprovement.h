@@ -20,6 +20,7 @@ namespace floatTetWild {
     void cleanup_empty_slots(Mesh &mesh, double percentage = 0.7);
     void operation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags, std::vector<bool> &is_face_inserted,
             Mesh &mesh, AABBWrapper& tree, const std::array<int, 5> &ops = {{1, 1, 1, 1, 1}});
+    void operation(Mesh &mesh, AABBWrapper& tree, const std::array<int, 4> &ops = {{1, 1, 1, 1}});
     bool update_scaling_field(Mesh &mesh, Scalar max_energy);
 
     int get_max_p(const Mesh &mesh);
@@ -36,6 +37,8 @@ namespace floatTetWild {
     void manifold_surface(Mesh& mesh);
     void manifold_edges(Mesh& mesh);
     void manifold_vertices(Mesh& mesh);
+
+    void apply_sizingfield(Mesh& mesh, AABBWrapper& tree);
 
     void output_info(Mesh& mesh, const AABBWrapper& tree);
     void check_envelope(Mesh& mesh, const AABBWrapper& tree);

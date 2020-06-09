@@ -26,6 +26,8 @@ class Parameters
     std::string tag_path    = "";
     std::string postfix     = "";
 
+    std::string background_mesh = "";
+
     std::string envelope_log     = "";
     std::string envelope_log_csv = "";
 

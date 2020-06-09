@@ -241,6 +241,12 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         v.sizing_scalar = 1;
     }
     operation(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, std::array<int, 5>({{0, 1, 0, 0, 0}}));
+
+
+    ///apply sizing field
+    if(mesh.params.background_mesh != ""){
+        apply_sizingfield(mesh, tree);
+    }
 }
 
 void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {
@@ -297,8 +303,7 @@ void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {
     cout<<mesh.tets.size()<<endl;
 }
 
-void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags, std::vector<bool> &is_face_inserted,
-        Mesh &mesh, AABBWrapper& tree, const std::array<int, 5> &ops) {
+void floatTetWild::operation(Mesh &mesh, AABBWrapper& tree, const std::array<int, 4> &ops){
     igl::Timer igl_timer;
     int v_num, t_num;
     double max_energy, avg_energy;
@@ -378,6 +383,91 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
         stats().record(StateInfo::smoothing_id, time, v_num, t_num, max_energy, avg_energy);
         output_info(mesh, tree);
     }
+}
+
+void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, const std::vector<int> &input_tags, std::vector<bool> &is_face_inserted,
+        Mesh &mesh, AABBWrapper& tree, const std::array<int, 5> &ops) {
+    operation(mesh, tree, {{ops[0], ops[1], ops[2], ops[3]}});
+
+    igl::Timer igl_timer;
+//    int v_num, t_num;
+//    double max_energy, avg_energy;
+//    double time;
+//
+//    for (int i = 0; i < ops[0]; i++) {
+//        igl_timer.start();
+//        cout << "edge splitting..." << endl;
+//        untangle(mesh);
+//        edge_splitting(mesh, tree);
+//        time = igl_timer.getElapsedTime();
+//        cout << "edge splitting done!" << endl;
+//        cout << "time = " << time << "s" << endl;
+//        v_num = mesh.get_v_num();
+//        t_num = mesh.get_t_num();
+//        get_max_avg_energy(mesh, max_energy, avg_energy);
+//        cout << "#v = " << v_num << endl;
+//        cout << "#t = " << t_num << endl;
+//        cout << "max_energy = " << max_energy << endl;
+//        cout << "avg_energy = " << avg_energy << endl;
+//        stats().record(StateInfo::splitting_id, time, v_num, t_num, max_energy, avg_energy);
+//        output_info(mesh, tree);
+//    }
+//
+//    for (int i = 0; i < ops[1]; i++) {
+//        igl_timer.start();
+//        cout << "edge collapsing..." << endl;
+//        untangle(mesh);
+//        edge_collapsing(mesh, tree);
+//        time = igl_timer.getElapsedTime();
+//        cout << "edge collapsing done!" << endl;
+//        cout << "time = " << time << "s" << endl;
+//        v_num = mesh.get_v_num();
+//        t_num = mesh.get_t_num();
+//        get_max_avg_energy(mesh, max_energy, avg_energy);
+//        cout << "#v = " << v_num << endl;
+//        cout << "#t = " << t_num << endl;
+//        cout << "max_energy = " << max_energy << endl;
+//        cout << "avg_energy = " << avg_energy << endl;
+//        stats().record(StateInfo::collapsing_id, time, v_num, t_num, max_energy, avg_energy);
+//        output_info(mesh, tree);
+//    }
+//
+//    for (int i = 0; i < ops[2]; i++) {
+//        igl_timer.start();
+//        cout << "edge swapping..." << endl;
+//        untangle(mesh);
+//        edge_swapping(mesh);
+//        time = igl_timer.getElapsedTime();
+//        cout << "edge swapping done!" << endl;
+//        cout << "time = " << time << "s" << endl;
+//        v_num = mesh.get_v_num();
+//        t_num = mesh.get_t_num();
+//        get_max_avg_energy(mesh, max_energy, avg_energy);
+//        cout << "#v = " << v_num << endl;
+//        cout << "#t = " << t_num << endl;
+//        cout << "max_energy = " << max_energy << endl;
+//        cout << "avg_energy = " << avg_energy << endl;
+//        stats().record(StateInfo::swapping_id, time, v_num, t_num, max_energy, avg_energy);
+//        output_info(mesh, tree);
+//    }
+//
+//    for (int i = 0; i < ops[3]; i++) {
+//        igl_timer.start();
+//        cout << "vertex smoothing..." << endl;
+//        vertex_smoothing(mesh, tree);
+//        time = igl_timer.getElapsedTime();
+//        cout << "vertex smoothing done!" << endl;
+//        cout << "time = " << time << "s" << endl;
+//        v_num = mesh.get_v_num();
+//        t_num = mesh.get_t_num();
+//        get_max_avg_energy(mesh, max_energy, avg_energy);
+//        cout << "#v = " << v_num << endl;
+//        cout << "#t = " << t_num << endl;
+//        cout << "max_energy = " << max_energy << endl;
+//        cout << "avg_energy = " << avg_energy << endl;
+//        stats().record(StateInfo::smoothing_id, time, v_num, t_num, max_energy, avg_energy);
+//        output_info(mesh, tree);
+//    }
 
     if (!mesh.is_input_all_inserted) {
         pausee();
@@ -1100,6 +1190,79 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
         }
     }
     igl::writeSTL(filename + ".stl", Eigen::MatrixXd(V_sf), Eigen::MatrixXi(F_sf));
+}
+
+#include <floattetwild/MshLoader.h>
+#include <geogram/mesh/mesh_AABB.h>
+void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
+    auto &tet_vertices = mesh.tet_vertices;
+    auto &tets = mesh.tets;
+
+    PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
+    Eigen::VectorXd V_in = mshLoader.get_nodes();
+    Eigen::VectorXi T_in = mshLoader.get_elements();
+    Eigen::VectorXd values = mshLoader.get_node_field("values");
+    if (V_in.rows() == 0 || T_in.rows() == 0 || values.rows() == 0)
+        return;
+
+    logger().debug("Applying sizing field...");
+
+    GEO::Mesh bg_mesh;
+    bg_mesh.vertices.clear();
+    bg_mesh.vertices.create_vertices((int) V_in.rows() / 3);
+    for (int i = 0; i < V_in.rows() / 3; i++) {
+        GEO::vec3 &p = bg_mesh.vertices.point(i);
+        for (int j = 0; j < 3; j++)
+            p[j] = V_in(i * 3 + j);
+    }
+    bg_mesh.cells.clear();
+    bg_mesh.cells.create_tets((int) T_in.rows() / 4);
+    for (int i = 0; i < T_in.rows() / 4; i++) {
+        for (int j = 0; j < 4; j++)
+            bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
+    }
+
+    GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
+    for (auto &p: tet_vertices) {
+        if (p.is_removed)
+            continue;
+
+        p.sizing_scalar = 1;//reset scalar
+        GEO::vec3 geo_p(p.pos[0], p.pos[1], p.pos[2]);
+        int bg_t_id = bg_aabb.containing_tet(geo_p);
+        if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
+            continue;
+
+        //compute barycenter
+        std::array<Vector3, 4> vs;
+        for (int j = 0; j < 4; j++) {
+            vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3), V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
+                            V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
+        }
+        double value = 0;
+        for (int j = 0; j < 4; j++) {
+            Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
+            double d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+            if(d == 0)
+                continue;
+            double weight = abs((p.pos - vs[j]).dot(n) / d);
+            value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
+        }
+        p.sizing_scalar = value / mesh.params.ideal_edge_length;
+//        cout<<p.sizing_scalar<<endl;
+    }
+
+    int num_tets = mesh.get_t_num();
+    for (int i = 0; i < 20; i++) {
+        operation(mesh, tree);
+        double tmp_num_tets = mesh.get_t_num();
+        double max_energy = mesh.get_max_energy();
+        cout<<"/////////"<<i<<" "<<max_energy<<endl;
+        if ((tmp_num_tets - num_tets) / num_tets < 0.02
+            && max_energy < mesh.params.stop_energy) //refinement and quality enough
+            break;
+        num_tets = tmp_num_tets;
+    }
 }
 
 #include <floattetwild/bfs_orient.h>

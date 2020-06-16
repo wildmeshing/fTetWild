@@ -75,8 +75,8 @@ endfunction()
 ## fmt
 function(float_tetwild_download_fmt)
     float_tetwild_download_project(fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt
-        GIT_TAG 5.3.0
+        URL      https://github.com/fmtlib/fmt/archive/5.3.0.tar.gz
+        URL_MD5  1015bf3ff2a140dfe03de50ee2469401
     )
 endfunction()
 

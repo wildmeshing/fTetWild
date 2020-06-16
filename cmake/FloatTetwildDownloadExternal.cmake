@@ -43,8 +43,8 @@ endfunction()
 ## Catch2
 function(float_tetwild_download_catch2)
     float_tetwild_download_project(Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v2.4.2
+        URL          https://github.com/catchorg/Catch2/archive/v2.4.2.tar.gz
+        URL_MD5      26927b878b1f42633f15a9ef1c4bd8e7
     )
 endfunction()
 
@@ -83,16 +83,16 @@ endfunction()
 ## spdlog
 function(float_tetwild_download_spdlog)
     float_tetwild_download_project(spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog.git
-        GIT_TAG         v1.3.1
+        URL         https://github.com/gabime/spdlog/archive/v1.3.1.tar.gz
+        URL_MD5     3c17dd6983de2a66eca8b5a0b213d29f
     )
 endfunction()
 
 ## Geogram LGPL
 function(float_tetwild_download_geogram)
     float_tetwild_download_project(geogram
-        GIT_REPOSITORY https://github.com/alicevision/geogram.git
-        GIT_TAG        v1.6.8
+        URL         https://github.com/alicevision/geogram/archive/v1.6.8.tar.gz
+        URL_MD5     9be60608f984de909fcf06ba421f970a
     )
 endfunction()
 

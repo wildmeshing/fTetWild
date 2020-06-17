@@ -27,6 +27,9 @@
 #include <igl/Timer.h>
 #include <igl/winding_number.h>
 
+#include <floattetwild/MshLoader.h>
+#include <geogram/mesh/mesh_AABB.h>
+
 //#define USE_FWN true
 
 void floatTetWild::init(Mesh &mesh, AABBWrapper& tree) {
@@ -244,8 +247,13 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
 
     ///apply sizing field
-    if(mesh.params.background_mesh != ""){
-        apply_sizingfield(mesh, tree);
+    if(mesh.params.background_mesh != "") {
+        PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
+        Eigen::VectorXd V_in = mshLoader.get_nodes();
+        Eigen::VectorXi T_in = mshLoader.get_elements();
+        Eigen::VectorXd values = mshLoader.get_node_field("values");
+        if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0)
+            apply_sizingfield(V_in, T_in, values, mesh, tree);
     }
 }
 
@@ -1192,18 +1200,18 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
     igl::writeSTL(filename + ".stl", Eigen::MatrixXd(V_sf), Eigen::MatrixXi(F_sf));
 }
 
-#include <floattetwild/MshLoader.h>
-#include <geogram/mesh/mesh_AABB.h>
-void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
+void floatTetWild::apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values,
+        Mesh& mesh, AABBWrapper& tree) {
+
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
-    PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
-    Eigen::VectorXd V_in = mshLoader.get_nodes();
-    Eigen::VectorXi T_in = mshLoader.get_elements();
-    Eigen::VectorXd values = mshLoader.get_node_field("values");
-    if (V_in.rows() == 0 || T_in.rows() == 0 || values.rows() == 0)
-        return;
+//    PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
+//    Eigen::VectorXd V_in = mshLoader.get_nodes();
+//    Eigen::VectorXi T_in = mshLoader.get_elements();
+//    Eigen::VectorXd values = mshLoader.get_node_field("values");
+//    if (V_in.rows() == 0 || T_in.rows() == 0 || values.rows() == 0)
+//        return;
 
     logger().debug("Applying sizing field...");
 

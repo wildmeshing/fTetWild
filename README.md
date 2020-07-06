@@ -5,7 +5,7 @@
 
 ## Important Tips
 
-💡💡💡 **If you are interested in the algorithm details, please refer to our [paper](https://arxiv.org/abs/1908.03581) first. We provide plenty of examples and statistics in the paper.**
+💡💡💡 **If you are interested in the algorithm details, please refer to our [paper](https://cs.nyu.edu/~yixinhu/ftetwild.pdf) first. We provide plenty of examples and statistics in the paper.**
 
 💡💡💡 **Check our license first.**
 

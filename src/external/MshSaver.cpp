@@ -27,7 +27,7 @@ MshSaver::~MshSaver() {
     fout.close();
 }
 
-void MshSaver::save_mesh(const VectorF& nodes, const VectorI& elements,
+void MshSaver::save_mesh(const VectorF& nodes, const VectorI& elements, const VectorI& components,
                          size_t dim, MshSaver::ElementType type) {
     if (dim != 2 && dim != 3) {
         std::stringstream err_msg;
@@ -38,7 +38,7 @@ void MshSaver::save_mesh(const VectorF& nodes, const VectorI& elements,
 
     save_header();
     save_nodes(nodes);
-    save_elements(elements, type);
+    save_elements(elements, components,type);
 }
 
 void MshSaver::save_header() {
@@ -91,7 +91,7 @@ void MshSaver::save_nodes(const VectorF& nodes) {
 }
 
 void MshSaver::save_elements(
-        const VectorI& elements, MshSaver::ElementType type) {
+        const VectorI& elements, const VectorI& components, MshSaver::ElementType type) {
     size_t nodes_per_element = 0;
     switch (type) {
         case TRI:
@@ -122,7 +122,7 @@ void MshSaver::save_elements(
     if (m_num_elements > 0) {
         int elem_type = type;
         int num_elems = m_num_elements;
-        int tags = 0;
+        int tags = components.size() > 0 ? 2 : 0;
         if (!m_binary) {
             for (size_t i=0; i<elements.size(); i+=nodes_per_element) {
                 int elem_num = i/nodes_per_element + 1;
@@ -130,6 +130,9 @@ void MshSaver::save_elements(
                                VectorI::Ones(nodes_per_element);
 
                 fout << elem_num << " " << elem_type << " " << tags << " ";
+                if(components.size() > 0)
+                    fout << components[elem_num-1] << " " << components[elem_num-1] << " ";
+
                 for (size_t j=0; j<nodes_per_element; j++) {
                     fout << elem[j] << " ";
                 }
@@ -143,7 +146,12 @@ void MshSaver::save_elements(
                 int elem_num = i/nodes_per_element + 1;
                 VectorI elem = elements.segment(i, nodes_per_element) +
                                VectorI::Ones(nodes_per_element);
+
                 fout.write((char*)&elem_num, sizeof(int));
+                if(components.size() > 0){
+                    std::array<int, 2> comps = {{components[elem_num-1], components[elem_num-1]}};
+                    fout.write((char*)comps.data(), sizeof(int) * 2);
+                }
                 fout.write((char*)elem.data(), sizeof(int)*nodes_per_element);
             }
         }

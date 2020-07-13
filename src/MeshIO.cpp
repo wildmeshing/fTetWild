@@ -86,6 +86,7 @@ void write_mesh_aux(const std::string&              path,
                     const std::vector<int>&         t_ids,
                     const std::vector<Scalar>&      color,
                     const bool                      binary,
+                    const bool                      separate_components,
                     const std::function<bool(int)>& skip_tet,
                     const std::function<bool(int)>& skip_vertex)
 {
@@ -161,6 +162,10 @@ void write_mesh_aux(const std::string&              path,
         }
         PyMesh::VectorF V_flat(cnt_v * 3);
         PyMesh::VectorI T_flat(cnt_t * 4);
+        PyMesh::VectorI C_flat;
+
+        if(separate_components)
+            C_flat.resize(cnt_t);
 
         size_t index = 0;
         for (size_t i = 0; i < mesh.tet_vertices.size(); ++i) {
@@ -179,10 +184,14 @@ void write_mesh_aux(const std::string&              path,
             T_flat[index * 4 + 1] = old_2_new[mesh.tets[i][1]];
             T_flat[index * 4 + 2] = old_2_new[mesh.tets[i][3]];
             T_flat[index * 4 + 3] = old_2_new[mesh.tets[i][2]];
+
+            if (separate_components)
+                C_flat[index] = mesh.tets[i].scalar;
+
             index++;
         }
 
-        mesh_saver.save_mesh(V_flat, T_flat, 3, mesh_saver.TET);
+        mesh_saver.save_mesh(V_flat, T_flat, C_flat, 3, mesh_saver.TET);
 
         if (color.size() == mesh.tets.size()) {
             PyMesh::VectorF color_flat(cnt_t);
@@ -333,7 +342,8 @@ void MeshIO::write_mesh(const std::string&      path,
                         const Mesh&             mesh,
                         const std::vector<int>& t_ids,
                         const bool              only_interior,
-                        const bool              binary)
+                        const bool              binary,
+                        const bool              separate_components)
 {
     logger().info("Writing mesh to {}...", path);
     igl::Timer timer;
@@ -342,13 +352,13 @@ void MeshIO::write_mesh(const std::string&      path,
     if (only_interior) {
         const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_outside; };
         const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_outside; };
-        write_mesh_aux(path, mesh, t_ids, std::vector<Scalar>(), binary, skip_tet, skip_vertex);
+        write_mesh_aux(path, mesh, t_ids, std::vector<Scalar>(), binary, separate_components, skip_tet, skip_vertex);
     }
     else {
         timer.start();
         const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_removed; };
         const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_removed; };
-        write_mesh_aux(path, mesh, t_ids, std::vector<Scalar>(), binary, skip_tet, skip_vertex);
+        write_mesh_aux(path, mesh, t_ids, std::vector<Scalar>(), binary, separate_components, skip_tet, skip_vertex);
     }
 
     timer.stop();
@@ -359,7 +369,8 @@ void MeshIO::write_mesh(const std::string&         path,
                         const Mesh&                mesh,
                         const bool                 only_interior,
                         const std::vector<Scalar>& color,
-                        const bool                 binary)
+                        const bool                 binary,
+                        const bool                 separate_components)
 {
     logger().info("Writing mesh to {}...", path);
     igl::Timer timer;
@@ -371,12 +382,12 @@ void MeshIO::write_mesh(const std::string&         path,
     if (only_interior) {
         const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_outside; };
         const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_outside; };
-        write_mesh_aux(path, mesh, t_ids, color, binary, skip_tet, skip_vertex);
+        write_mesh_aux(path, mesh, t_ids, color, binary, separate_components, skip_tet, skip_vertex);
     }
     else {
         const auto skip_tet    = [&mesh](const int i) { return mesh.tets[i].is_removed; };
         const auto skip_vertex = [&mesh](const int i) { return mesh.tet_vertices[i].is_removed; };
-        write_mesh_aux(path, mesh, t_ids, color, binary, skip_tet, skip_vertex);
+        write_mesh_aux(path, mesh, t_ids, color, binary, separate_components, skip_tet, skip_vertex);
     }
 
     timer.stop();

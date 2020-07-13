@@ -1413,8 +1413,15 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json &csg_tree_with_ids){
 
         bool keep = CSGTreeParser::keep_tet(csg_tree_with_ids, cnt, w);
         t.is_removed = !keep;
+        int tid = 0;
+        for (int id = 0; id <= max_id; ++id) {
+            bool inside = w[id][cnt] > 0.5;
+            if(inside)
+                tid = std::max(id+1, tid);
+        }
+        t.scalar = tid;
         cnt++;
-    }
+        }
 
 //    output_surface(mesh, "inner.stl");
 }

@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
         colors[i] = mesh.tets[i].quality;
     }
     //fortest
-    MeshIO::write_mesh(output_mesh_name, mesh, false, colors);
+    MeshIO::write_mesh(output_mesh_name, mesh, false, colors, true, !csg_file.empty());
     MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh, false);
 
     std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");

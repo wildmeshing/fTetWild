@@ -29,11 +29,10 @@ class MshSaver {
         };
 
     public:
-        void save_mesh(const VectorF& nodes, const VectorI& elements,
-                size_t dim, ElementType type);
+        void save_mesh(const VectorF& nodes, const VectorI& elements, const VectorI& components, size_t dim, ElementType type);
         void save_header();
         void save_nodes(const VectorF& nodes);
-        void save_elements(const VectorI& elements, ElementType type);
+        void save_elements(const VectorI& elements, const VectorI& components, ElementType type);
         void save_scalar_field(const std::string& fieldname, const VectorF& field);
         void save_vector_field(const std::string& fieldname, const VectorF& field);
         void save_elem_scalar_field(const std::string& fieldname, const VectorF& field);

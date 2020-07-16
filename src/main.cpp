@@ -163,6 +163,8 @@ int main(int argc, char **argv) {
 
     bool run_tet_gen = false;
     bool skip_simplify = false;
+    bool nobinary = false;
+    bool nocolor = false;
 
     Mesh mesh;
     Parameters &params = mesh.params;
@@ -198,6 +200,8 @@ int main(int argc, char **argv) {
 
     command_line.add_flag("-q,--is-quiet", params.is_quiet, "Mute console output. (optional)");
     command_line.add_flag("--skip-simplify", skip_simplify, "");
+    command_line.add_flag("--no-binary", nobinary, "export meshes as ascii");
+    command_line.add_flag("--no-color", nocolor, "don't export color");
     command_line.add_flag("--not-sort-input", params.not_sort_input, "");
     command_line.add_flag("--correct-surface-orientation", params.correct_surface_orientation, "");
 
@@ -464,14 +468,17 @@ int main(int argc, char **argv) {
 //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
 
     //fortest
-    std::vector<Scalar> colors(mesh.tets.size(), -1);
-    for (int i = 0; i < mesh.tets.size(); i++) {
-        if (mesh.tets[i].is_removed)
-            continue;
-        colors[i] = mesh.tets[i].quality;
+    std::vector<Scalar> colors;
+    if (!nocolor) {
+        colors.resize((mesh.tets.size(), -1));
+        for (int i = 0; i < mesh.tets.size(); i++) {
+            if (mesh.tets[i].is_removed)
+                continue;
+            colors[i] = mesh.tets[i].quality;
+        }
     }
     //fortest
-    MeshIO::write_mesh(output_mesh_name, mesh, false, colors, true, !csg_file.empty());
+    MeshIO::write_mesh(output_mesh_name, mesh, false, colors, !nobinary, !csg_file.empty());
     MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh, false);
 
     std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");

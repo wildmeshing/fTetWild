@@ -296,6 +296,8 @@ int main(int argc, char **argv) {
     GEO::Mesh sf_mesh;
     json tree_with_ids;
 
+    std::vector<std::string> meshes;
+
     if(!csg_file.empty())
     {
         json csg_tree = json({});
@@ -310,12 +312,12 @@ int main(int argc, char **argv) {
         }
 		file.close();
 
-        std::vector<std::string> meshes;
-
         CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
 
         if(!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
             return EXIT_FAILURE;
+
+        // To disable the recent modification of using input for wn, use meshes.clear();
     }
     else{
         if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
@@ -421,7 +423,7 @@ int main(int argc, char **argv) {
     correct_tracked_surface_orientation(mesh, tree);
     logger().info("correct_tracked_surface_orientation done");
     if(!csg_file.empty())
-        boolean_operation(mesh, tree_with_ids);
+        boolean_operation(mesh, tree_with_ids, meshes);
     else if(boolean_op >= 0)
         boolean_operation(mesh, boolean_op);
     else {

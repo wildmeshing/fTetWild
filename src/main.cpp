@@ -470,7 +470,7 @@ int main(int argc, char **argv) {
     //fortest
     std::vector<Scalar> colors;
     if (!nocolor) {
-        colors.resize((mesh.tets.size(), -1));
+        colors.resize(mesh.tets.size(), -1);
         for (int i = 0; i < mesh.tets.size(); i++) {
             if (mesh.tets[i].is_removed)
                 continue;

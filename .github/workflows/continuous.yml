@@ -113,8 +113,8 @@ jobs:
           conda install -c conda-forge mpir -y
           conda info
           ls C:\Miniconda\condabin
-          ls C:\Miniconda\condabin\Library\include
-          ls C:\Miniconda\condabin\Library\lib
+          ls C:\Miniconda\Library\include
+          ls C:\Miniconda\Library\lib
 
       - name: Checkout repository
         uses: actions/checkout@v1

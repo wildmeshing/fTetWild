@@ -123,15 +123,15 @@ jobs:
       - name: Set env
         run: |
           echo "::set-env name=appdata::$($env:LOCALAPPDATA)"
-          echo "::set-env name=GMP_INC::C:\\Miniconda\\Library\\include"
+          echo "::set-env name=GMP_INC::C:\Miniconda\Library\include"
 
       - name: Set GMP lib env static
         if: matrix.btype == 'Static'
-        run: echo "::set-env name=GMP_LIB::C:\\Miniconda\\Library\\lib"
+        run: echo "::set-env name=GMP_LIB::C:\Miniconda\Library\lib"
 
       - name: Set GMP lib env dynamic
         if: matrix.btype == 'Dynamic'
-        run: echo "::set-env name=GMP_LIB::C:\\Miniconda\\Library\\bin"
+        run: echo "::set-env name=GMP_LIB::C:\Miniconda\Library\bin"
 
       - name: Cache build
         id: cache-build

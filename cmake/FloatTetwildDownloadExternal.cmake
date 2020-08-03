@@ -28,7 +28,7 @@ endfunction()
 function(float_tetwild_download_libigl)
     float_tetwild_download_project(libigl
         GIT_REPOSITORY https://github.com/libigl/libigl.git
-        GIT_TAG        b0d7740e0b7e887a7e93601c4c557ecf762b389b
+        GIT_TAG        015ac35cd135e3a40c3e71443eeda4a9a4ccf7f5
     )
 endfunction()
 
@@ -91,8 +91,8 @@ endfunction()
 ## Geogram LGPL
 function(float_tetwild_download_geogram)
     float_tetwild_download_project(geogram
-        URL         https://github.com/alicevision/geogram/archive/v1.6.8.tar.gz
-        URL_MD5     9be60608f984de909fcf06ba421f970a
+        GIT_REPOSITORY   https://github.com/polyfem/geogram.git
+        GIT_TAG          e6b9612f1146370e40deaa341b4dd7ef90502102
     )
 endfunction()
 

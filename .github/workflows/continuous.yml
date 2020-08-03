@@ -100,10 +100,10 @@ jobs:
         config: [Debug, Release]
     steps:
       - name: Stetup Conda
-        uses: goanpeca/setup-miniconda@v1
+        uses: s-weigand/setup-conda@v1
         with:
-          channels: conda-forge
-          miniconda-version: "latest"
+          update-conda: true
+          conda-channels: anaconda, conda-forge
           activate-environment: ftetwild
           python-version: 3.6
 

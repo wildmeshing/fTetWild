@@ -162,9 +162,7 @@ jobs:
         run: |
           cd build
           ls
-          ls C:\Miniconda\Library
-          ls C:\Miniconda\Library\bin
-          # cp C:\Miniconda\Library\lib\mpir.dll .\
-          # cp C:\Miniconda\Library\lib\gmp.dll .\
-          FloatTetwild_bin.exe --help
-          FloatTetwild_bin.exe --input ../tests/bunny.off --level 0
+          cp C:\Miniconda\Library\bin\mpir.dll .\
+          cp C:\Miniconda\Library\bin\gmp.dll .\
+          .\FloatTetwild_bin.exe --help
+          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0

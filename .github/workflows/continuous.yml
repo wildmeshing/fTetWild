@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [Release]
+        config: [Debug, Release]
         btype: [Static]
     steps:
       - name: Stetup Conda
@@ -153,7 +153,7 @@ jobs:
             -B build ^
             -S .
           cd build
-          ninja
+          ninja -j1
 
       - name: Tests
         run: |

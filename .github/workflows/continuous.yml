@@ -111,10 +111,6 @@ jobs:
         shell: powershell
         run: |
           conda install -c conda-forge mpir -y
-          conda info
-          ls C:\Miniconda\condabin
-          ls C:\Miniconda\Library\include
-          ls C:\Miniconda\Library\lib
 
       - name: Checkout repository
         uses: actions/checkout@v1
@@ -153,6 +149,9 @@ jobs:
             -S .
           cd build
           ninja -j1
+        env:
+          GMP_INC: C:\Miniconda\Library\include
+          GMP_LIB: C:\Miniconda\Library\lib
 
       - name: Tests
         run: |

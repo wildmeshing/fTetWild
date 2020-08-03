@@ -102,7 +102,6 @@ jobs:
       - name: Stetup Conda
         uses: s-weigand/setup-conda@v1
         with:
-          update-conda: true
           conda-channels: anaconda, conda-forge
           activate-environment: ftetwild
           python-version: 3.6
@@ -157,9 +156,10 @@ jobs:
         run: |
           cd build
           ctest --verbose --output-on-failure
-      - name: Run Example
-        shell: powershell
-        run: |
-          cd build
-          ls
-          ./FloatTetwild_bin.exe --input ../tests/bunny.off --level 0
+
+      # - name: Run Example
+      #   shell: powershell
+      #   run: |
+      #     cd build
+      #     ls
+      #     ./FloatTetwild_bin.exe --input ../tests/bunny.off --level 0

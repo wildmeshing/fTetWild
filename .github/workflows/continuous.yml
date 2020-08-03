@@ -97,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [Debug, Release]
+        config: [Release]
     steps:
       - name: Stetup Conda
         uses: s-weigand/setup-conda@v1
@@ -148,7 +148,7 @@ jobs:
             -B build ^
             -S .
           cd build
-          ninja -j1
+          ninja
         env:
           GMP_INC: C:\Miniconda\Library\include
           GMP_LIB: C:\Miniconda\Library\lib
@@ -158,4 +158,7 @@ jobs:
           cd build
           ctest --verbose --output-on-failure
       - name: Run Example
-        run: cd build; FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0
+        run: |
+          cd build
+          ls
+          FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0

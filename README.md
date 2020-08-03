@@ -21,7 +21,7 @@ Here is pre-generated tetmeshes and the extracted surface meshes for research-pu
 - 10k Output:
 [10k tetmeshes](https://drive.google.com/file/d/13zmGxikHiiSv9-eu8wZDTOWtPmR-KV5b/view?usp=sharing)
 
-- Figures in the paper: [Input/output & scripts](https://drive.google.com/file/d/1qTukYF3N05jLxKxYQK5tNOUdFAr_0sf1/view?usp=sharing) 
+- Figures in the paper: [Input/output & scripts](https://drive.google.com/file/d/1qTukYF3N05jLxKxYQK5tNOUdFAr_0sf1/view?usp=sharing)
 
 ## Installation via CMake
 
@@ -43,7 +43,7 @@ cmake ..
 make
 ```
 
-You may need to install `gmp` before compiling the code. You can install them via
+You may need to install `gmp` before compiling the code. You can install it via
 
 - [homebrew](https://brew.sh/) on mac:
 ```bash
@@ -55,8 +55,10 @@ sudo apt-get install gmp
 ```
 - [Conda](https://anaconda.org) on Windows:
 ```
-conda install -c conda-forge mpfr
+conda install -c conda-forge mpir
 ```
+
+**Note** if cmake cannot find gmp you need to export the envirnement variable `GMP_INC` and `GMP_LIB` to the folder where you installed (e.g., `<conda_dir>\Library\include` for `GMP_INC` and ``<conda_dir>\Library\lib` for `GMP_LIB`).
 
 - Check the installation:
 
@@ -115,26 +117,26 @@ Options:
   -h,--help                   Print this help message and exit
   -i,--input TEXT:FILE        Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)
   -o,--output TEXT            Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')
-  --tag TEXT                  
-  --op INT                    
+  --tag TEXT
+  --op INT
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
-  --max-its INT               
-  --stop-energy FLOAT         
-  --stage INT                 
-  --stop-p INT                
-  --postfix TEXT              
+  --max-its INT
+  --stop-energy FLOAT
+  --stage INT
+  --stop-p INT
+  --postfix TEXT
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).
   -q,--is-quiet               Mute console output. (optional)
-  --skip-simplify             
-  --not-sort-input            
+  --skip-simplify
+  --not-sort-input
   --correct-surface-orientation
-  --envelope-log TEXT         
-  --smooth-open-boundary      
-  --manifold-surface          
+  --envelope-log TEXT
+  --smooth-open-boundary
+  --manifold-surface
   --csg TEXT:FILE             json file containg a csg tree
-  --use-old-energy            
+  --use-old-energy
   --disable-wn                Disable winding number.
   --use-floodfill             Use flood-fill to extract interior volume.
   --use-general-wn            Use general winding number.

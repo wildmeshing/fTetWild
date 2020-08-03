@@ -158,6 +158,7 @@ jobs:
           cd build
           ctest --verbose --output-on-failure
       - name: Run Example
+        shell: cmd
         run: |
           cd build
           ls

@@ -158,8 +158,8 @@ jobs:
           cd build
           ctest --verbose --output-on-failure
       - name: Run Example
-        shell: cmd
+        shell: powershell
         run: |
           cd build
           ls
-          FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0
+          ./FloatTetwild_bin.exe --input ../tests/bunny.off --level 0

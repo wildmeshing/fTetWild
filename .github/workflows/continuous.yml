@@ -103,6 +103,9 @@ jobs:
         uses: goanpeca/setup-miniconda@v1
         with:
           channels: conda-forge
+          miniconda-version: "latest"
+          activate-environment: ftetwild
+          python-version: 3.6
 
       - name: Install Dependencies
         shell: powershell

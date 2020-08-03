@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [Release]
+        config: [Debug, Release]
         btype: [Static]
     steps:
       - name: Stetup Conda

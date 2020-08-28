@@ -7,6 +7,7 @@
 
 #include "Exception.h"
 
+namespace floatTetWild {
 using namespace PyMesh;
 
 MshSaver::MshSaver(const std::string& filename, bool binary) :
@@ -19,7 +20,7 @@ MshSaver::MshSaver(const std::string& filename, bool binary) :
     if (!fout) {
         std::stringstream err_msg;
         err_msg << "Error opening " << filename << " to write msh file." << std::endl;
-        throw IOError(err_msg.str());
+        throw ::PyMesh::IOError(err_msg.str());
     }
 }
 
@@ -32,7 +33,7 @@ void MshSaver::save_mesh(const VectorF& nodes, const VectorI& elements, const Ve
     if (dim != 2 && dim != 3) {
         std::stringstream err_msg;
         err_msg << dim << "D mesh is not supported!" << std::endl;
-        throw NotImplementedError(err_msg.str());
+        throw ::PyMesh::NotImplementedError(err_msg.str());
     }
     m_dim = dim;
 
@@ -110,7 +111,7 @@ void MshSaver::save_elements(
         {
             std::stringstream err_msg;
             err_msg << "Unsupported element type " << type;
-            throw NotImplementedError(err_msg.str());
+            throw ::PyMesh::NotImplementedError(err_msg.str());
         }
     }
     m_num_elements = elements.size() / nodes_per_element;
@@ -378,4 +379,5 @@ void MshSaver::save_elem_tensor_field(const std::string& fieldname, const Vector
 
     fout << "$EndElementData" << std::endl;
     fout.flush();
+}
 }

@@ -8,6 +8,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+namespace floatTetWild {
 namespace PyMesh {
 
 typedef floatTetWild::Scalar Float;
@@ -54,4 +55,5 @@ class MshSaver {
         std::ofstream fout;
 };
 
+}
 }

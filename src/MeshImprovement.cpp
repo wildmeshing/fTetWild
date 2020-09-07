@@ -2332,9 +2332,71 @@ void floatTetWild::manifold_vertices(Mesh& mesh){
                 }
             }
         }
+        //
+        if (tet_groups.size() < 2) {
+            std::vector<std::array<int, 2>> tmp_edges;
+            for (int t_id:tet_groups[0]) {
+                for (int j = 0; j < 4; j++) {
+                    if (tets[t_id][j] == b_v_id)
+                        continue;
+                    int opp_t_id = get_opp_t_id(mesh, t_id, j);
+                    if(opp_t_id == OPP_T_ID_BOUNDARY){
+                        int k = 0;
+                        for (; k < 3; k++) {
+                            if (tets[t_id][(j + 1 + k) % 4] == b_v_id)
+                                break;
+                        }
+//                        //fortest
+//                        tets[t_id].print();
+//                        cout<<b_v_id<<" "<<j<<endl;
+//                        cout<<k<<endl;
+//                        cout<<tets[t_id][(j + 1 + (k + 1) % 3) % 4]<<" "<< tets[t_id][(j + 1 + (k + 2) % 3) % 4]<<endl;
+//                        pausee();
+//                        //fortest
+                        tmp_edges.push_back(
+                                {{tets[t_id][(j + 1 + (k + 1) % 3) % 4], tets[t_id][(j + 1 + (k + 2) % 3) % 4]}});
+                    }
+                }
+            }
+            std::vector<int> tmp_vs;
+            for(auto& e:tmp_edges) {
+                tmp_vs.push_back(e[0]);
+                tmp_vs.push_back(e[1]);
+            }
+            vector_unique(tmp_vs);
+            std::map<int, std::vector<int>> conn_e4v;
+            for(int i=0;i<tmp_edges.size();i++){
+                conn_e4v[tmp_edges[i][0]].push_back(i);
+                conn_e4v[tmp_edges[i][1]].push_back(i);
+            }
 
-        if (tet_groups.size() < 2)
-            continue;
+            int cnt_es = 1;
+            int cur_e_id = 0;
+            int start_v_id = tmp_edges[cur_e_id][0];
+            int cur_v_id = tmp_edges[cur_e_id][1];
+            while(cnt_es<tmp_edges.size()) {
+                int next_e_id = -1;
+                for (int e_id: conn_e4v[cur_v_id]) {
+                    if (e_id != cur_e_id) {
+                        next_e_id = e_id;
+                        break;
+                    }
+                }
+                if (next_e_id < 0)
+                    break;
+                cur_v_id = cur_v_id == tmp_edges[next_e_id][0] ? tmp_edges[next_e_id][1] : tmp_edges[next_e_id][0];
+                cur_e_id = next_e_id;
+                cnt_es++;
+                if(cur_v_id == start_v_id)
+                    break;
+            }
+
+            if (cnt_es == tmp_edges.size())
+                continue;
+
+//            cout<<"XXXXXXXXXXXX"<<endl;
+        }
+
 
         cout<<"find non-manifold vertex "<<b_v_id<<endl;
 

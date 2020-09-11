@@ -200,7 +200,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
 }
 }
 
-void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
+void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree, bool is_coarsening) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 

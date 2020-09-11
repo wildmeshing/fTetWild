@@ -36,11 +36,13 @@ namespace floatTetWild {
     void mark_outside(Mesh& mesh, bool invert_faces = false);
     void smooth_open_boundary(Mesh& mesh, const AABBWrapper& tree);
     void smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree);
-    void manifold_surface(Mesh& mesh);
+    void get_surface(Mesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& F);
+    void manifold_surface(Mesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& F);
     void manifold_edges(Mesh& mesh);
     void manifold_vertices(Mesh& mesh);
 
     void apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values, Mesh& mesh, AABBWrapper& tree);
+    void apply_coarsening(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values, Mesh& mesh, AABBWrapper& tree);
 
     void output_info(Mesh& mesh, const AABBWrapper& tree);
     void check_envelope(Mesh& mesh, const AABBWrapper& tree);

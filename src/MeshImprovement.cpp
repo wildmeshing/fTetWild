@@ -247,6 +247,10 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
 
 
     ///apply sizing field
+    if(mesh.params.coarsen){
+        apply_coarsening(mesh, tree);
+    }
+
     if(mesh.params.background_mesh != "") {
         PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
         Eigen::VectorXd V_in = mshLoader.get_nodes();
@@ -1273,9 +1277,26 @@ void floatTetWild::apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::V
     }
 }
 
-void floatTetWild::apply_coarsening(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values,
-        Mesh& mesh, AABBWrapper& tree){
+void floatTetWild::apply_coarsening(Mesh& mesh, AABBWrapper& tree) {
+    mesh.is_coarsening = true;
 
+    for (auto &v:mesh.tet_vertices) {
+        if (v.is_removed)
+            continue;
+        v.sizing_scalar = 1;
+    }
+
+    int tets_size = mesh.get_t_num();
+    int stop_size = tets_size * 0.001;
+    for (int i = 0; i < 20; i++) {
+        operation(mesh, tree, {{0, 1, 1, 0}});
+        int new_size = mesh.get_t_num();
+        if (abs(new_size - tets_size) < stop_size)
+            break;
+        tets_size = new_size;
+    }
+
+    mesh.is_coarsening = false;
 }
 
 #include <floattetwild/bfs_orient.h>

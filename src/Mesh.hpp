@@ -178,6 +178,7 @@ public:
         bool is_closed = true;
 
         bool is_input_all_inserted = false;
+        bool is_coarsening = false;
 
         void one_ring_vertex_coloring(std::vector<Scalar> &colors) const;
 

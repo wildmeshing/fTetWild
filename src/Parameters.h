@@ -84,6 +84,7 @@ class Parameters
     Scalar dd_simplification;
 
     bool use_general_wn = true;
+    bool coarsen = false;
 
     bool init(Scalar bbox_diag_l)
     {

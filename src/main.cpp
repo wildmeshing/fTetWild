@@ -209,6 +209,7 @@ int main(int argc, char **argv) {
     command_line.add_option("--envelope-log", params.envelope_log, "");
     command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
     command_line.add_flag("--manifold-surface", params.manifold_surface, "");
+    command_line.add_flag("--coarsen", params.coarsen, "");
     command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
 
     command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "");//tmp

@@ -16,6 +16,7 @@
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/atomic.h>
+
 #endif
 
 #define EC_FAIL_INVERSION -1
@@ -200,7 +201,7 @@ void edge_collapsing_aux(Mesh& mesh, const AABBWrapper& tree, std::vector<std::a
 }
 }
 
-void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree, bool is_coarsening) {
+void floatTetWild::edge_collapsing(Mesh& mesh, const AABBWrapper& tree) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
@@ -311,15 +312,19 @@ int floatTetWild::collapse_an_edge(Mesh& mesh, int v1_id, int v2_id, const AABBW
 
     //quality
     Scalar old_max_quality = 0;
+    if(mesh.is_coarsening){
+        old_max_quality = mesh.params.stop_energy;
+    } else {
+        if (is_check_quality) {
+            for (int t_id:tet_vertices[v1_id].conn_tets) {
+                if (tets[t_id].quality > old_max_quality)
+                    old_max_quality = tets[t_id].quality;
+            }
+        }
+    }
     std::vector<Scalar> new_qs;
     new_qs.reserve(tet_vertices[v1_id].conn_tets.size());
     int ii = 0;
-    if(is_check_quality) {
-        for (int t_id:tet_vertices[v1_id].conn_tets) {
-            if (tets[t_id].quality > old_max_quality)
-                old_max_quality = tets[t_id].quality;
-        }
-    }
     for (int t_id:n1_t_ids) {
         int j = js_n1_t_ids[ii++];
         Scalar new_q = get_quality(tet_vertices[v2_id], tet_vertices[tets[t_id][mod4(j + 1)]],

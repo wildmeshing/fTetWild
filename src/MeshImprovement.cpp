@@ -2451,17 +2451,20 @@ void floatTetWild::get_surface(Mesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& 
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;
 
-    std::vector<std::array<int, 3>> faces;
-    for (auto &t: tets) {
+    std::vector<std::array<int, 5>> faces;
+    for (int i=0;i<tets.size();i++) {
+        auto &t = tets[i];
         if (t.is_removed)
             continue;
         for (int j = 0; j < 4; j++) {
-            std::array<int, 3> f = {{t[j], t[(j + 1) % 4], t[(j + 2) % 4]}};
+            std::array<int, 3> f = {{t[(j + 1) % 4], t[(j + 2) % 4], t[(j + 3) % 4]}};
             std::sort(f.begin(), f.end());
-            faces.push_back(f);
+            faces.push_back({{f[0], f[1], f[2], i, j}});
         }
     }
-    std::sort(faces.begin(), faces.end());
+    std::sort(faces.begin(), faces.end(), [](const std::array<int, 5>& a, const std::array<int, 5>& b){
+        return std::make_tuple(a[0], a[1], a[2]) < std::make_tuple(b[0], b[1], b[2]);
+    });
     if (faces.empty())
         return;
     //
@@ -2472,13 +2475,25 @@ void floatTetWild::get_surface(Mesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& 
             is_boundary = false;
         } else {
             if (is_boundary) {
-                b_faces.push_back(faces[i]);
+                b_faces.push_back({{faces[i][0], faces[i][1], faces[i][2]}});
+                bool is_inv = is_inverted(tet_vertices[tets[faces[i][3]][faces[i][4]]],
+                                          tet_vertices[faces[i][0]],
+                                          tet_vertices[faces[i][1]],
+                                          tet_vertices[faces[i][2]]);
+                if (!is_inv)
+                    std::swap(b_faces.back()[1], b_faces.back()[2]);
             }
             is_boundary = true;
         }
     }
     if (is_boundary) {
-        b_faces.push_back(faces.back());
+        b_faces.push_back({{faces.back()[0], faces.back()[1], faces.back()[2]}});
+        bool is_inv = is_inverted(tet_vertices[tets[faces.back()[3]][faces.back()[4]]],
+                                  tet_vertices[faces.back()[0]],
+                                  tet_vertices[faces.back()[1]],
+                                  tet_vertices[faces.back()[2]]);
+        if(!is_inv)
+            std::swap(b_faces.back()[1], b_faces.back()[2]);
     }
     //
     std::vector<int> b_v_ids;

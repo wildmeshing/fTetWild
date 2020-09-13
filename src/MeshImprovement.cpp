@@ -2471,7 +2471,8 @@ void floatTetWild::get_surface(Mesh& mesh, Eigen::MatrixXd& V, Eigen::MatrixXi& 
     std::vector<std::array<int, 3>> b_faces;
     bool is_boundary = true;
     for (int i = 0; i < faces.size() - 1; i++) {
-        if (faces[i] == faces[i + 1]) {
+        if (std::make_tuple(faces[i][0], faces[i][1], faces[i][2])
+            == std::make_tuple(faces[i + 1][0], faces[i + 1][1], faces[i + 1][2])) {
             is_boundary = false;
         } else {
             if (is_boundary) {

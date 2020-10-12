@@ -53,6 +53,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(FLOAT_TETWILD_ENABLE_TBB         "Enable TBB"                    ON)
 option(FLOAT_TETWILD_USE_FLOAT          "Use floats instead of double"  OFF)
 option(FLOAT_TETWILD_WITH_SANITIZERS    "Use sanitizers"                OFF)
+option(FLOAT_TETWILD_WITH_EXACT_ENVELOPE    "Use exact envelope"        ON)
 
 # Sanitizer options
 option(SANITIZE_ADDRESS   "Sanitize Address"       OFF)
@@ -143,6 +144,12 @@ if(FLOAT_TETWILD_ENABLE_TBB)
 	target_link_libraries(${PROJECT_NAME} PUBLIC tbb::tbb)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC FLOAT_TETWILD_USE_TBB)
 endif()
+
+if(FLOAT_TETWILD_WITH_EXACT_ENVELOPE)
+	target_link_libraries(${PROJECT_NAME} PUBLIC FastEnvelope)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC NEW_ENVELOPE)
+endif()
+
 
 ################################################################################
 # FloatTetwild binary

@@ -111,3 +111,12 @@ function(float_tetwild_download_windingnumber)
             GIT_TAG        1e6081e52905575d8e98fb8b7c0921274a18752f
             )
 endfunction()
+
+
+## exact envelope
+function(float_tetwild_download_exact_envelope)
+    float_tetwild_download_project(exact_envelope
+            GIT_REPOSITORY https://github.com/wangbolun300/fast-envelope
+            GIT_TAG        82768b82ad8dd38f191713b68c5155710195cf5e
+            )
+endfunction()

@@ -7,6 +7,12 @@
 
 #include <memory>
 
+//#define NEW_ENVELOPE //fortest
+
+#ifdef NEW_ENVELOPE
+#include <fastenvelope/FastEnvelope.h>
+#endif
+
 namespace floatTetWild {
     class AABBWrapper {
     public:
@@ -22,6 +28,32 @@ namespace floatTetWild {
         inline Scalar get_sf_diag() const { return GEO::bbox_diagonal(sf_mesh); }
 
         AABBWrapper(const GEO::Mesh &sf_mesh) : sf_mesh(sf_mesh), sf_tree(sf_mesh) {}
+
+#ifdef NEW_ENVELOPE
+        fastEnvelope::FastEnvelope b_tree_exact;
+        fastEnvelope::FastEnvelope tmp_b_tree_exact;
+        fastEnvelope::FastEnvelope sf_tree_exact;
+        fastEnvelope::FastEnvelope sf_tree_exact_simplify;
+//        std::shared_ptr<fastEnvelope::FastEnvelope> b_tree_exact;
+//        std::shared_ptr<fastEnvelope::FastEnvelope> tmp_b_tree_exact;
+//        std::shared_ptr<fastEnvelope::FastEnvelope> sf_tree_exact;
+
+        inline void init_sf_tree(const std::vector<Vector3> &vs, const std::vector<Vector3i> &fs, double eps) {
+//            sf_tree_exact = std::make_shared<fastEnvelope::FastEnvelope>(vs, fs, eps);
+            sf_tree_exact.init(vs, fs, eps);
+            sf_tree_exact_simplify.init(vs, fs, 0.8*eps);
+        }
+        inline void init_sf_tree(const std::vector<Vector3> &vs, const std::vector<Vector3i> &fs,
+                std::vector<double>& eps, double bbox_diag_length) {
+            for (auto& e: eps)
+                e *= bbox_diag_length;
+            sf_tree_exact.init(vs, fs, eps);
+            std::vector<double> eps_simplify = eps;
+            for (auto& e: eps_simplify)
+                e *= 0.8;
+            sf_tree_exact_simplify.init(vs, fs, eps_simplify);
+        }
+#endif
 
         void init_b_mesh_and_tree(const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces, Mesh &mesh);
 
@@ -143,6 +175,24 @@ namespace floatTetWild {
             return false;
         }
 
+#ifdef NEW_ENVELOPE
+        inline bool is_out_sf_envelope_exact(const std::array<Vector3, 3> &triangle) const {
+            return sf_tree_exact.is_outside(triangle);
+        }
+
+        inline bool is_out_sf_envelope_exact_simplify(const std::array<Vector3, 3> &triangle) const {
+            return sf_tree_exact_simplify.is_outside(triangle);
+        }
+
+        inline bool is_out_b_envelope_exact(const std::array<Vector3, 3> &triangle) const {
+            return b_tree_exact.is_outside(triangle);
+        }
+
+        inline bool is_out_tmp_b_envelope_exact(const std::array<Vector3, 3> &triangle) const {
+            return tmp_b_tree_exact.is_outside(triangle);
+        }
+#endif
+
         //// envelope check - point
         inline bool is_out_sf_envelope(const Vector3 &p, const Scalar eps_2, GEO::index_t &prev_facet) const {
             GEO::vec3 nearest_p;
@@ -195,6 +245,20 @@ namespace floatTetWild {
                 return true;
             return false;
         }
+
+#ifdef NEW_ENVELOPE
+        inline bool is_out_sf_envelope_exact(const Vector3& p) const {
+            return sf_tree_exact.is_outside(p);
+        }
+
+        inline bool is_out_b_envelope_exact(const Vector3& p) const {
+            return b_tree_exact.is_outside(p);
+        }
+
+        inline bool is_out_tmp_b_envelope_exact(const Vector3& p) const {
+            return tmp_b_tree_exact.is_outside(p);
+        }
+#endif
 
 
         //fortest

@@ -64,6 +64,25 @@ void floatTetWild::AABBWrapper::init_b_mesh_and_tree(const std::vector<Vector3>&
 
     if(b_edges.empty())
         mesh.is_closed = true;
+
+#ifdef NEW_ENVELOPE
+    std::vector<Vector3> vs;
+    std::vector<Vector3i> fs;
+    if (b_edges.empty()) {
+        vs.push_back(Vector3(0, 0, 0));
+        fs.push_back(Vector3i(0, 0, 0));
+    } else {
+        vs.resize(b_edges.size() * 2);
+        fs.resize(b_edges.size());
+        for (int i = 0; i < b_edges.size(); i++) {
+            vs[i * 2] = input_vertices[b_edges[i][0]];
+            vs[i * 2 + 1] = input_vertices[b_edges[i][1]];
+            fs[i] = Vector3i(i * 2, i * 2 + 1, i * 2 + 1);
+        }
+    }
+//    b_tree_exact = std::make_shared<fastEnvelope::FastEnvelope>(vs, fs, eps);
+    b_tree_exact.init(vs, fs, mesh.params.eps);
+#endif
 }
 
 void floatTetWild::AABBWrapper::init_tmp_b_mesh_and_tree(const std::vector<Vector3>& input_vertices, const std::vector<Vector3i>& input_faces,
@@ -115,4 +134,27 @@ void floatTetWild::AABBWrapper::init_tmp_b_mesh_and_tree(const std::vector<Vecto
     mesh_reorder(tmp_b_mesh, GEO::MESH_ORDER_MORTON);
     tmp_b_tree = std::make_shared<MeshFacetsAABBWithEps>(tmp_b_mesh);
 
+#ifdef NEW_ENVELOPE
+    std::vector<Vector3> vs;
+    std::vector<Vector3i> fs;
+    if (b_edges1.empty() && b_edges2.empty()) {
+        vs.push_back(Vector3(0, 0, 0));
+        fs.push_back(Vector3i(0, 0, 0));
+    } else {
+        vs.resize((b_edges1.size() + b_edges2.size()) * 2);
+        fs.resize(b_edges1.size() + b_edges2.size());
+        for (int i = 0; i < b_edges1.size(); i++) {
+            vs[i * 2] = input_vertices[b_edges1[i][0]];
+            vs[i * 2 + 1] = input_vertices[b_edges1[i][1]];
+            fs[i] = Vector3i(i * 2, i * 2 + 1, i * 2 + 1);
+        }
+        for (int i = b_edges1.size(); i < b_edges1.size() + b_edges2.size(); i++) {
+            vs[i * 2] = mesh.tet_vertices[b_edges2[i - b_edges1.size()][0]].pos;
+            vs[i * 2 + 1] = mesh.tet_vertices[b_edges2[i - b_edges1.size()][1]].pos;
+            fs[i] = Vector3i(i * 2, i * 2 + 1, i * 2 + 1);
+        }
+    }
+//    tmp_b_tree_exact = std::make_shared<fastEnvelope::FastEnvelope>(vs, fs, mesh.params.eps_input);
+    tmp_b_tree_exact.init(vs, fs, mesh.params.eps);
+#endif
 }

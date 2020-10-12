@@ -222,6 +222,8 @@ int main(int argc, char **argv) {
 
     command_line.add_option("--bg-mesh", params.background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
 
+    std::string epsr_tags;
+    command_line.add_option("--epsr-tags", epsr_tags, "");
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
@@ -285,6 +287,7 @@ int main(int argc, char **argv) {
     std::vector<Vector3> input_vertices;
     std::vector<Vector3i> input_faces;
     std::vector<int> input_tags;
+    std::vector<double> input_epsr_tags;
 
     if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
@@ -296,6 +299,14 @@ int main(int argc, char **argv) {
             }
             fin.close();
         }
+    }
+    if(!epsr_tags.empty()) {
+        std::ifstream fin(epsr_tags);
+        std::string line;
+        while (std::getline(fin, line)){
+            input_epsr_tags.push_back(std::stod(line));
+        }
+        fin.close();
     }
 
     igl::Timer timer;
@@ -326,7 +337,7 @@ int main(int argc, char **argv) {
         // To disable the recent modification of using input for wn, use meshes.clear();
     }
     else{
-        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
+        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, input_epsr_tags)) {
             logger().error("Unable to load mesh at {}", params.input_path);
             MeshIO::write_mesh(output_mesh_name, mesh, false);
             return EXIT_FAILURE;
@@ -345,6 +356,13 @@ int main(int argc, char **argv) {
     if (!params.init(tree.get_sf_diag())) {
         return EXIT_FAILURE;
     }
+
+#ifdef NEW_ENVELOPE
+    if(!epsr_tags.empty())
+        tree.init_sf_tree(input_vertices, input_faces, input_epsr_tags, params.bbox_diag_length);
+    else
+        tree.init_sf_tree(input_vertices, input_faces, params.eps);
+#endif
 
 #ifdef LIBIGL_WITH_TETGEN
     if(run_tet_gen)

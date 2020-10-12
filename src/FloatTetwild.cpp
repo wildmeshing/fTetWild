@@ -53,6 +53,9 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     }
 
     AABBWrapper      tree(sf_mesh);
+#ifdef NEW_ENVELOPE
+    tree.init_sf_tree(input_vertices, input_faces, params.eps);
+#endif
     std::vector<int> input_tags(input_faces.size(), 0);
 
     if (!params.init(tree.get_sf_diag())) {

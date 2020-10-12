@@ -258,6 +258,15 @@ bool floatTetWild::is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, cons
     if (!mesh.tet_vertices[v1_id].is_on_boundary || !mesh.tet_vertices[v2_id].is_on_boundary)
         return false;
 
+#ifdef NEW_ENVELOPE
+    if(!mesh.is_input_all_inserted) {
+        return !tree.is_out_tmp_b_envelope_exact({{mesh.tet_vertices[v1_id].pos, mesh.tet_vertices[v2_id].pos,
+                                                          mesh.tet_vertices[v2_id].pos}});
+    } else {
+        return !tree.is_out_b_envelope_exact({{mesh.tet_vertices[v1_id].pos, mesh.tet_vertices[v2_id].pos,
+                                                mesh.tet_vertices[v2_id].pos}});
+    }
+#else
     std::vector<GEO::vec3> ps;
     ps.push_back(GEO::vec3(mesh.tet_vertices[v1_id].pos[0], mesh.tet_vertices[v1_id].pos[1],
             mesh.tet_vertices[v1_id].pos[2]));
@@ -273,9 +282,10 @@ bool floatTetWild::is_boundary_edge(const Mesh& mesh, int v1_id, int v2_id, cons
 
     if(!mesh.is_input_all_inserted) {
         return !tree.is_out_tmp_b_envelope(ps, mesh.params.eps_2);
-    }else {
+    } else {
         return !tree.is_out_b_envelope(ps, mesh.params.eps_2);
     }
+#endif
 
 //    if(!mesh.is_input_all_inserted)
 //        return true;
@@ -338,9 +348,12 @@ bool floatTetWild::is_isolate_surface_point(const Mesh& mesh, int v_id) {
 }
 
 bool floatTetWild::is_point_out_envelope(const Mesh& mesh, const Vector3& p, const AABBWrapper& tree){
+#ifdef NEW_ENVELOPE
+    return tree.is_out_sf_envelope_exact(p);
+#else
     GEO::index_t prev_facet;
     return tree.is_out_sf_envelope(p, mesh.params.eps_2, prev_facet);
-
+#endif
 //    GEO::vec3 geo_p(p[0], p[1], p[2]);
 //    if (sf_tree.squared_distance(geo_p) > mesh.params.eps_2)
 //        return true;
@@ -602,9 +615,14 @@ bool floatTetWild::is_out_boundary_envelope(const Mesh& mesh, int v_id, const Ve
 
 #include <sstream>
 bool floatTetWild::is_out_envelope(Mesh& mesh, int v_id, const Vector3& new_pos, const AABBWrapper& tree) {
+#ifdef NEW_ENVELOPE
+    if(tree.is_out_sf_envelope_exact(new_pos))
+        return true;
+#else
     GEO::index_t prev_facet;
     if(tree.is_out_sf_envelope(new_pos, mesh.params.eps_2, prev_facet))
         return true;
+#endif
 
     std::vector<GEO::vec3> ps;
     for (int t_id:mesh.tet_vertices[v_id].conn_tets) {
@@ -617,14 +635,8 @@ bool floatTetWild::is_out_envelope(Mesh& mesh, int v_id, const Vector3& new_pos,
                     else
                         vs[k] = mesh.tet_vertices[mesh.tets[t_id][mod4(j + 1 + k)]].pos;
                 }
-
-#ifdef STORE_SAMPLE_POINTS
-                ps.clear();
-                sample_triangle(vs, ps, mesh.params.dd);
-                bool is_out = tree.is_out_sf_envelope(ps, mesh.params.eps_2, prev_facet);
-#else
-                bool is_out = sample_triangle_and_check_is_out(vs, mesh.params.dd, mesh.params.eps_2, tree, prev_facet);
-#endif
+#ifdef NEW_ENVELOPE
+                bool is_out =tree.is_out_sf_envelope_exact(vs);
                 if(!mesh.params.envelope_log.empty()){
                     if(envelope_log_csv_cnt < 1e5) {
                         std::ostringstream ss;
@@ -645,6 +657,35 @@ bool floatTetWild::is_out_envelope(Mesh& mesh, int v_id, const Vector3& new_pos,
                 }
                 if (is_out)
                     return true;
+#else
+    #ifdef STORE_SAMPLE_POINTS
+                    ps.clear();
+                    sample_triangle(vs, ps, mesh.params.dd);
+                    bool is_out = tree.is_out_sf_envelope(ps, mesh.params.eps_2, prev_facet);
+    #else
+                    bool is_out = sample_triangle_and_check_is_out(vs, mesh.params.dd, mesh.params.eps_2, tree, prev_facet);
+    #endif
+                    if(!mesh.params.envelope_log.empty()){
+                        if(envelope_log_csv_cnt < 1e5) {
+                            std::ostringstream ss;
+                            ss << std::setprecision(17);
+                            for (const auto &v: vs) {
+                                ss << v[0] << ',' << v[1] << ',' << v[2] << ',';
+                            }
+                            ss << is_out << "\n";
+                            std::string tmp = ss.str();
+                            envelope_log_csv += tmp;
+                            envelope_log_csv_cnt += 1;
+                        } else {
+                            std::ofstream fout(mesh.params.envelope_log);
+                            fout << envelope_log_csv;
+                            fout.close();
+                            mesh.params.envelope_log = "";
+                        }
+                    }
+                    if (is_out)
+                        return true;
+#endif
 
 //                int cnt = 0;
 //                const unsigned int ps_size = ps.size();

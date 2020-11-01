@@ -88,7 +88,9 @@ protected:
 #include <geogram/basic/numeric.h>
 #include <geogram/basic/geometry.h>
 #include <floattetwild/Predicates.hpp>
-#include "LocalOperations.h"
+
+#include <geogram/mesh/mesh_AABB.h>
+#include <floattetwild/MshLoader.h>
 
 void connect_2_meshes(std::string m1, std::string m2, std::string m);
 
@@ -219,10 +221,13 @@ int main(int argc, char **argv) {
     command_line.add_flag("--use-general-wn", params.use_general_wn, "Use general winding number.");
     command_line.add_flag("--use-input-for-wn", params.use_input_for_wn, "Use input surface for winding number.");
 
-    command_line.add_option("--bg-mesh", params.background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
+    std::string background_mesh = "";
+    command_line.add_option("--bg-mesh", background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
 
+#ifdef NEW_ENVELOPE
     std::string epsr_tags;
     command_line.add_option("--epsr-tags", epsr_tags, "List of envelope size for each input faces.")->check(CLI::ExistingFile);
+#endif
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
@@ -282,7 +287,57 @@ int main(int argc, char **argv) {
         output_mesh_name = params.output_path + "_" + params.postfix + ".msh";
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///set sizing field
+    if(!background_mesh.empty()) {
+        PyMesh::MshLoader mshLoader(background_mesh);
+        Eigen::VectorXd V_in = mshLoader.get_nodes();
+        Eigen::VectorXi T_in = mshLoader.get_elements();
+        Eigen::VectorXd values = mshLoader.get_node_field("values");
+        if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
+            params.apply_sizing_field = true;
+            params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3 &p) {
+                GEO::Mesh bg_mesh;
+                bg_mesh.vertices.clear();
+                bg_mesh.vertices.create_vertices((int) V_in.rows() / 3);
+                for (int i = 0; i < V_in.rows() / 3; i++) {
+                    GEO::vec3 &p = bg_mesh.vertices.point(i);
+                    for (int j = 0; j < 3; j++)
+                        p[j] = V_in(i * 3 + j);
+                }
+                bg_mesh.cells.clear();
+                bg_mesh.cells.create_tets((int) T_in.rows() / 4);
+                for (int i = 0; i < T_in.rows() / 4; i++) {
+                    for (int j = 0; j < 4; j++)
+                        bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
+                }
 
+                GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
+                GEO::vec3 geo_p(p[0], p[1], p[2]);
+                int bg_t_id = bg_aabb.containing_tet(geo_p);
+                if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
+                    return -1.;
+
+                //compute barycenter
+                std::array<Vector3, 4> vs;
+                for (int j = 0; j < 4; j++) {
+                    vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3), V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
+                                    V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
+                }
+                double value = 0;
+                for (int j = 0; j < 4; j++) {
+                    Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
+                    double d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+                    if (d == 0)
+                        continue;
+                    double weight = abs((p - vs[j]).dot(n) / d);
+                    value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
+                }
+                return value;// / mesh.params.ideal_edge_length;
+            };
+        }
+    }
+
+    ///set input tage
     std::vector<Vector3> input_vertices;
     std::vector<Vector3i> input_faces;
     std::vector<int> input_tags;
@@ -299,6 +354,8 @@ int main(int argc, char **argv) {
             fin.close();
         }
     }
+
+#ifdef NEW_ENVELOPE
     if(!epsr_tags.empty()) {
         std::ifstream fin(epsr_tags);
         std::string line;
@@ -307,36 +364,37 @@ int main(int argc, char **argv) {
         }
         fin.close();
     }
+#endif
 
+    ///set envelope
     igl::Timer timer;
     GEO::Mesh sf_mesh;
     json tree_with_ids;
-
     std::vector<std::string> meshes;
-
-    if(!csg_file.empty())
-    {
+    if(!csg_file.empty()) {
         json csg_tree = json({});
-		std::ifstream file(csg_file);
+        std::ifstream file(csg_file);
 
-		if (file.is_open())
-			file >> csg_tree;
-		else
-        {
-			logger().error("unable to open {} file", csg_file);
+        if (file.is_open())
+            file >> csg_tree;
+        else {
+            logger().error("unable to open {} file", csg_file);
             return EXIT_FAILURE;
         }
-		file.close();
+        file.close();
 
         CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
 
-        if(!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
+        if (!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
             return EXIT_FAILURE;
 
         // To disable the recent modification of using input for wn, use meshes.clear();
-    }
-    else{
+    } else {
+#ifdef NEW_ENVELOPE
         if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags)) {
+#else
+        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
+#endif
             logger().error("Unable to load mesh at {}", params.input_path);
             MeshIO::write_mesh(output_mesh_name, mesh, false);
             return EXIT_FAILURE;
@@ -351,7 +409,6 @@ int main(int argc, char **argv) {
         }
     }
     AABBWrapper tree(sf_mesh);
-
     if (!params.init(tree.get_sf_diag())) {
         return EXIT_FAILURE;
     }

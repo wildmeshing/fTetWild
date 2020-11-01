@@ -254,14 +254,14 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         apply_coarsening(mesh, tree);
     }
 
-    if(mesh.params.background_mesh != "") {
-        PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
-        Eigen::VectorXd V_in = mshLoader.get_nodes();
-        Eigen::VectorXi T_in = mshLoader.get_elements();
-        Eigen::VectorXd values = mshLoader.get_node_field("values");
-        if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0)
-            apply_sizingfield(V_in, T_in, values, mesh, tree);
-    }
+//    if(mesh.params.background_mesh != "") {
+//        PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
+//        Eigen::VectorXd V_in = mshLoader.get_nodes();
+//        Eigen::VectorXi T_in = mshLoader.get_elements();
+//        Eigen::VectorXd values = mshLoader.get_node_field("values");
+//        if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0)
+//            apply_sizingfield(V_in, T_in, values, mesh, tree);
+//    }
 }
 
 void floatTetWild::cleanup_empty_slots(Mesh &mesh, double percentage) {

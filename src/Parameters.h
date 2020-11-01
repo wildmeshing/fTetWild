@@ -25,8 +25,6 @@ namespace floatTetWild {
         std::string tag_path = "";
         std::string postfix = "";
 
-        std::string background_mesh = "";
-
         std::string envelope_log = "";
         std::string envelope_log_csv = "";
 
@@ -43,7 +41,9 @@ namespace floatTetWild {
         bool use_input_for_wn = false;
         bool coarsen = false;
 
-//        std::function<double(double, double, double)> get_sizing_field_value;//get sizing field value for an point
+        bool apply_sizing_field = false;
+        std::function<double(Vector3)> get_sizing_field_value;//get sizing field value for an point
+
 #ifdef NEW_ENVELOPE
         std::vector<double> input_epsr_tags;//same length as the list of input faces
 #endif

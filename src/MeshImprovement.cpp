@@ -1303,7 +1303,6 @@ void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
         double value = mesh.params.get_sizing_field_value(p.pos);
         if (value > 0) {
             p.sizing_scalar = value / mesh.params.ideal_edge_length;
-            cout<<p.sizing_scalar<<endl;
         }
     }
 
@@ -1317,9 +1316,6 @@ void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
             && max_energy < mesh.params.stop_energy) //refinement and quality enough
             break;
         num_tets = tmp_num_tets;
-
-        cout<<mesh.params.output_path<<endl;
-        MeshIO::write_mesh(mesh.params.output_path + "_.msh", mesh, false);
     }
 }
 

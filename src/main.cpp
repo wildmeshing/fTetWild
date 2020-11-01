@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
     std::vector<Vector3> input_vertices;
     std::vector<Vector3i> input_faces;
     std::vector<int> input_tags;
-    std::vector<double> input_epsr_tags;
+//    std::vector<double> input_epsr_tags;
 
     if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
         std::ifstream fin(epsr_tags);
         std::string line;
         while (std::getline(fin, line)){
-            input_epsr_tags.push_back(std::stod(line));
+            params.input_epsr_tags.push_back(std::stod(line));
         }
         fin.close();
     }
@@ -336,7 +336,7 @@ int main(int argc, char **argv) {
         // To disable the recent modification of using input for wn, use meshes.clear();
     }
     else{
-        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, input_epsr_tags)) {
+        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags)) {
             logger().error("Unable to load mesh at {}", params.input_path);
             MeshIO::write_mesh(output_mesh_name, mesh, false);
             return EXIT_FAILURE;
@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
 
 #ifdef NEW_ENVELOPE
     if(!epsr_tags.empty())
-        tree.init_sf_tree(input_vertices, input_faces, input_epsr_tags, params.bbox_diag_length);
+        tree.init_sf_tree(input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
     else
         tree.init_sf_tree(input_vertices, input_faces, params.eps);
 #endif

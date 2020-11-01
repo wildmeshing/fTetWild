@@ -32,12 +32,21 @@ namespace floatTetWild {
 
         bool not_sort_input = false;
         bool correct_surface_orientation = false;
-
         bool is_quiet = false;
         int log_level = 3;//2;
 
         bool smooth_open_boundary = false;
         bool manifold_surface = false;
+        bool disable_filtering = false;
+        bool use_floodfill = false;
+        bool use_general_wn = false;
+        bool use_input_for_wn = false;
+        bool coarsen = false;
+
+//        std::function<double(double, double, double)> get_sizing_field_value;//get sizing field value for an point
+#ifdef NEW_ENVELOPE
+        std::vector<double> input_epsr_tags;//same length as the list of input faces
+#endif
 
         // it decides the scale of the box, presents the deviation of the box from the model
         //( in % of  max((xmax-xmin), (ymax-ymin), (zmax-zmin)) of the input points)
@@ -85,17 +94,6 @@ namespace floatTetWild {
         Scalar eps_simplification;
         Scalar eps_2_simplification;
         Scalar dd_simplification;
-
-        bool disable_filtering = false;
-        bool use_floodfill = false;
-        bool use_general_wn = false;
-        bool use_input_for_wn = false;
-        bool coarsen = false;
-
-//        std::function<double(double, double, double)> get_sizing_field_value;//get sizing field value for an point
-//#ifdef NEW_ENVELOPE
-//        std::vector<double> adaptive_epsilons;//same length as the list of input faces
-//#endif
 
         bool init(Scalar bbox_diag_l) {
             if (stage > 5)

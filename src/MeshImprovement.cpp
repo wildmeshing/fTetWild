@@ -254,6 +254,10 @@ void floatTetWild::optimization(const std::vector<Vector3> &input_vertices, cons
         apply_coarsening(mesh, tree);
     }
 
+    if(mesh.params.apply_sizing_field){
+        apply_sizingfield(mesh, tree);
+    }
+
 //    if(mesh.params.background_mesh != "") {
 //        PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
 //        Eigen::VectorXd V_in = mshLoader.get_nodes();
@@ -1213,64 +1217,94 @@ void floatTetWild::output_surface(Mesh& mesh, const std::string& filename) {
     igl::writeSTL(filename + ".stl", Eigen::MatrixXd(V_sf), Eigen::MatrixXi(F_sf));
 }
 
-void floatTetWild::apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values,
-        Mesh& mesh, AABBWrapper& tree) {
+//void floatTetWild::apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::VectorXi& T_in, const Eigen::VectorXd& values,
+//        Mesh& mesh, AABBWrapper& tree) {
+//
+//    auto &tet_vertices = mesh.tet_vertices;
+//    auto &tets = mesh.tets;
+//
+////    PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
+////    Eigen::VectorXd V_in = mshLoader.get_nodes();
+////    Eigen::VectorXi T_in = mshLoader.get_elements();
+////    Eigen::VectorXd values = mshLoader.get_node_field("values");
+////    if (V_in.rows() == 0 || T_in.rows() == 0 || values.rows() == 0)
+////        return;
+//
+//    logger().debug("Applying sizing field...");
+//
+//    GEO::Mesh bg_mesh;
+//    bg_mesh.vertices.clear();
+//    bg_mesh.vertices.create_vertices((int) V_in.rows() / 3);
+//    for (int i = 0; i < V_in.rows() / 3; i++) {
+//        GEO::vec3 &p = bg_mesh.vertices.point(i);
+//        for (int j = 0; j < 3; j++)
+//            p[j] = V_in(i * 3 + j);
+//    }
+//    bg_mesh.cells.clear();
+//    bg_mesh.cells.create_tets((int) T_in.rows() / 4);
+//    for (int i = 0; i < T_in.rows() / 4; i++) {
+//        for (int j = 0; j < 4; j++)
+//            bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
+//    }
+//
+//    GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
+//    for (auto &p: tet_vertices) {
+//        if (p.is_removed)
+//            continue;
+//
+//        p.sizing_scalar = 1;//reset scalar
+//        GEO::vec3 geo_p(p.pos[0], p.pos[1], p.pos[2]);
+//        int bg_t_id = bg_aabb.containing_tet(geo_p);
+//        if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
+//            continue;
+//
+//        //compute barycenter
+//        std::array<Vector3, 4> vs;
+//        for (int j = 0; j < 4; j++) {
+//            vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3), V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
+//                            V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
+//        }
+//        double value = 0;
+//        for (int j = 0; j < 4; j++) {
+//            Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
+//            double d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+//            if(d == 0)
+//                continue;
+//            double weight = abs((p.pos - vs[j]).dot(n) / d);
+//            value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
+//        }
+//        p.sizing_scalar = value / mesh.params.ideal_edge_length;
+////        cout<<p.sizing_scalar<<endl;
+//    }
+//
+//    int num_tets = mesh.get_t_num();
+//    for (int i = 0; i < 20; i++) {
+//        operation(mesh, tree);
+//        double tmp_num_tets = mesh.get_t_num();
+//        double max_energy = mesh.get_max_energy();
+//        cout<<"/////////"<<i<<" "<<max_energy<<endl;
+//        if ((tmp_num_tets - num_tets) / num_tets < 0.02
+//            && max_energy < mesh.params.stop_energy) //refinement and quality enough
+//            break;
+//        num_tets = tmp_num_tets;
+//    }
+//}
+
+void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
+    logger().debug("Applying sizing field...");
 
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
-//    PyMesh::MshLoader mshLoader(mesh.params.background_mesh);
-//    Eigen::VectorXd V_in = mshLoader.get_nodes();
-//    Eigen::VectorXi T_in = mshLoader.get_elements();
-//    Eigen::VectorXd values = mshLoader.get_node_field("values");
-//    if (V_in.rows() == 0 || T_in.rows() == 0 || values.rows() == 0)
-//        return;
-
-    logger().debug("Applying sizing field...");
-
-    GEO::Mesh bg_mesh;
-    bg_mesh.vertices.clear();
-    bg_mesh.vertices.create_vertices((int) V_in.rows() / 3);
-    for (int i = 0; i < V_in.rows() / 3; i++) {
-        GEO::vec3 &p = bg_mesh.vertices.point(i);
-        for (int j = 0; j < 3; j++)
-            p[j] = V_in(i * 3 + j);
-    }
-    bg_mesh.cells.clear();
-    bg_mesh.cells.create_tets((int) T_in.rows() / 4);
-    for (int i = 0; i < T_in.rows() / 4; i++) {
-        for (int j = 0; j < 4; j++)
-            bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
-    }
-
-    GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
     for (auto &p: tet_vertices) {
         if (p.is_removed)
             continue;
-
-        p.sizing_scalar = 1;//reset scalar
-        GEO::vec3 geo_p(p.pos[0], p.pos[1], p.pos[2]);
-        int bg_t_id = bg_aabb.containing_tet(geo_p);
-        if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
-            continue;
-
-        //compute barycenter
-        std::array<Vector3, 4> vs;
-        for (int j = 0; j < 4; j++) {
-            vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3), V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
-                            V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
+        p.sizing_scalar = 1; //reset
+        double value = mesh.params.get_sizing_field_value(p.pos);
+        if (value > 0) {
+            p.sizing_scalar = value / mesh.params.ideal_edge_length;
+            cout<<p.sizing_scalar<<endl;
         }
-        double value = 0;
-        for (int j = 0; j < 4; j++) {
-            Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
-            double d = (vs[(j + 3) % 4] - vs[j]).dot(n);
-            if(d == 0)
-                continue;
-            double weight = abs((p.pos - vs[j]).dot(n) / d);
-            value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
-        }
-        p.sizing_scalar = value / mesh.params.ideal_edge_length;
-//        cout<<p.sizing_scalar<<endl;
     }
 
     int num_tets = mesh.get_t_num();
@@ -1283,6 +1317,9 @@ void floatTetWild::apply_sizingfield(const Eigen::VectorXd& V_in, const Eigen::V
             && max_energy < mesh.params.stop_energy) //refinement and quality enough
             break;
         num_tets = tmp_num_tets;
+
+        cout<<mesh.params.output_path<<endl;
+        MeshIO::write_mesh(mesh.params.output_path + "_.msh", mesh, false);
     }
 }
 

@@ -128,8 +128,7 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
     //////////////////////////////////////
 
     timer.start();
-    optimization(
-      input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
+    optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
     logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
     logger().info("");
     stats().record(StateInfo::optimization_id,
@@ -145,9 +144,24 @@ int tetrahedralization(GEO::Mesh&       sf_mesh,
 
     timer.start();
     if (boolean_op < 0) {
-        filter_outside(mesh);
-    }
-    else {
+//        filter_outside(mesh);
+        if (params.smooth_open_boundary) {
+            smooth_open_boundary(mesh, tree);
+            for (auto &t: mesh.tets) {
+                if (t.is_outside)
+                    t.is_removed = true;
+            }
+        } else {
+            if(!params.disable_filtering) {
+                if(params.use_floodfill) {
+                    filter_outside_floodfill(mesh);
+                } else if(params.use_input_for_wn){
+                    filter_outside(mesh, input_vertices, input_faces);
+                } else
+                    filter_outside(mesh);
+            }
+        }
+    } else {
         boolean_operation(mesh, boolean_op);
     }
     stats().record(StateInfo::wn_id,

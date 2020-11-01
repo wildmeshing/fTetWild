@@ -117,31 +117,28 @@ Options:
   -h,--help                   Print this help message and exit
   -i,--input TEXT:FILE        Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)
   -o,--output TEXT            Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')
-  --tag TEXT
-  --op INT
+  --tag TEXT:FILE             Tag input faces for Boolean operation.
+  --op INT                    Boolean operation: 0: union, 1: intersection, 2: difference.
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
-  --max-its INT
-  --stop-energy FLOAT
-  --stage INT
-  --stop-p INT
-  --postfix TEXT
+  --stop-energy FLOAT         Stop optimization when max energy is lower than this.
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).
   -q,--is-quiet               Mute console output. (optional)
-  --skip-simplify
-  --not-sort-input
-  --correct-surface-orientation
-  --envelope-log TEXT
-  --smooth-open-boundary
-  --manifold-surface
+  --skip-simplify             skip preprocessing.
+  --no-binary                 export meshes as ascii
+  --no-color                  don't export color
+  --smooth-open-boundary      Smooth the open boundary.
+  --manifold-surface          Force the output to be manifold.
+  --coarsen                   Coarsen the output as much as possible.
   --csg TEXT:FILE             json file containg a csg tree
-  --use-old-energy
-  --disable-wn                Disable winding number.
+  --disable-filtering         Disable filtering out outside elements.
   --use-floodfill             Use flood-fill to extract interior volume.
   --use-general-wn            Use general winding number.
+  --use-input-for-wn          Use input surface for winding number.
   --bg-mesh TEXT:FILE         Background mesh for sizing field (.msh file).
-  --max-threads UINT          maximum number of threads used
+  --epsr-tags TEXT:FILE       List of envelope size for each input faces.
+  --max-threads UINT          Maximum number of threads used
 ```
 
 ## Acknowledgements

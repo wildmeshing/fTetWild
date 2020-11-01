@@ -86,8 +86,16 @@ namespace floatTetWild {
         Scalar eps_2_simplification;
         Scalar dd_simplification;
 
-        bool use_general_wn = true;
+        bool disable_filtering = false;
+        bool use_floodfill = false;
+        bool use_general_wn = false;
+        bool use_input_for_wn = false;
         bool coarsen = false;
+
+//        std::function<double(double, double, double)> get_sizing_field_value;//get sizing field value for an point
+//#ifdef NEW_ENVELOPE
+//        std::vector<double> adaptive_epsilons;//same length as the list of input faces
+//#endif
 
         bool init(Scalar bbox_diag_l) {
             if (stage > 5)

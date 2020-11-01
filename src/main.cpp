@@ -177,60 +177,59 @@ int main(int argc, char **argv) {
     command_line.add_option("-o,--output", params.output_path,
                             "Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')");
 
-    command_line.add_option("--tag", params.tag_path, "");
+    command_line.add_option("--tag", params.tag_path, "Tag input faces for Boolean operation.")->check(CLI::ExistingFile);
 //    const int UNION = 0;
 //    const int INTERSECTION = 1;
 //    const int DIFFERENCE = 2;
     int boolean_op = -1;
     std::string csg_file="";
-    command_line.add_option("--op", boolean_op, "");
+    command_line.add_option("--op", boolean_op, "Boolean operation: 0: union, 1: intersection, 2: difference.");
 
     command_line.add_option("-l,--lr", params.ideal_edge_length_rel,
                             "ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)");
     command_line.add_option("-e,--epsr", params.eps_rel,
                             "epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)");
 
-    command_line.add_option("--max-its", params.max_its, "");
-    command_line.add_option("--stop-energy", params.stop_energy, "");
-    command_line.add_option("--stage", params.stage, "");
-    command_line.add_option("--stop-p", params.stop_p, "");
+    command_line.add_option("--max-its", params.max_its, "(for debugging usage only)");
+    command_line.add_option("--stop-energy", params.stop_energy, "Stop optimization when max energy is lower than this.");
+    command_line.add_option("--stage", params.stage, "(for debugging usage only)");
+    command_line.add_option("--stop-p", params.stop_p, "(for debugging usage only)");
 
-    command_line.add_option("--postfix", params.postfix, "");
+    command_line.add_option("--postfix", params.postfix, "(for debugging usage only)");
     command_line.add_option("--log", params.log_path, "Log info to given file.");
     command_line.add_option("--level", params.log_level, "Log level (0 = most verbose, 6 = off).");
 
     command_line.add_flag("-q,--is-quiet", params.is_quiet, "Mute console output. (optional)");
-    command_line.add_flag("--skip-simplify", skip_simplify, "");
+    command_line.add_flag("--skip-simplify", skip_simplify, "skip preprocessing.");
     command_line.add_flag("--no-binary", nobinary, "export meshes as ascii");
     command_line.add_flag("--no-color", nocolor, "don't export color");
-    command_line.add_flag("--not-sort-input", params.not_sort_input, "");
-    command_line.add_flag("--correct-surface-orientation", params.correct_surface_orientation, "");
+    command_line.add_flag("--not-sort-input", params.not_sort_input, "(for debugging usage only)");
+    command_line.add_flag("--correct-surface-orientation", params.correct_surface_orientation, "(for debugging usage only)");
 
-    command_line.add_option("--envelope-log", params.envelope_log, "");
-    command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "");
-    command_line.add_flag("--manifold-surface", params.manifold_surface, "");
-    command_line.add_flag("--coarsen", params.coarsen, "");
+    command_line.add_option("--envelope-log", params.envelope_log, "(for debugging usage only)");
+    command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "Smooth the open boundary.");
+    command_line.add_flag("--manifold-surface", params.manifold_surface, "Force the output to be manifold.");
+    command_line.add_flag("--coarsen", params.coarsen, "Coarsen the output as much as possible.");
     command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
 
-    command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "");//tmp
+    command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "(for debugging usage only)");//tmp
 
-    bool disable_wn = false;
-    command_line.add_flag("--disable-wn", disable_wn, "Disable winding number.");
-    bool use_floodfill = false;
-    command_line.add_flag("--use-floodfill", use_floodfill, "Use flood-fill to extract interior volume.");
+    command_line.add_flag("--disable-filtering", params.disable_filtering, "Disable filtering out outside elements.");
+    command_line.add_flag("--use-floodfill", params.use_floodfill, "Use flood-fill to extract interior volume.");
     command_line.add_flag("--use-general-wn", params.use_general_wn, "Use general winding number.");
+    command_line.add_flag("--use-input-for-wn", params.use_input_for_wn, "Use input surface for winding number.");
 
     command_line.add_option("--bg-mesh", params.background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
 
     std::string epsr_tags;
-    command_line.add_option("--epsr-tags", epsr_tags, "");
+    command_line.add_option("--epsr-tags", epsr_tags, "List of envelope size for each input faces.")->check(CLI::ExistingFile);
 
 #ifdef LIBIGL_WITH_TETGEN
     command_line.add_flag("--tetgen", run_tet_gen, "run tetgen too. (optional)");
 #endif
     unsigned int max_threads = std::numeric_limits<unsigned int>::max();
 #ifdef FLOAT_TETWILD_USE_TBB
-    command_line.add_option("--max-threads", max_threads, "maximum number of threads used");
+    command_line.add_option("--max-threads", max_threads, "Maximum number of threads used");
 #endif
 
     try {
@@ -458,9 +457,11 @@ int main(int argc, char **argv) {
                     t.is_removed = true;
             }
         } else {
-            if(!disable_wn) {
-                if(use_floodfill) {
+            if(!params.disable_filtering) {
+                if(params.use_floodfill) {
                     filter_outside_floodfill(mesh);
+                } else if(params.use_input_for_wn){
+                    filter_outside(mesh, input_vertices, input_faces);
                 } else
                     filter_outside(mesh);
             }

@@ -31,6 +31,7 @@ namespace floatTetWild {
     void boolean_operation(Mesh& mesh, const json& csg_tree_with_ids, const std::vector<std::string> &meshes);
     void boolean_operation(Mesh& mesh, const json &csg_tree_with_ids, const std::vector<Eigen::VectorXd> &w);
     void boolean_operation(Mesh& mesh, const json &csg_tree_with_ids);
+    void filter_outside(Mesh& mesh, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces);
     void filter_outside(Mesh& mesh, bool invert_faces = false);
     void filter_outside_floodfill(Mesh& mesh, bool invert_faces = false);
     void mark_outside(Mesh& mesh, bool invert_faces = false);

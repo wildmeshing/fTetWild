@@ -1644,6 +1644,83 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
     }
 }
 
+void floatTetWild::filter_outside(Mesh& mesh, const std::vector<Vector3> &input_vertices, const std::vector<Vector3i> &input_faces){
+    Eigen::MatrixXd C(mesh.get_t_num(), 3);
+    C.setZero();
+    int index = 0;
+    for (size_t i = 0; i < mesh.tets.size(); i++) {
+        if (mesh.tets[i].is_removed)
+            continue;
+        for (int j = 0; j < 4; j++)
+            C.row(index) += mesh.tet_vertices[mesh.tets[i][j]].pos.cast<double>();
+        C.row(index) /= 4.0;
+        index++;
+    }
+//    C.conservativeResize(index, 3);
+
+    Eigen::Matrix<Scalar, Eigen::Dynamic, 3> V(input_vertices.size(), 3);
+    Eigen::Matrix<int, Eigen::Dynamic, 3> F(input_faces.size(), 3);
+//    get_tracked_surface(mesh, V, F);
+    ///
+    for(int i=0;i<input_vertices.size();i++)
+        V.row(i) = input_vertices[i];
+    for(int i=0;i<input_faces.size();i++)
+        F.row(i) = input_faces[i];
+    ///
+    Eigen::VectorXd W;
+//    if (invert_faces) {
+//        Eigen::Matrix<int, Eigen::Dynamic, 1> tmp = F.col(1);
+//        F.col(1) = F.col(2).eval();
+//        F.col(2) = tmp;
+//    }
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
+        igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+
+    index = 0;
+    int n_tets = 0;
+    std::vector<bool> old_flags(mesh.tets.size());
+    for (int t_id = 0; t_id < mesh.tets.size(); ++t_id) {
+        auto &t = mesh.tets[t_id];
+        old_flags[t_id] = t.is_removed;
+
+        if (t.is_removed)
+            continue;
+        if (W(index) <= 0.5) {
+            t.is_removed = true;
+        } else
+            n_tets++;
+        index++;
+    }
+
+//    if (n_tets <= 0) {
+//        if (invert_faces)
+//            logger().error("Empty mesh, problem with inverted faces");
+//        else {
+//            for (int t_id = 0; t_id < mesh.tets.size(); ++t_id) {
+//                auto &t = mesh.tets[t_id];
+//                t.is_removed = old_flags[t_id];
+//            }
+//            logger().debug("Empty mesh trying to reverse the faces");
+//            filter_outside(mesh, true);
+//        }
+//    }
+
+    for (auto &v: mesh.tet_vertices) {
+        if (v.is_removed)
+            continue;
+        bool is_remove = true;
+        for (int t_id: v.conn_tets) {
+            if (!mesh.tets[t_id].is_removed) {
+                is_remove = false;
+                break;
+            }
+        }
+        v.is_removed = is_remove;
+    }
+}
+
 void floatTetWild::filter_outside_floodfill(Mesh& mesh, bool invert_faces) {
     auto &tets = mesh.tets;
     auto &tet_vertices = mesh.tet_vertices;

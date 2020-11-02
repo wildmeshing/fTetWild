@@ -42,7 +42,7 @@ namespace floatTetWild {
         bool coarsen = false;
 
         bool apply_sizing_field = false;
-        std::function<double(Vector3)> get_sizing_field_value;//get sizing field value for an point
+        std::function<double(const Vector3&)> get_sizing_field_value;//get sizing field value for an point
 
 #ifdef NEW_ENVELOPE
         std::vector<double> input_epsr_tags;//same length as the list of input faces

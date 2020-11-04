@@ -5,7 +5,8 @@
 #include <windingnumber/UT_SolidAngle.h>
 
 #include <cstdlib>
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 
 namespace floatTetWild {

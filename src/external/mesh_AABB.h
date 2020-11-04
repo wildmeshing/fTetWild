@@ -63,7 +63,7 @@ namespace floatTetWild {
      * \details Used to quickly compute facet intersection and
      *  to locate the nearest facet from 3d query points.
      */
-    class GEOGRAM_API MeshFacetsAABBWithEps {
+    class MeshFacetsAABBWithEps {
     public:
         /**
          * \brief Creates the Axis Aligned Bounding Boxes tree.

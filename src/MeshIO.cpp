@@ -12,7 +12,6 @@
 #include <floattetwild/MshSaver.h>
 #include <floattetwild/Logger.hpp>
 
-#undef IGL_STATIC_LIBRARY
 #include <igl/Timer.h>
 #include <igl/boundary_facets.h>
 #include <igl/remove_unreferenced.h>

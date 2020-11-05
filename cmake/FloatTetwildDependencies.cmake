@@ -115,8 +115,8 @@ endif()
 ##target_link_libraries(fast_winding_number PRIVATE tbb::tbb)
 #target_compile_features(fast_winding_number PRIVATE ${CXX17_FEATURES})
 #target_include_directories(fast_winding_number PUBLIC "${FLOAT_TETWILD_EXTERNAL}/")
-#
-#if(FLOAT_TETWILD_WITH_EXACT_ENVELOPE)
-#	float_tetwild_download_exact_envelope()
-#	add_subdirectory(${FLOAT_TETWILD_EXTERNAL}/exact_envelope)
-#endif()
+
+if(FLOAT_TETWILD_WITH_EXACT_ENVELOPE)
+	float_tetwild_download_exact_envelope()
+	add_subdirectory(${FLOAT_TETWILD_EXTERNAL}/exact_envelope)
+endif()

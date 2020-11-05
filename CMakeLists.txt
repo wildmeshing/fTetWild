@@ -50,7 +50,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ################################################################################
 
 # FloatTetwild options
-option(FLOAT_TETWILD_ENABLE_TBB         "Enable TBB"                    ON)
+option(FLOAT_TETWILD_ENABLE_TBB         "Enable TBB"                    OFF)
 option(FLOAT_TETWILD_USE_FLOAT          "Use floats instead of double"  OFF)
 option(FLOAT_TETWILD_WITH_SANITIZERS    "Use sanitizers"                OFF)
 option(FLOAT_TETWILD_WITH_EXACT_ENVELOPE    "Use exact envelope"        OFF)
@@ -97,7 +97,7 @@ ENDIF()
 # ENDIF()
 
 # add_library() can only be called without any source since CMake 3.11 ...
-add_library(${PROJECT_NAME} src/Logger.cpp)
+add_library(${PROJECT_NAME} src/Logger.cpp src/external/WindingNumber.h)
 
 # Public include directory for FloatTetwild
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
@@ -135,7 +135,7 @@ target_link_libraries(${PROJECT_NAME}
 		geogram::geogram
 		spdlog::spdlog
 		Threads::Threads
-		fast_winding_number
+#		fast_winding_number
 		json
 		${GMP_LIBRARIES}
 		# ${MPFR_LIBRARIES}

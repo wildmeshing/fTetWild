@@ -28,7 +28,7 @@ endfunction()
 function(float_tetwild_download_libigl)
     float_tetwild_download_project(libigl
         GIT_REPOSITORY https://github.com/libigl/libigl.git
-        GIT_TAG        015ac35cd135e3a40c3e71443eeda4a9a4ccf7f5
+        GIT_TAG        fb3bd3571e7cc36d99ea505bc5ccba99650ad73c
     )
 endfunction()
 
@@ -104,13 +104,13 @@ function(float_tetwild_download_aabbcc)
             )
 endfunction()
 
-## winding number
-function(float_tetwild_download_windingnumber)
-    float_tetwild_download_project(windingnumber
-            GIT_REPOSITORY https://github.com/alecjacobson/WindingNumber.git
-            GIT_TAG        1e6081e52905575d8e98fb8b7c0921274a18752f
-            )
-endfunction()
+### winding number
+#function(float_tetwild_download_windingnumber)
+#    float_tetwild_download_project(windingnumber
+#            GIT_REPOSITORY https://github.com/alecjacobson/WindingNumber.git
+#            GIT_TAG        bde8780ec848fa71c1294a0af50347e968b19493
+#            )
+#endfunction()
 
 
 ## exact envelope

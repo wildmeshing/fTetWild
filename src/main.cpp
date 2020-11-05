@@ -37,10 +37,8 @@
 #include <geogram/basic/logger.h>
 #include <geogram/basic/command_line.h>
 #include <geogram/basic/command_line_args.h>
-
 #include <geogram/mesh/mesh.h>
-
-#include<bitset>
+#include <bitset>
 
 using namespace floatTetWild;
 using namespace Eigen;
@@ -581,48 +579,48 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
-#include <igl/readSTL.h>
-#include <igl/writeSTL.h>
-#include <igl/writeOFF.h>
-void connect_2_meshes(std::string m1, std::string m2, std::string m) {
-    Eigen::MatrixXd v1, v2, _;
-    Eigen::MatrixXi f1, f2;
-
-    igl::readSTL(m1, v1, f1, _);
-    igl::readSTL(m2, v2, f2, _);
-
-    MatrixXd V(v1.rows() + v2.rows(), v1.cols());
-    V << v1, v2;
-
-    int v1_rows = v1.rows();
-    for (int i = 0; i < f2.rows(); i++) {
-        for (int j = 0; j < 3; j++)
-            f2(i, j) += v1_rows;
-    }
-    MatrixXi F(f1.rows() + f2.rows(), f1.cols());
-    F << f1, f2;
-
-//    igl::writeOFF(m+".off", V, F);
-    igl::writeSTL(m+".stl", V, F);
-    std::ofstream fout(m+"_tags.txt");
-    for (int i = 0; i < f1.rows(); i++)
-        fout << 1 << endl;
-    for (int i = 0; i < f2.rows(); i++)
-        fout << 2 << endl;
-    fout.close();
-
-    //pausee();
-}
-
-#include <igl/readMESH.h>
-void test_manifold(std::string& file_name){
-    Eigen::MatrixXd V;
-    Eigen::MatrixXi T, F;
-    igl::readMESH(file_name, V, T, F);
-
-    Mesh mesh;
-
-    Eigen::MatrixXd V_sf;
-    Eigen::MatrixXi F_sf;
-    manifold_surface(mesh, V_sf, F_sf);
-}
+//#include <igl/readSTL.h>
+//#include <igl/writeSTL.h>
+//#include <igl/writeOFF.h>
+//void connect_2_meshes(std::string m1, std::string m2, std::string m) {
+//    Eigen::MatrixXd v1, v2, _;
+//    Eigen::MatrixXi f1, f2;
+//
+//    igl::readSTL(m1, v1, f1, _);
+//    igl::readSTL(m2, v2, f2, _);
+//
+//    MatrixXd V(v1.rows() + v2.rows(), v1.cols());
+//    V << v1, v2;
+//
+//    int v1_rows = v1.rows();
+//    for (int i = 0; i < f2.rows(); i++) {
+//        for (int j = 0; j < 3; j++)
+//            f2(i, j) += v1_rows;
+//    }
+//    MatrixXi F(f1.rows() + f2.rows(), f1.cols());
+//    F << f1, f2;
+//
+////    igl::writeOFF(m+".off", V, F);
+//    igl::writeSTL(m+".stl", V, F);
+//    std::ofstream fout(m+"_tags.txt");
+//    for (int i = 0; i < f1.rows(); i++)
+//        fout << 1 << endl;
+//    for (int i = 0; i < f2.rows(); i++)
+//        fout << 2 << endl;
+//    fout.close();
+//
+//    //pausee();
+//}
+//
+//#include <igl/readMESH.h>
+//void test_manifold(std::string& file_name){
+//    Eigen::MatrixXd V;
+//    Eigen::MatrixXi T, F;
+//    igl::readMESH(file_name, V, T, F);
+//
+//    Mesh mesh;
+//
+//    Eigen::MatrixXd V_sf;
+//    Eigen::MatrixXi F_sf;
+//    manifold_surface(mesh, V_sf, F_sf);
+//}

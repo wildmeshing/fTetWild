@@ -413,6 +413,78 @@ void MeshIO::load_mesh(std::vector<Vector3>&  points,
         faces[i] << input.facets.vertex(i, 0), input.facets.vertex(i, 1), input.facets.vertex(i, 2);
 }
 
+void MeshIO::load_mesh(std::vector<Vector3>&  points,
+                       std::vector<Vector3i>& faces,
+                       GEO::Mesh&             input,
+                       std::vector<int>&      flags,
+                       std::vector<double>& epsr_flags) {
+    logger().debug("Loading mesh from data...");
+    igl::Timer timer;
+    timer.start();
+    input.clear(false, false);
+
+    input.clear();
+    input.vertices.create_vertices((int) points.size());
+    for (int i = 0; i < (int) input.vertices.nb(); ++i) {
+        GEO::vec3 &p = input.vertices.point(i);
+        p[0] = points[i](0);
+        p[1] = points[i](1);
+        p[2] = points[i](2);
+    }
+    // Setup faces
+    input.facets.create_triangles((int) faces.size());
+
+    for (int c = 0; c < (int) input.facets.nb(); ++c) {
+        for (int lv = 0; lv < 3; ++lv) {
+            input.facets.set_vertex(c, lv, faces[c](lv));
+        }
+    }
+
+    bool is_valid = (flags.size() == input.facets.nb());
+    if (is_valid) {
+        assert(flags.size() == input.facets.nb());
+        GEO::Attribute<int> bflags(input.facets.attributes(), "bbflags");
+        for (int index = 0; index < (int) input.facets.nb(); ++index) {
+            bflags[index] = flags[index];
+        }
+    }
+    bool is_valid_epsr = (epsr_flags.size() == input.facets.nb());
+    if (is_valid_epsr) {
+        GEO::Attribute<double> eflags(input.facets.attributes(), "eflags");
+        for (int index = 0; index < (int) input.facets.nb(); ++index) {
+            eflags[index] = epsr_flags[index];
+        }
+    }
+
+    GEO::mesh_reorder(input, GEO::MESH_ORDER_MORTON);
+
+    if (is_valid) {
+        flags.clear();
+        flags.resize(input.facets.nb());
+        GEO::Attribute<int> bflags(input.facets.attributes(), "bbflags");
+        for (int index = 0; index < (int) input.facets.nb(); ++index) {
+            flags[index] = bflags[index];
+        }
+    }
+    if(is_valid_epsr){
+        epsr_flags.clear();
+        epsr_flags.resize(input.facets.nb());
+        GEO::Attribute<double> eflags(input.facets.attributes(), "eflags");
+        for (int index = 0; index < (int)input.facets.nb(); ++index) {
+            epsr_flags[index] = eflags[index];
+        }
+    }
+
+    points.resize(input.vertices.nb());
+    for (size_t i = 0; i < points.size(); i++)
+        points[i] << (input.vertices.point(i))[0], (input.vertices.point(i))[1],
+                (input.vertices.point(i))[2];
+
+    faces.resize(input.facets.nb());
+    for (size_t i = 0; i < faces.size(); i++)
+        faces[i] << input.facets.vertex(i, 0), input.facets.vertex(i, 1), input.facets.vertex(i, 2);
+}
+
 void MeshIO::write_mesh(const std::string&      path,
                         const Mesh&             mesh,
                         const std::vector<int>& t_ids,

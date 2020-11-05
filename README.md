@@ -58,6 +58,8 @@ sudo apt-get install gmp
 conda install -c conda-forge mpir
 ```
 
+**Note Windows** The executable needs that the file `mpir.dll` is in the same directiory of `FloatTetwild_bin.exe`. Once you compliled the code, copy `mpir.dll` (e.g., `<conda_dir>\Library\bin`) to the directoy containing `FloatTetwild_bin.exe`.
+
 **Note** if cmake cannot find gmp you need to export the envirnement variable `GMP_INC` and `GMP_LIB` to the folder where you installed (e.g., `<conda_dir>\Library\include` for `GMP_INC` and `<conda_dir>\Library\lib` for `GMP_LIB`).
 
 - Check the installation:

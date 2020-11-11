@@ -84,7 +84,7 @@ jobs:
         run: cd build; ctest --verbose --output-on-failure
 
       - name: Run Example
-        run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0
+        run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0 --stop-energy 100
 
   ####################
   # Windows
@@ -168,4 +168,4 @@ jobs:
           cd build
           cp C:\Miniconda\Library\bin\mpir.dll .\
           cp C:\Miniconda\Library\bin\gmp.dll .\
-          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0
+          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0  --stop-energy 100

@@ -31,6 +31,7 @@
 #include <tbb/atomic.h>
 //#include <floattetwild/FloatTetCuttingParallel.h>
 #include <tbb/concurrent_queue.h>
+#include <tbb/concurrent_vector.h>
 #endif
 
 #include <bitset>

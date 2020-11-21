@@ -17,10 +17,6 @@
 #include <floattetwild/AABBWrapper.h>
 #include <floattetwild/CutMesh.h>
 
-#ifdef FLOAT_TETWILD_USE_TBB
-#include <tbb/concurrent_vector.h>
-#endif
-
 #include <floattetwild/Rational.h>
 namespace floatTetWild {
     void match_surface_fs(const Mesh &mesh,

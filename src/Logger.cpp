@@ -11,13 +11,10 @@
 
 #include "Logger.hpp"
 #include <spdlog/async.h>
-#include <spdlog/details/registry.h>
-#include <spdlog/details/thread_pool.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <iostream>
 #include <memory>
-#include <mutex>
+#include <vector>
 
 namespace floatTetWild {
 

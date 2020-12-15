@@ -1,7 +1,29 @@
 # Fast Tetrahedral Meshing in the Wild
-<!-- ![](docs/teaser.png) -->
+![](./figs/1k.jpg)
 
+Yixin Hu, Teseo Schneider, Bolun Wang, Denis Zorin, Daniele Panozzo.
+ACM Transactions on Graphics (SIGGRAPH 2020)
 
+```bash
+@article{10.1145/3386569.3392385,
+author = {Hu, Yixin and Schneider, Teseo and Wang, Bolun and Zorin, Denis and Panozzo, Daniele},
+title = {Fast Tetrahedral Meshing in the Wild},
+year = {2020},
+issue_date = {July 2020},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {39},
+number = {4},
+issn = {0730-0301},
+url = {https://doi.org/10.1145/3386569.3392385},
+doi = {10.1145/3386569.3392385},
+journal = {ACM Trans. Graph.},
+month = jul,
+articleno = {117},
+numpages = {18},
+keywords = {mesh generation, robust geometry processing, tetrahedral meshing}
+}
+```
 
 ## Important Tips
 

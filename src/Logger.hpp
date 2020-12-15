@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include <spdlog/fmt/bundled/ranges.h>
 #include <spdlog/spdlog.h>
+#include <memory>
 
 namespace floatTetWild {
 

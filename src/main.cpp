@@ -13,19 +13,19 @@
 #include <thread>
 #endif
 
-#include <floattetwild/Mesh.hpp>
-#include <floattetwild/MeshIO.hpp>
+#include <floattetwild/AABBWrapper.h>
 #include <floattetwild/FloatTetDelaunay.h>
 #include <floattetwild/LocalOperations.h>
 #include <floattetwild/MeshImprovement.h>
 #include <floattetwild/Simplification.h>
-#include <floattetwild/AABBWrapper.h>
 #include <floattetwild/Statistics.h>
 #include <floattetwild/TriangleInsertion.h>
 #include <floattetwild/CSGTreeParser.hpp>
+#include <floattetwild/Mesh.hpp>
+#include <floattetwild/MeshIO.hpp>
 
-#include <floattetwild/Logger.hpp>
 #include <Eigen/Dense>
+#include <floattetwild/Logger.hpp>
 
 #include <igl/Timer.h>
 #include <igl/write_triangle_mesh.h>
@@ -34,47 +34,46 @@
 #include <igl/copyleft/tetgen/tetrahedralize.h>
 #endif
 
-#include <geogram/basic/logger.h>
 #include <geogram/basic/command_line.h>
 #include <geogram/basic/command_line_args.h>
+#include <geogram/basic/logger.h>
 #include <geogram/mesh/mesh.h>
 #include <bitset>
 
 using namespace floatTetWild;
 using namespace Eigen;
 
-
-class GeoLoggerForward: public GEO::LoggerClient {
+class GeoLoggerForward : public GEO::LoggerClient
+{
     std::shared_ptr<spdlog::logger> logger_;
 
-public:
+  public:
     template<typename T>
-    GeoLoggerForward(T logger) : logger_(logger) {}
+    GeoLoggerForward(T logger)
+        : logger_(logger)
+    {}
 
-private:
-    std::string truncate(const std::string &msg) {
+  private:
+    std::string truncate(const std::string& msg)
+    {
         static size_t prefix_len = GEO::CmdLine::ui_feature(" ", false).size();
         return msg.substr(prefix_len, msg.size() - 1 - prefix_len);
     }
 
-protected:
-    void div(const std::string &title) override {
+  protected:
+    void div(const std::string& title) override
+    {
         logger_->trace(title.substr(0, title.size() - 1));
     }
 
-    void out(const std::string &str) override {
-        logger_->info(truncate(str));
-    }
+    void out(const std::string& str) override { logger_->info(truncate(str)); }
 
-    void warn(const std::string &str) override {
-        logger_->warn(truncate(str));
-    }
+    void warn(const std::string& str) override { logger_->warn(truncate(str)); }
 
-    void err(const std::string &str) override {
-        logger_->error(truncate(str));
-    }
+    void err(const std::string& str) override { logger_->error(truncate(str)); }
 
-    void status(const std::string &str) override {
+    void status(const std::string& str) override
+    {
         // Errors and warnings are also dispatched as status by geogram, but without
         // the "feature" header. We thus forward them as trace, to avoid duplicated
         // logger info...
@@ -83,72 +82,73 @@ protected:
 };
 
 #include <geogram/basic/common.h>
-#include <geogram/basic/numeric.h>
 #include <geogram/basic/geometry.h>
+#include <geogram/basic/numeric.h>
 #include <floattetwild/Predicates.hpp>
 
-#include <geogram/mesh/mesh_AABB.h>
 #include <floattetwild/MshLoader.h>
+#include <geogram/mesh/mesh_AABB.h>
 
 void connect_2_meshes(std::string m1, std::string m2, std::string m);
 
-//extern "C" void exactinit();
-int main(int argc, char **argv) {
+// extern "C" void exactinit();
+int main(int argc, char** argv)
+{
 #ifdef STORE_SAMPLE_POINTS
-    cout<<"STORE_SAMPLE_POINTS defined"<<endl;
+    cout << "STORE_SAMPLE_POINTS defined" << endl;
 #endif
 
-//    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
-//                     "/Users/yixinhu/Downloads/test_cutting/37627.stl");
+    //    connect_2_meshes("/Users/yixinhu/Downloads/test_cutting/100729.stl",
+    //                     "/Users/yixinhu/Downloads/test_cutting/37627.stl");
 
-//    connect_2_meshes("/Users/yixinhu/Downloads/stamp.stl",
-//                     "/Users/yixinhu/Downloads/cookies.stl", "stamp-cookies");
+    //    connect_2_meshes("/Users/yixinhu/Downloads/stamp.stl",
+    //                     "/Users/yixinhu/Downloads/cookies.stl", "stamp-cookies");
 
-//    connect_2_meshes("/Users/yixinhu/Downloads/cylinder.stl",
-//                     "/Users/yixinhu/Downloads/metatron.stl", "cylinder-metatron");
+    //    connect_2_meshes("/Users/yixinhu/Downloads/cylinder.stl",
+    //                     "/Users/yixinhu/Downloads/metatron.stl", "cylinder-metatron");
 
-//    return 0;
-//    igl::Timer test_timer;
-//    int n = 1e8;
-//    std::vector<std::array<int, 2>> edges(n);
-//    for(int i=0;i<n;i++){
-////        edges[i] = {{rand() % 30, rand() % 30}};
-//        edges[i] = {{rand() % 7, rand() % 7}};
-//    }
-//    test_timer.start();
-//    int sum = 0;
-//    for(int i=0;i<n;i++){
-////        edges[i] = {{edges[i][1], edges[i][0]}};
-//        sum += edges[i][0]%4;
-////        for(int j=0;j<4;j++)
-////            sum+=edges[i][mod2(j)];
-//    }
-//    cout<<sum<<endl;
-//    cout<<test_timer.getElapsedTime()<<endl;
-//
-//    for(int i=0;i<n;i++){
-////        edges[i] = {{rand() % 30, rand() % 30}};
-//        edges[i] = {{rand() % 7, rand() % 7}};
-//    }
-//    test_timer.start();
-//    int sum1 = 0;
-//    for(int i=0;i<n;i++){
-////        std::swap(edges[i][0], edges[i][1]);
-//        sum1 += mod4(edges[i][0]);
-////        for(short int j=0;j<4;j++)
-////            sum1+=edges[i][mod2(j)];
-//    }
-//    cout<<sum1<<endl;
-//    cout<<test_timer.getElapsedTime()<<endl;
-//
-//    return 0;
+    //    return 0;
+    //    igl::Timer test_timer;
+    //    int n = 1e8;
+    //    std::vector<std::array<int, 2>> edges(n);
+    //    for(int i=0;i<n;i++){
+    ////        edges[i] = {{rand() % 30, rand() % 30}};
+    //        edges[i] = {{rand() % 7, rand() % 7}};
+    //    }
+    //    test_timer.start();
+    //    int sum = 0;
+    //    for(int i=0;i<n;i++){
+    ////        edges[i] = {{edges[i][1], edges[i][0]}};
+    //        sum += edges[i][0]%4;
+    ////        for(int j=0;j<4;j++)
+    ////            sum+=edges[i][mod2(j)];
+    //    }
+    //    cout<<sum<<endl;
+    //    cout<<test_timer.getElapsedTime()<<endl;
+    //
+    //    for(int i=0;i<n;i++){
+    ////        edges[i] = {{rand() % 30, rand() % 30}};
+    //        edges[i] = {{rand() % 7, rand() % 7}};
+    //    }
+    //    test_timer.start();
+    //    int sum1 = 0;
+    //    for(int i=0;i<n;i++){
+    ////        std::swap(edges[i][0], edges[i][1]);
+    //        sum1 += mod4(edges[i][0]);
+    ////        for(short int j=0;j<4;j++)
+    ////            sum1+=edges[i][mod2(j)];
+    //    }
+    //    cout<<sum1<<endl;
+    //    cout<<test_timer.getElapsedTime()<<endl;
+    //
+    //    return 0;
 
 #ifndef WIN32
     setenv("GEO_NO_SIGNAL_HANDLER", "1", 1);
 #endif
 
     GEO::initialize();
-//    exactinit();
+    //    exactinit();
 
     std::vector<int> indices(20);
     std::iota(std::begin(indices), std::end(indices), 0);
@@ -162,36 +162,47 @@ int main(int argc, char **argv) {
     GEO::CmdLine::import_arg_group("pre");
     GEO::CmdLine::import_arg_group("algo");
 
-    bool run_tet_gen = false;
+    bool run_tet_gen   = false;
     bool skip_simplify = false;
-    bool nobinary = false;
-    bool nocolor = false;
+    bool nobinary      = false;
+    bool nocolor       = false;
+    bool export_raw    = false;
 
-    Mesh mesh;
-    Parameters &params = mesh.params;
+    Mesh        mesh;
+    Parameters& params = mesh.params;
 
-    CLI::App command_line{"float-tetwild"};
-    command_line.add_option("-i,--input", params.input_path,
-                            "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)")->check(
-            CLI::ExistingFile);
-    command_line.add_option("-o,--output", params.output_path,
-                            "Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')");
+    CLI::App command_line {"float-tetwild"};
+    command_line
+      .add_option("-i,--input",
+                  params.input_path,
+                  "Input surface mesh INPUT in .off/.obj/.stl/.ply format. (string, required)")
+      ->check(CLI::ExistingFile);
+    command_line.add_option("-o,--output",
+                            params.output_path,
+                            "Output tetmesh OUTPUT in .msh format. (string, optional, default: "
+                            "input_file+postfix+'.msh')");
 
-    command_line.add_option("--tag", params.tag_path, "Tag input faces for Boolean operation.")->check(CLI::ExistingFile);
-//    const int UNION = 0;
-//    const int INTERSECTION = 1;
-//    const int DIFFERENCE = 2;
-    int boolean_op = -1;
-    std::string csg_file="";
-    command_line.add_option("--op", boolean_op, "Boolean operation: 0: union, 1: intersection, 2: difference.");
+    command_line.add_option("--tag", params.tag_path, "Tag input faces for Boolean operation.")
+      ->check(CLI::ExistingFile);
+    //    const int UNION = 0;
+    //    const int INTERSECTION = 1;
+    //    const int DIFFERENCE = 2;
+    int         boolean_op = -1;
+    std::string csg_file   = "";
+    command_line.add_option(
+      "--op", boolean_op, "Boolean operation: 0: union, 1: intersection, 2: difference.");
 
-    command_line.add_option("-l,--lr", params.ideal_edge_length_rel,
-                            "ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)");
-    command_line.add_option("-e,--epsr", params.eps_rel,
+    command_line.add_option(
+      "-l,--lr",
+      params.ideal_edge_length_rel,
+      "ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)");
+    command_line.add_option("-e,--epsr",
+                            params.eps_rel,
                             "epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)");
 
     command_line.add_option("--max-its", params.max_its, "(for debugging usage only)");
-    command_line.add_option("--stop-energy", params.stop_energy, "Stop optimization when max energy is lower than this.");
+    command_line.add_option(
+      "--stop-energy", params.stop_energy, "Stop optimization when max energy is lower than this.");
     command_line.add_option("--stage", params.stage, "(for debugging usage only)");
     command_line.add_option("--stop-p", params.stop_p, "(for debugging usage only)");
 
@@ -204,27 +215,41 @@ int main(int argc, char **argv) {
     command_line.add_flag("--no-binary", nobinary, "export meshes as ascii");
     command_line.add_flag("--no-color", nocolor, "don't export color");
     command_line.add_flag("--not-sort-input", params.not_sort_input, "(for debugging usage only)");
-    command_line.add_flag("--correct-surface-orientation", params.correct_surface_orientation, "(for debugging usage only)");
+    command_line.add_flag("--correct-surface-orientation",
+                          params.correct_surface_orientation,
+                          "(for debugging usage only)");
 
     command_line.add_option("--envelope-log", params.envelope_log, "(for debugging usage only)");
-    command_line.add_flag("--smooth-open-boundary", params.smooth_open_boundary, "Smooth the open boundary.");
-    command_line.add_flag("--manifold-surface", params.manifold_surface, "Force the output to be manifold.");
+    command_line.add_flag(
+      "--smooth-open-boundary", params.smooth_open_boundary, "Smooth the open boundary.");
+    command_line.add_flag("--export-raw", export_raw, "Export raw output.");
+    command_line.add_flag(
+      "--manifold-surface", params.manifold_surface, "Force the output to be manifold.");
     command_line.add_flag("--coarsen", params.coarsen, "Coarsen the output as much as possible.");
-    command_line.add_option("--csg", csg_file, "json file containg a csg tree")->check(CLI::ExistingFile);
+    command_line.add_option("--csg", csg_file, "json file containg a csg tree")
+      ->check(CLI::ExistingFile);
 
-    command_line.add_flag("--use-old-energy", floatTetWild::use_old_energy, "(for debugging usage only)");//tmp
+    command_line.add_flag(
+      "--use-old-energy", floatTetWild::use_old_energy, "(for debugging usage only)");  // tmp
 
-    command_line.add_flag("--disable-filtering", params.disable_filtering, "Disable filtering out outside elements.");
-    command_line.add_flag("--use-floodfill", params.use_floodfill, "Use flood-fill to extract interior volume.");
+    command_line.add_flag(
+      "--disable-filtering", params.disable_filtering, "Disable filtering out outside elements.");
+    command_line.add_flag(
+      "--use-floodfill", params.use_floodfill, "Use flood-fill to extract interior volume.");
     command_line.add_flag("--use-general-wn", params.use_general_wn, "Use general winding number.");
-    command_line.add_flag("--use-input-for-wn", params.use_input_for_wn, "Use input surface for winding number.");
+    command_line.add_flag(
+      "--use-input-for-wn", params.use_input_for_wn, "Use input surface for winding number.");
 
     std::string background_mesh = "";
-    command_line.add_option("--bg-mesh", background_mesh, "Background mesh for sizing field (.msh file).")->check(CLI::ExistingFile);
+    command_line
+      .add_option("--bg-mesh", background_mesh, "Background mesh for sizing field (.msh file).")
+      ->check(CLI::ExistingFile);
 
 #ifdef NEW_ENVELOPE
     std::string epsr_tags;
-    command_line.add_option("--epsr-tags", epsr_tags, "List of envelope size for each input faces.")->check(CLI::ExistingFile);
+    command_line
+      .add_option("--epsr-tags", epsr_tags, "List of envelope size for each input faces.")
+      ->check(CLI::ExistingFile);
 #endif
 
 #ifdef LIBIGL_WITH_TETGEN
@@ -237,116 +262,117 @@ int main(int argc, char **argv) {
 
     try {
         command_line.parse(argc, argv);
-    } catch (const CLI::ParseError &e) {
+    }
+    catch (const CLI::ParseError& e) {
         return command_line.exit(e);
     }
 
-
 #ifdef FLOAT_TETWILD_USE_TBB
-    const size_t MB = 1024 * 1024;
-    const size_t stack_size = 64 * MB;
+    const size_t MB          = 1024 * 1024;
+    const size_t stack_size  = 64 * MB;
     unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
-    num_threads = std::min(max_threads, num_threads);
-    params.num_threads = num_threads;
+    num_threads              = std::min(max_threads, num_threads);
+    params.num_threads       = num_threads;
     std::cout << "TBB threads " << num_threads << std::endl;
     tbb::task_scheduler_init scheduler(num_threads, stack_size);
 #endif
 
-//    if(params.is_quiet){
-//        std::streambuf *orig_buf = cout.rdbuf();
-//        cout.rdbuf(NULL);
-//    }
+    //    if(params.is_quiet){
+    //        std::streambuf *orig_buf = cout.rdbuf();
+    //        cout.rdbuf(NULL);
+    //    }
 
     Logger::init(!params.is_quiet, params.log_path);
     params.log_level = std::max(0, std::min(6, params.log_level));
     spdlog::set_level(static_cast<spdlog::level::level_enum>(params.log_level));
     spdlog::flush_every(std::chrono::seconds(3));
 
-    GEO::Logger *geo_logger = GEO::Logger::instance();
+    GEO::Logger* geo_logger = GEO::Logger::instance();
     geo_logger->unregister_all_clients();
     geo_logger->register_client(new GeoLoggerForward(logger().clone("geogram")));
     geo_logger->set_pretty(false);
-
 
     if (params.output_path.empty())
         params.output_path = params.input_path;
     if (params.log_path.empty())
         params.log_path = params.output_path;
 
-
     std::string output_mesh_name = params.output_path;
-    if (params.output_path.size() > 3
-        && params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) == "msh")
+    if (params.output_path.size() > 3 &&
+        params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) ==
+          "msh")
         output_mesh_name = params.output_path;
-    else if (params.output_path.size() > 4
-             && params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) == "mesh")
+    else if (params.output_path.size() > 4 &&
+             params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) ==
+               "mesh")
         output_mesh_name = params.output_path;
     else
         output_mesh_name = params.output_path + "_" + params.postfix + ".msh";
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///set sizing field
+    /// set sizing field
     Eigen::VectorXd V_in;
     Eigen::VectorXi T_in;
     Eigen::VectorXd values;
-    if(!background_mesh.empty()) {
+    if (!background_mesh.empty()) {
         PyMesh::MshLoader mshLoader(background_mesh);
-        V_in = mshLoader.get_nodes();
-        T_in = mshLoader.get_elements();
+        V_in   = mshLoader.get_nodes();
+        T_in   = mshLoader.get_elements();
         values = mshLoader.get_node_field("values");
     }
     if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
-        params.apply_sizing_field = true;
-        params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3 &p) {
+        params.apply_sizing_field     = true;
+        params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3& p) {
             GEO::Mesh bg_mesh;
             bg_mesh.vertices.clear();
-            bg_mesh.vertices.create_vertices((int) V_in.rows() / 3);
+            bg_mesh.vertices.create_vertices((int)V_in.rows() / 3);
             for (int i = 0; i < V_in.rows() / 3; i++) {
-                GEO::vec3 &p = bg_mesh.vertices.point(i);
+                GEO::vec3& p = bg_mesh.vertices.point(i);
                 for (int j = 0; j < 3; j++)
                     p[j] = V_in(i * 3 + j);
             }
             bg_mesh.cells.clear();
-            bg_mesh.cells.create_tets((int) T_in.rows() / 4);
+            bg_mesh.cells.create_tets((int)T_in.rows() / 4);
             for (int i = 0; i < T_in.rows() / 4; i++) {
                 for (int j = 0; j < 4; j++)
                     bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
             }
 
             GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
-            GEO::vec3 geo_p(p[0], p[1], p[2]);
-            int bg_t_id = bg_aabb.containing_tet(geo_p);
+            GEO::vec3          geo_p(p[0], p[1], p[2]);
+            int                bg_t_id = bg_aabb.containing_tet(geo_p);
             if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
                 return -1.;
 
-            //compute barycenter
+            // compute barycenter
             std::array<Vector3, 4> vs;
             for (int j = 0; j < 4; j++) {
-                vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3), V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
+                vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3),
+                                V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
                                 V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
             }
             double value = 0;
             for (int j = 0; j < 4; j++) {
                 Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
-                double d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+                double  d = (vs[(j + 3) % 4] - vs[j]).dot(n);
                 if (d == 0)
                     continue;
                 double weight = abs((p - vs[j]).dot(n) / d);
                 value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
             }
-            return value;// / mesh.params.ideal_edge_length;
+            return value;  // / mesh.params.ideal_edge_length;
         };
     }
 
-    ///set input tage
-    std::vector<Vector3> input_vertices;
+    /// set input tage
+    std::vector<Vector3>  input_vertices;
     std::vector<Vector3i> input_faces;
-    std::vector<int> input_tags;
-//    std::vector<double> input_epsr_tags;
+    std::vector<int>      input_tags;
+    //    std::vector<double> input_epsr_tags;
 
     if (!params.tag_path.empty()) {
         input_tags.reserve(input_faces.size());
-        std::string line;
+        std::string   line;
         std::ifstream fin(params.tag_path);
         if (fin.is_open()) {
             while (getline(fin, line)) {
@@ -357,23 +383,23 @@ int main(int argc, char **argv) {
     }
 
 #ifdef NEW_ENVELOPE
-    if(!epsr_tags.empty()) {
+    if (!epsr_tags.empty()) {
         std::ifstream fin(epsr_tags);
-        std::string line;
-        while (std::getline(fin, line)){
+        std::string   line;
+        while (std::getline(fin, line)) {
             params.input_epsr_tags.push_back(std::stod(line));
         }
         fin.close();
     }
 #endif
 
-    ///set envelope
-    igl::Timer timer;
-    GEO::Mesh sf_mesh;
-    json tree_with_ids;
+    /// set envelope
+    igl::Timer               timer;
+    GEO::Mesh                sf_mesh;
+    json                     tree_with_ids;
     std::vector<std::string> meshes;
-    if(!csg_file.empty()) {
-        json csg_tree = json({});
+    if (!csg_file.empty()) {
+        json          csg_tree = json({});
         std::ifstream file(csg_file);
 
         if (file.is_open())
@@ -386,20 +412,29 @@ int main(int argc, char **argv) {
 
         CSGTreeParser::get_meshes(csg_tree, meshes, tree_with_ids);
 
-        if (!CSGTreeParser::load_and_merge(meshes, input_vertices, input_faces, sf_mesh, input_tags))
+        if (!CSGTreeParser::load_and_merge(
+              meshes, input_vertices, input_faces, sf_mesh, input_tags))
             return EXIT_FAILURE;
 
         // To disable the recent modification of using input for wn, use meshes.clear();
-    } else {
+    }
+    else {
 #ifdef NEW_ENVELOPE
-        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags, params.input_epsr_tags)) {
+        if (!MeshIO::load_mesh(params.input_path,
+                               input_vertices,
+                               input_faces,
+                               sf_mesh,
+                               input_tags,
+                               params.input_epsr_tags)) {
 #else
-        if (!MeshIO::load_mesh(params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
+        if (!MeshIO::load_mesh(
+              params.input_path, input_vertices, input_faces, sf_mesh, input_tags)) {
 #endif
             logger().error("Unable to load mesh at {}", params.input_path);
             MeshIO::write_mesh(output_mesh_name, mesh, false);
             return EXIT_FAILURE;
-        } else if (input_vertices.empty() || input_faces.empty()) {
+        }
+        else if (input_vertices.empty() || input_faces.empty()) {
             MeshIO::write_mesh(output_mesh_name, mesh, false);
             return EXIT_FAILURE;
         }
@@ -415,42 +450,52 @@ int main(int argc, char **argv) {
     }
 
 #ifdef NEW_ENVELOPE
-    if(!epsr_tags.empty())
-        tree.init_sf_tree(input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
+    if (!epsr_tags.empty())
+        tree.init_sf_tree(
+          input_vertices, input_faces, params.input_epsr_tags, params.bbox_diag_length);
     else
         tree.init_sf_tree(input_vertices, input_faces, params.eps);
 #endif
 
 #ifdef LIBIGL_WITH_TETGEN
-    if(run_tet_gen)
-    {
+    if (run_tet_gen) {
         Eigen::MatrixXd tetgen_pts(input_vertices.size(), 3);
         Eigen::MatrixXi tetgen_faces(input_faces.size(), 3);
 
-        for(size_t i = 0; i < input_vertices.size(); ++i)
-        {
+        for (size_t i = 0; i < input_vertices.size(); ++i) {
             tetgen_pts.row(i) = input_vertices[i].cast<double>();
         }
 
-        for(size_t i = 0; i < input_faces.size(); ++i)
-        {
+        for (size_t i = 0; i < input_faces.size(); ++i) {
             tetgen_faces.row(i) = input_faces[i];
         }
 
         std::stringstream buf;
         buf.precision(100);
         buf.setf(std::ios::fixed, std::ios::floatfield);
-        buf<<"Qpq2.0a"<<params.ideal_edge_length*params.ideal_edge_length*params.ideal_edge_length*sqrt(2.)/12.;
+        buf << "Qpq2.0a"
+            << params.ideal_edge_length * params.ideal_edge_length * params.ideal_edge_length *
+                 sqrt(2.) / 12.;
 
         Eigen::MatrixXi tetgen_generated_tets;
         Eigen::MatrixXd tetgen_generated_points;
         Eigen::MatrixXi tetgen_generated_faces;
 
         timer.start();
-        igl::copyleft::tetgen::tetrahedralize(tetgen_pts, tetgen_faces, buf.str(), tetgen_generated_points, tetgen_generated_tets, tetgen_generated_faces);
+        igl::copyleft::tetgen::tetrahedralize(tetgen_pts,
+                                              tetgen_faces,
+                                              buf.str(),
+                                              tetgen_generated_points,
+                                              tetgen_generated_tets,
+                                              tetgen_generated_faces);
         timer.stop();
         logger().info("Tetgen time {}s", timer.getElapsedTimeInSec());
-        stats().record(StateInfo::tetgen_id, timer.getElapsedTimeInSec(), tetgen_generated_points.rows(), tetgen_generated_tets.rows(), 0, 0);
+        stats().record(StateInfo::tetgen_id,
+                       timer.getElapsedTimeInSec(),
+                       tetgen_generated_points.rows(),
+                       tetgen_generated_tets.rows(),
+                       0,
+                       0);
     }
 #endif
 
@@ -461,8 +506,12 @@ int main(int argc, char **argv) {
     tree.init_b_mesh_and_tree(input_vertices, input_faces, mesh);
     logger().info("preprocessing {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    stats().record(StateInfo::preprocessing_id, timer.getElapsedTimeInSec(), input_vertices.size(),
-                   input_faces.size(), -1, -1);
+    stats().record(StateInfo::preprocessing_id,
+                   timer.getElapsedTimeInSec(),
+                   input_vertices.size(),
+                   input_faces.size(),
+                   -1,
+                   -1);
     if (params.log_level <= 1)
         output_component(input_vertices, input_faces, input_tags);
 
@@ -473,84 +522,132 @@ int main(int argc, char **argv) {
     logger().info("#t = {}", mesh.get_t_num());
     logger().info("tetrahedralizing {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    stats().record(StateInfo::tetrahedralization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                   -1, -1);
+    stats().record(StateInfo::tetrahedralization_id,
+                   timer.getElapsedTimeInSec(),
+                   mesh.get_v_num(),
+                   mesh.get_t_num(),
+                   -1,
+                   -1);
 
     timer.start();
     insert_triangles(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree, false);
     logger().info("cutting {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                   mesh.get_max_energy(), mesh.get_avg_energy(),
+    stats().record(StateInfo::cutting_id,
+                   timer.getElapsedTimeInSec(),
+                   mesh.get_v_num(),
+                   mesh.get_t_num(),
+                   mesh.get_max_energy(),
+                   mesh.get_avg_energy(),
                    std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
 
-//    timer.start();
-////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
-//    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
-//    logger().info("cutting {}s", timer.getElapsedTimeInSec());
-//    logger().info("");
-//    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-//                                                   mesh.get_max_energy(), mesh.get_avg_energy(),
-//                                                   std::count(is_face_inserted.begin(), is_face_inserted.end(), false));
+    //    timer.start();
+    ////    cutting(input_vertices, input_faces, mesh, is_face_inserted, tree);
+    //    cutting(input_vertices, input_faces, input_tags, mesh, is_face_inserted, tree);
+    //    logger().info("cutting {}s", timer.getElapsedTimeInSec());
+    //    logger().info("");
+    //    stats().record(StateInfo::cutting_id, timer.getElapsedTimeInSec(), mesh.get_v_num(),
+    //    mesh.get_t_num(),
+    //                                                   mesh.get_max_energy(),
+    //                                                   mesh.get_avg_energy(),
+    //                                                   std::count(is_face_inserted.begin(),
+    //                                                   is_face_inserted.end(), false));
 
     timer.start();
-    optimization(input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
+    optimization(
+      input_vertices, input_faces, input_tags, is_face_inserted, mesh, tree, {{1, 1, 1, 1}});
     logger().info("mesh optimization {}s", timer.getElapsedTimeInSec());
     logger().info("");
-    stats().record(StateInfo::optimization_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                   mesh.get_max_energy(), mesh.get_avg_energy());
+    stats().record(StateInfo::optimization_id,
+                   timer.getElapsedTimeInSec(),
+                   mesh.get_v_num(),
+                   mesh.get_t_num(),
+                   mesh.get_max_energy(),
+                   mesh.get_avg_energy());
 
     timer.start();
     correct_tracked_surface_orientation(mesh, tree);
     logger().info("correct_tracked_surface_orientation done");
-    if(!csg_file.empty())
+
+    if (export_raw) {
+        Eigen::Matrix<Scalar, Eigen::Dynamic, 3> Vt;
+        Eigen::Matrix<int, Eigen::Dynamic, 3>    Ft;
+
+        if (!csg_file.empty()) {
+            int max_id = CSGTreeParser::get_max_id(tree_with_ids);
+
+            for (int i = 0; i <= max_id; ++i) {
+                get_tracked_surface(mesh, Vt, Ft, i);
+                igl::write_triangle_mesh(
+                  params.output_path + "_" + params.postfix + "_" + std::to_string(i) + "_all.obj",
+                  Vt,
+                  Ft);
+            }
+        }
+        else {
+            get_tracked_surface(mesh, Vt, Ft);
+            igl::write_triangle_mesh(
+              params.output_path + "_" + params.postfix + "_all.obj", Vt, Ft);
+        }
+        MeshIO::write_mesh(params.output_path + "_" + params.postfix + "_all.msh", mesh, false);
+    }
+
+    if (!csg_file.empty())
         boolean_operation(mesh, tree_with_ids, meshes);
-    else if(boolean_op >= 0)
+    else if (boolean_op >= 0)
         boolean_operation(mesh, boolean_op);
     else {
         if (params.smooth_open_boundary) {
             smooth_open_boundary(mesh, tree);
-            for (auto &t: mesh.tets) {
+            for (auto& t : mesh.tets) {
                 if (t.is_outside)
                     t.is_removed = true;
             }
-        } else {
-            if(!params.disable_filtering) {
-                if(params.use_floodfill) {
+        }
+        else {
+            if (!params.disable_filtering) {
+                if (params.use_floodfill) {
                     filter_outside_floodfill(mesh);
-                } else if(params.use_input_for_wn){
+                }
+                else if (params.use_input_for_wn) {
                     filter_outside(mesh, input_vertices, input_faces);
-                } else
+                }
+                else
                     filter_outside(mesh);
             }
         }
     }
     Eigen::MatrixXd V_sf;
     Eigen::MatrixXi F_sf;
-    if(params.manifold_surface){
+    if (params.manifold_surface) {
         manifold_surface(mesh, V_sf, F_sf);
-    } else {
+    }
+    else {
         get_surface(mesh, V_sf, F_sf);
     }
-    stats().record(StateInfo::wn_id, timer.getElapsedTimeInSec(), mesh.get_v_num(), mesh.get_t_num(),
-                   mesh.get_max_energy(), mesh.get_avg_energy());
+    stats().record(StateInfo::wn_id,
+                   timer.getElapsedTimeInSec(),
+                   mesh.get_v_num(),
+                   mesh.get_t_num(),
+                   mesh.get_max_energy(),
+                   mesh.get_avg_energy());
     logger().info("after winding number");
     logger().info("#v = {}", mesh.get_v_num());
     logger().info("#t = {}", mesh.get_t_num());
     logger().info("winding number {}s", timer.getElapsedTimeInSec());
     logger().info("");
 
+    //    if (params.output_path.size() > 3
+    //        && params.output_path.substr(params.output_path.size() - 3, params.output_path.size())
+    //        == "msh") MeshIO::write_mesh(params.output_path, mesh, false);
+    //    else if (params.output_path.size() > 4
+    //             && params.output_path.substr(params.output_path.size() - 4,
+    //             params.output_path.size()) == "mesh")
+    //        MeshIO::write_mesh(params.output_path, mesh, false);
+    //    else
+    //        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
 
-//    if (params.output_path.size() > 3
-//        && params.output_path.substr(params.output_path.size() - 3, params.output_path.size()) == "msh")
-//        MeshIO::write_mesh(params.output_path, mesh, false);
-//    else if (params.output_path.size() > 4
-//             && params.output_path.substr(params.output_path.size() - 4, params.output_path.size()) == "mesh")
-//        MeshIO::write_mesh(params.output_path, mesh, false);
-//    else
-//        MeshIO::write_mesh(params.output_path + "_" + params.postfix + ".msh", mesh, false);
-
-    //fortest
+    // fortest
     std::vector<Scalar> colors;
     if (!nocolor) {
         colors.resize(mesh.tets.size(), -1);
@@ -560,10 +657,11 @@ int main(int argc, char **argv) {
             colors[i] = mesh.tets[i].quality;
         }
     }
-    //fortest
+    // fortest
     MeshIO::write_mesh(output_mesh_name, mesh, false, colors, !nobinary, !csg_file.empty());
     igl::write_triangle_mesh(params.output_path + "_" + params.postfix + "_sf.obj", V_sf, F_sf);
-//    MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh, false);
+    //    MeshIO::write_surface_mesh(params.output_path + "_" + params.postfix + "_sf.obj", mesh,
+    //    false);
 
     std::ofstream fout(params.log_path + "_" + params.postfix + ".csv");
     if (fout.good())
@@ -582,7 +680,7 @@ int main(int argc, char **argv) {
 //#include <igl/readSTL.h>
 //#include <igl/writeSTL.h>
 //#include <igl/writeOFF.h>
-//void connect_2_meshes(std::string m1, std::string m2, std::string m) {
+// void connect_2_meshes(std::string m1, std::string m2, std::string m) {
 //    Eigen::MatrixXd v1, v2, _;
 //    Eigen::MatrixXi f1, f2;
 //
@@ -613,7 +711,7 @@ int main(int argc, char **argv) {
 //}
 //
 //#include <igl/readMESH.h>
-//void test_manifold(std::string& file_name){
+// void test_manifold(std::string& file_name){
 //    Eigen::MatrixXd V;
 //    Eigen::MatrixXi T, F;
 //    igl::readMESH(file_name, V, T, F);

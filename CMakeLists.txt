@@ -117,7 +117,7 @@ if(FLOAT_TETWILD_USE_FLOAT)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_USE_FLOAT)
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${GMP_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC

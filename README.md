@@ -27,7 +27,7 @@ keywords = {mesh generation, robust geometry processing, tetrahedral meshing}
 
 ## Important Tips
 
-💡💡💡 **If you are interested in the algorithm details, please refer to our [paper](https://cs.nyu.edu/~yixinhu/ftetwild.pdf) first. We provide plenty of examples and statistics in the paper.**
+💡💡💡 **If you are interested in the algorithm details, please refer to our [paper](https://yixin-hu.github.io/ftetwild.pdf) first. We provide plenty of examples and statistics in the paper.**
 
 💡💡💡 **Check our license first.**
 

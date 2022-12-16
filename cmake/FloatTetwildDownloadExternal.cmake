@@ -91,8 +91,10 @@ endfunction()
 ## Geogram LGPL
 function(float_tetwild_download_geogram)
     float_tetwild_download_project(geogram
-        GIT_REPOSITORY   https://github.com/polyfem/geogram.git
-        GIT_TAG          e6b9612f1146370e40deaa341b4dd7ef90502102
+#        GIT_REPOSITORY   https://github.com/polyfem/geogram.git
+#        GIT_TAG          e6b9612f1146370e40deaa341b4dd7ef90502102
+            GIT_REPOSITORY https://github.com/Yixin-Hu/geogram
+            GIT_TAG        b613750341a6cdd31ae8df80ecfc26ac7ca1a6ad
     )
 endfunction()
 

@@ -27,6 +27,11 @@ keywords = {mesh generation, robust geometry processing, tetrahedral meshing}
 
 ## Important Tips
 
+👀 👀 We have the original version of "fTetWild" - TetWild. Check it out 👉 [TetWild](https://github.com/Yixin-Hu/TetWild).
+
+👀 👀 We have a 2D version of "fTetWild" - TriWild. TriWild is able to deal with both linear and curved constraints. Now we are able to mesh curves robustly! Check it out 👉 [TriWild](https://github.com/wildmeshing/TriWild).
+
+
 💡💡💡 **If you are interested in the algorithm details, please refer to our [paper](https://yixin-hu.github.io/ftetwild.pdf) first. We provide plenty of examples and statistics in the paper.**
 
 💡💡💡 **Check our license first.**

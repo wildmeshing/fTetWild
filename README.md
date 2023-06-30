@@ -102,7 +102,7 @@ This command should show a list of fTetWild parameters.
 
 The inputs of our software are triangle surface meshes in `.off/.obj/.stl/.ply` format.
 
-We support `.mesh/.msh` format output. The default output format is `.msh` with minimum dihedral angle recorded as element scalar field, which can be visualized by software [Gmsh](http://gmsh.info/). You can use `PyMesh::MshLoader` and `PyMesh::MshSaver` in `pymesh/` for read and write `.msh` meshes.
+We support `.mesh/.msh` format output. The default output format is `.msh` with the elements' energy as the scalar field, which can be visualized by software [Gmsh](http://gmsh.info/). You can use `PyMesh::MshLoader` and `PyMesh::MshSaver` in `pymesh/` for read and write `.msh` meshes.
 
 
 ### Features

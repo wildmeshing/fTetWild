@@ -150,7 +150,7 @@ Options:
   --op INT                    Boolean operation: 0: union, 1: intersection, 2: difference.
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
-  --stop-energy FLOAT         Stop optimization when max energy is lower than this.
+  --stop-energy FLOAT         Stop optimization when max energy is lower than this. (double, optional, default: 10.0)
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).
   -q,--is-quiet               Mute console output. (optional)

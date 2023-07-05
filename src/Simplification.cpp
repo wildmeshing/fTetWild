@@ -362,6 +362,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
         }
 
         //real update
+#ifndef FLOAT_TETWILD_USE_TBB
 //        std::unordered_set<int> n_v_ids;//get this info before real update for later usage
         std::vector<int> n_v_ids;//get this info before real update for later usage
         for (int f_id:new_f_ids) {
@@ -371,6 +372,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
             }
         }
         vector_unique(n_v_ids);
+#endif
 
         v_is_removed[v1_id] = true;
         input_vertices[v2_id] = p;

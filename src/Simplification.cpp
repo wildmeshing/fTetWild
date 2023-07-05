@@ -204,6 +204,11 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
         input_tags.push_back(old_input_tags[i]);
     }
 
+    logger().info("remove degenerate triangles and duplicated opposite-oriented triangles:");
+    logger().info("(removing degenerate triangles might leave lone vertices that will be removed later)");
+    logger().info("#v: {} -> {}", V_in.rows(), input_vertices.size());
+    logger().info("#f: {} -> {}", F_in.rows(), input_faces.size());
+
     return true;
 }
 
@@ -491,7 +496,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
     //    cout<<fail_flip<<endl;
     //    cout<<fail_env<<endl;
 //    std::cout<<"#v: "<<build_time<<std::endl;
-    logger().debug("{}  faces are collapsed!!", cnt_suc);
+    logger().debug("{} edges ({} faces) were collapsed!!", cnt_suc, 2*cnt_suc);
 }
 
 void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces,
@@ -615,7 +620,7 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
 //        check_surface(input_vertices, input_faces, f_is_removed, tree, params);
     }
 
-    logger().debug("{}  faces are swapped!!", cnt);
+    logger().debug("{} edges/faces were swapped!!", cnt);
     return;
 
     ///////////////////

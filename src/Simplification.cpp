@@ -523,7 +523,6 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
     for (auto &e: edges) {
         Scalar weight = (input_vertices[e[0]] - input_vertices[e[1]]).squaredNorm();
         sm_queue.push(ElementInQueue(e, weight));
-        sm_queue.push(ElementInQueue(std::array<int, 2>({{e[1], e[0]}}), weight));
     }
 
     int cnt = 0;
@@ -558,25 +557,10 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
             auto &c = input_vertices[input_faces[n12_f_ids[f]][2]];
             old_nvs[f] = ((b - c).cross(a - c)).normalized();
         }
-        if (cos_a0 > -0.999) {//maybe it's for avoiding numerical issue
-            if (old_nvs[0].dot(old_nvs[1]) < 1 - 1e-6)//not coplanar
+        if (cos_a0 > -0.999 and cos_a1 > -0.999) {//if any old face too degenerate, ignore coplanarity
+            if (old_nvs[0].dot(old_nvs[1]) < 1 - SCALAR_ZERO)//not coplanar
                 continue;
         }
-
-        //check inversion
-        auto &old_nv = cos_a1 < cos_a0 ? old_nvs[0] : old_nvs[1];
-        bool is_filp = false;
-        for (int f_id:n12_f_ids) {
-            auto &a = input_vertices[input_faces[f_id][0]];
-            auto &b = input_vertices[input_faces[f_id][1]];
-            auto &c = input_vertices[input_faces[f_id][2]];
-            if (old_nv.dot(((b - c).cross(a - c)).normalized()) < 0) {
-                is_filp = true;
-                break;
-            }
-        }
-        if (is_filp)
-            continue;
 
         //check quality
         Scalar cos_a0_new = get_angle_cos(input_vertices[v1_id], input_vertices[n_v_ids[0]],
@@ -586,31 +570,36 @@ void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Ve
         if (std::min(cos_a0_new, cos_a1_new) <= std::min(cos_a0, cos_a1))
             continue;
 
-        //check envelope
-//        bool is_valid = true;
-//        for(int v_id: n_v_ids) {
-//            if (is_out_envelope({{input_vertices[v_id], input_vertices[v1_id], input_vertices[v2_id]}},
-//                                tree, params)) {
-//                is_valid = false;
-//                break;
-//            }
-//        }
-//        if(!is_valid)
-//            continue;
-        if (is_out_envelope({{input_vertices[v1_id], input_vertices[n_v_ids[0]], input_vertices[n_v_ids[1]]}}, tree,
-                            params)
-            || is_out_envelope({{input_vertices[v2_id], input_vertices[n_v_ids[0]], input_vertices[n_v_ids[1]]}}, tree,
-                               params)) {
-            continue;
-        }
-
-        // real update
+        //update (possibly temporarily) the two faces' vertices
+        auto f1_old = input_faces[n12_f_ids[0]];
+        auto f2_old = input_faces[n12_f_ids[1]];
         for (int j = 0; j < 3; j++) {
             if (input_faces[n12_f_ids[0]][j] == v2_id)
                 input_faces[n12_f_ids[0]][j] = n_v_ids[1];
             if (input_faces[n12_f_ids[1]][j] == v1_id)
                 input_faces[n12_f_ids[1]][j] = n_v_ids[0];
         }
+
+        //check inversion and envelope
+        auto &old_nv = cos_a1 < cos_a0 ? old_nvs[0] : old_nvs[1];
+        bool is_flipped_or_outside = false;
+        for (int f_id:n12_f_ids) {
+            auto &a = input_vertices[input_faces[f_id][0]];
+            auto &b = input_vertices[input_faces[f_id][1]];
+            auto &c = input_vertices[input_faces[f_id][2]];
+            if (old_nv.dot(((b - c).cross(a - c)).normalized()) < 0 or
+                is_out_envelope({{a, b, c}}, tree, params)) {
+                is_flipped_or_outside = true;
+                break;
+            }
+        }
+        if (is_flipped_or_outside) {
+            input_faces[n12_f_ids[0]] = f1_old;
+            input_faces[n12_f_ids[1]] = f2_old;
+            continue;
+        }
+
+        // real update
         conn_fs[v1_id].erase(n12_f_ids[1]);
         conn_fs[v2_id].erase(n12_f_ids[0]);
         conn_fs[n_v_ids[0]].insert(n12_f_ids[1]);

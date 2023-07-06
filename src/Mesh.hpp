@@ -189,8 +189,8 @@ public:
 
         void partition(const int n_parts, std::vector<std::vector<int>> &tets_id) const;
 
-        static void one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<bool> &v_is_removed,
-                          const std::vector<bool> &f_is_removed, const std::vector<std::unordered_set<int>> &conn_fs,
+        static void one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<char> &v_is_removed,
+                          const std::vector<char> &f_is_removed, const std::vector<std::unordered_set<int>> &conn_fs,
                           const std::vector<Vector3> &input_vertices, std::vector<int> &safe_set);
 
         inline int t_empty_size() const {

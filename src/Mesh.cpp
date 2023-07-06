@@ -101,7 +101,7 @@ namespace floatTetWild {
 	}
 
 
-	void Mesh::one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<bool>& v_is_removed, const std::vector<bool>& f_is_removed,
+	void Mesh::one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<char>& v_is_removed, const std::vector<char>& f_is_removed,
 	        const std::vector<std::unordered_set<int>>& conn_fs, const std::vector<Vector3>& input_vertices, std::vector<int> &safe_set)
 	{
 		// std::vector<int> indices(edges.size());

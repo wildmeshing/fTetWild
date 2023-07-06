@@ -31,8 +31,8 @@ void floatTetWild::simplify(std::vector<Vector3>& input_vertices, std::vector<Ve
     if (skip_simplify)
         return;
 
-    std::vector<bool> v_is_removed(input_vertices.size(), false);
-    std::vector<bool> f_is_removed(input_faces.size(), false);
+    std::vector<char> v_is_removed(input_vertices.size(), false);
+    std::vector<char> f_is_removed(input_faces.size(), false);
     std::vector<std::unordered_set<int>> conn_fs(input_vertices.size());
     for (int i = 0; i < input_faces.size(); i++) {
         for (int j = 0; j < 3; j++)
@@ -214,7 +214,7 @@ bool floatTetWild::remove_duplicates(std::vector<Vector3>& input_vertices, std::
 
 void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces,
         const AABBWrapper& tree, const Parameters& params,
-        std::vector<bool>& v_is_removed, std::vector<bool>& f_is_removed, std::vector<std::unordered_set<int>>& conn_fs){
+        std::vector<char>& v_is_removed, std::vector<char>& f_is_removed, std::vector<std::unordered_set<int>>& conn_fs){
 
 #ifdef FLOAT_TETWILD_USE_TBB
     std::vector<std::array<int, 2>> edges;
@@ -503,7 +503,7 @@ void floatTetWild::collapsing(std::vector<Vector3>& input_vertices, std::vector<
 
 void floatTetWild::swapping(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces,
         const AABBWrapper& tree, const Parameters& params,
-        std::vector<bool>& v_is_removed, std::vector<bool>& f_is_removed, std::vector<std::unordered_set<int>>& conn_fs) {
+        std::vector<char>& v_is_removed, std::vector<char>& f_is_removed, std::vector<std::unordered_set<int>>& conn_fs) {
     std::vector<std::array<int, 2>> edges;
     edges.reserve(input_faces.size() * 6);
     for (int i = 0; i < input_faces.size(); i++) {
@@ -919,7 +919,7 @@ bool floatTetWild::is_out_envelope(const std::array<Vector3, 3>& vs, const AABBW
     // return false;
 }
 
-void floatTetWild::check_surface(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, const std::vector<bool>& f_is_removed,
+void floatTetWild::check_surface(std::vector<Vector3>& input_vertices, std::vector<Vector3i>& input_faces, const std::vector<char>& f_is_removed,
                    const AABBWrapper& tree, const Parameters& params) {
     cout<<"checking surface"<<endl;
     bool is_valid = true;

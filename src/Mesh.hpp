@@ -111,7 +111,7 @@ public:
             is_surface_fs = {{NOT_SURFACE, NOT_SURFACE, NOT_SURFACE, NOT_SURFACE}};
             is_bbox_fs = {{NOT_BBOX, NOT_BBOX, NOT_BBOX, NOT_BBOX}};
             opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};
-            surface_tags = {{0, 0, 0, 0}};
+            surface_tags = {{NO_SURFACE_TAG, NO_SURFACE_TAG, NO_SURFACE_TAG, NO_SURFACE_TAG}};
 
             quality = 0;
             scalar = 0;
@@ -152,7 +152,7 @@ public:
         std::array<char, 4> is_surface_fs = {{NOT_SURFACE, NOT_SURFACE, NOT_SURFACE, NOT_SURFACE}};
         std::array<char, 4> is_bbox_fs = {{NOT_BBOX, NOT_BBOX, NOT_BBOX, NOT_BBOX}};
         std::array<int, 4> opp_t_ids = {{OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN, OPP_T_ID_UNKNOWN}};
-        std::array<char, 4> surface_tags = {{0, 0, 0, 0}};
+        std::array<char, 4> surface_tags = {{NO_SURFACE_TAG, NO_SURFACE_TAG, NO_SURFACE_TAG, NO_SURFACE_TAG}};
 
         Scalar quality = 0;
         Scalar scalar = 0;
@@ -189,8 +189,8 @@ public:
 
         void partition(const int n_parts, std::vector<std::vector<int>> &tets_id) const;
 
-        static void one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<bool> &v_is_removed,
-                          const std::vector<bool> &f_is_removed, const std::vector<std::unordered_set<int>> &conn_fs,
+        static void one_ring_edge_set(const std::vector<std::array<int, 2>> &edges, const std::vector<char> &v_is_removed,
+                          const std::vector<char> &f_is_removed, const std::vector<std::unordered_set<int>> &conn_fs,
                           const std::vector<Vector3> &input_vertices, std::vector<int> &safe_set);
 
         inline int t_empty_size() const {

@@ -60,7 +60,7 @@ endfunction()
 function(float_tetwild_download_tbb)
     float_tetwild_download_project(tbb
         GIT_REPOSITORY https://github.com/wjakob/tbb.git
-        GIT_TAG        ddbe45cd3ad89df9a84cd77013d5898fc48b8e89
+        GIT_TAG        9e219e2
     )
 endfunction()
 

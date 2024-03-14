@@ -9,7 +9,7 @@
 #include <CLI/CLI.hpp>
 
 #ifdef FLOAT_TETWILD_USE_TBB
-#include <tbb/task_scheduler_init.h>
+#include <oneapi/tbb.h>
 #include <thread>
 #endif
 
@@ -268,13 +268,8 @@ int main(int argc, char** argv)
     }
 
 #ifdef FLOAT_TETWILD_USE_TBB
-    const size_t MB          = 1024 * 1024;
-    const size_t stack_size  = 64 * MB;
-    unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
-    num_threads              = std::min(max_threads, num_threads);
-    params.num_threads       = num_threads;
-    std::cout << "TBB threads " << num_threads << std::endl;
-    tbb::task_scheduler_init scheduler(num_threads, stack_size);
+    const size_t MB         = 1024 * 1024;
+    const size_t stack_size = 64 * MB;
 #endif
 
     //    if(params.is_quiet){
@@ -321,47 +316,11 @@ int main(int argc, char** argv)
         values = mshLoader.get_node_field("values");
     }
     if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
-        params.apply_sizing_field     = true;
-        params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3& p) {
-            GEO::Mesh bg_mesh;
-            bg_mesh.vertices.clear();
-            bg_mesh.vertices.create_vertices((int)V_in.rows() / 3);
-            for (int i = 0; i < V_in.rows() / 3; i++) {
-                GEO::vec3& p = bg_mesh.vertices.point(i);
-                for (int j = 0; j < 3; j++)
-                    p[j] = V_in(i * 3 + j);
-            }
-            bg_mesh.cells.clear();
-            bg_mesh.cells.create_tets((int)T_in.rows() / 4);
-            for (int i = 0; i < T_in.rows() / 4; i++) {
-                for (int j = 0; j < 4; j++)
-                    bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
-            }
+        params.apply_sizing_field = true;
 
-            GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
-            GEO::vec3          geo_p(p[0], p[1], p[2]);
-            int                bg_t_id = bg_aabb.containing_tet(geo_p);
-            if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
-                return -1.;
-
-            // compute barycenter
-            std::array<Vector3, 4> vs;
-            for (int j = 0; j < 4; j++) {
-                vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3),
-                                V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
-                                V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
-            }
-            double value = 0;
-            for (int j = 0; j < 4; j++) {
-                Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
-                double  d = (vs[(j + 3) % 4] - vs[j]).dot(n);
-                if (d == 0)
-                    continue;
-                double weight = abs((p - vs[j]).dot(n) / d);
-                value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
-            }
-            return value;  // / mesh.params.ideal_edge_length;
-        };
+        params.V_sizing_field      = V_in;
+        params.T_sizing_field      = T_in;
+        params.values_sizing_field = values;
     }
 
     /// set input tage
@@ -677,26 +636,26 @@ int main(int argc, char** argv)
     return EXIT_SUCCESS;
 }
 
-//#include <igl/readSTL.h>
-//#include <igl/writeSTL.h>
-//#include <igl/writeOFF.h>
-// void connect_2_meshes(std::string m1, std::string m2, std::string m) {
-//    Eigen::MatrixXd v1, v2, _;
-//    Eigen::MatrixXi f1, f2;
+// #include <igl/readSTL.h>
+// #include <igl/writeSTL.h>
+// #include <igl/writeOFF.h>
+//  void connect_2_meshes(std::string m1, std::string m2, std::string m) {
+//     Eigen::MatrixXd v1, v2, _;
+//     Eigen::MatrixXi f1, f2;
 //
-//    igl::readSTL(m1, v1, f1, _);
-//    igl::readSTL(m2, v2, f2, _);
+//     igl::readSTL(m1, v1, f1, _);
+//     igl::readSTL(m2, v2, f2, _);
 //
-//    MatrixXd V(v1.rows() + v2.rows(), v1.cols());
-//    V << v1, v2;
+//     MatrixXd V(v1.rows() + v2.rows(), v1.cols());
+//     V << v1, v2;
 //
-//    int v1_rows = v1.rows();
-//    for (int i = 0; i < f2.rows(); i++) {
-//        for (int j = 0; j < 3; j++)
-//            f2(i, j) += v1_rows;
-//    }
-//    MatrixXi F(f1.rows() + f2.rows(), f1.cols());
-//    F << f1, f2;
+//     int v1_rows = v1.rows();
+//     for (int i = 0; i < f2.rows(); i++) {
+//         for (int j = 0; j < 3; j++)
+//             f2(i, j) += v1_rows;
+//     }
+//     MatrixXi F(f1.rows() + f2.rows(), f1.cols());
+//     F << f1, f2;
 //
 ////    igl::writeOFF(m+".off", V, F);
 //    igl::writeSTL(m+".stl", V, F);
@@ -710,7 +669,7 @@ int main(int argc, char** argv)
 //    //pausee();
 //}
 //
-//#include <igl/readMESH.h>
+// #include <igl/readMESH.h>
 // void test_manifold(std::string& file_name){
 //    Eigen::MatrixXd V;
 //    Eigen::MatrixXi T, F;

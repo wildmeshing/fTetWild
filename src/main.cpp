@@ -321,11 +321,47 @@ int main(int argc, char** argv)
         values = mshLoader.get_node_field("values");
     }
     if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
-        params.apply_sizing_field = true;
+        params.apply_sizing_field     = true;
+        params.get_sizing_field_value = [&V_in, &T_in, &values](const Vector3& p) {
+            GEO::Mesh bg_mesh;
+            bg_mesh.vertices.clear();
+            bg_mesh.vertices.create_vertices((int)V_in.rows() / 3);
+            for (int i = 0; i < V_in.rows() / 3; i++) {
+                GEO::vec3& p = bg_mesh.vertices.point(i);
+                for (int j = 0; j < 3; j++)
+                    p[j] = V_in(i * 3 + j);
+            }
+            bg_mesh.cells.clear();
+            bg_mesh.cells.create_tets((int)T_in.rows() / 4);
+            for (int i = 0; i < T_in.rows() / 4; i++) {
+                for (int j = 0; j < 4; j++)
+                    bg_mesh.cells.set_vertex(i, j, T_in(i * 4 + j));
+            }
 
-        params.V_sizing_field = V_in;
-        params.T_sizing_field = T_in;
-        params.values_sizing_field = values;
+            GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
+            GEO::vec3          geo_p(p[0], p[1], p[2]);
+            int                bg_t_id = bg_aabb.containing_tet(geo_p);
+            if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
+                return -1.;
+
+            // compute barycenter
+            std::array<Vector3, 4> vs;
+            for (int j = 0; j < 4; j++) {
+                vs[j] = Vector3(V_in(T_in(bg_t_id * 4 + j) * 3),
+                                V_in(T_in(bg_t_id * 4 + j) * 3 + 1),
+                                V_in(T_in(bg_t_id * 4 + j) * 3 + 2));
+            }
+            double value = 0;
+            for (int j = 0; j < 4; j++) {
+                Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
+                double  d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+                if (d == 0)
+                    continue;
+                double weight = abs((p - vs[j]).dot(n) / d);
+                value += weight * values(T_in(bg_t_id * 4 + (j + 3) % 4));
+            }
+            return value;  // / mesh.params.ideal_edge_length;
+        };
     }
 
     /// set input tage

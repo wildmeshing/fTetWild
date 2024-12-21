@@ -23,11 +23,12 @@ if(FLOAT_TETWILD_WITH_EXACT_ENVELOPE )
 		bfs_orient.h
 		bfs_orient.cpp
 
-#			WindingNumber.h
-#		FastWindingNumber.hpp
-#		FastWindingNumber.cpp
+		FastWindingNumber.hpp
+		FastWindingNumber.cpp
 
 		Rational.h
+
+		WindingNumber.h
 	)
 else()
 	set(SOURCES
@@ -54,9 +55,9 @@ else()
 			bfs_orient.h
 			bfs_orient.cpp
 
-#			WindingNumber.h
-#			FastWindingNumber.hpp
-#			FastWindingNumber.cpp
+			WindingNumber.h
+			FastWindingNumber.hpp
+			FastWindingNumber.cpp
 
 			Rational.h
 			)

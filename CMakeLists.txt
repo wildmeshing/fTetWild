@@ -102,6 +102,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 
 # Use C++11
+set(CMAKE_CXX_STANDARD 11) # C++11...
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 # if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 # target_compile_options(${PROJECT_NAME} PUBLIC "/Zc:__cplusplus") endif()

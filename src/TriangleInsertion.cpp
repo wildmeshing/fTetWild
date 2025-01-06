@@ -9,6 +9,8 @@
 //
 // Created by Yixin Hu on 2019-08-27.
 //
+#include <algorithm> // for std::shuffle
+#include <random>    // for std::random_device and std::mt19937
 
 #include <floattetwild/TriangleInsertion.h>
 
@@ -143,8 +145,11 @@ void floatTetWild::sort_input_faces(const std::vector<Vector3>&  input_vertices,
 
     if (mesh.params.not_sort_input)
         return;
+    std::random_device rd;  // obtain a random number from hardware
+    std::mt19937 g(rd());   // seed the generator
 
-    std::random_shuffle(sorted_f_ids.begin(), sorted_f_ids.end());
+    std::shuffle(sorted_f_ids.begin(), sorted_f_ids.end(), g);
+
     //    std::sort(sorted_f_ids.begin(), sorted_f_ids.end(), [&weights](int a, int b) {
     //        return weights[a] < weights[b];
     //    });

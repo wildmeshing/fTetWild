@@ -23,7 +23,6 @@
 #include <floattetwild/CSGTreeParser.hpp>
 #include <floattetwild/Mesh.hpp>
 #include <floattetwild/MeshIO.hpp>
-#include <floattetwild/Types.hpp>
 
 #include <Eigen/Dense>
 #include <floattetwild/Logger.hpp>
@@ -40,9 +39,9 @@
 #include <geogram/basic/logger.h>
 #include <geogram/mesh/mesh.h>
 #include <bitset>
-#include <vector>
 
 using namespace floatTetWild;
+//using namespace Eigen;
 
 class GeoLoggerForward : public GEO::LoggerClient
 {
@@ -319,8 +318,8 @@ int main(int argc, char** argv)
     if (V_in.rows() != 0 && T_in.rows() != 0 && values.rows() != 0) {
         params.apply_sizing_field = true;
 
-        params.V_sizing_field = V_in;
-        params.T_sizing_field = T_in;
+        params.V_sizing_field      = V_in;
+        params.T_sizing_field      = T_in;
         params.values_sizing_field = values;
     }
 

@@ -51,7 +51,6 @@ FetchContent_MakeAvailable(libigl)
 
 # Import libigl targets
 list(APPEND CMAKE_MODULE_PATH "${FLOAT_TETWILD_EXTERNAL}/libigl/cmake")
-include(libigl)
 
 # Geogram
 if(NOT TARGET geogram::geogram)

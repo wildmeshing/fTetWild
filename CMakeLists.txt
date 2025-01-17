@@ -75,6 +75,7 @@ endif()
 
 # Setup dependencies
 include(FloatTetwildDependencies)
+igl_include(predicates)
 
 # ##############################################################################
 # FloatTetwild library
@@ -89,7 +90,7 @@ endif()
 # MPFR") ENDIF()
 
 # add_library() can only be called without any source since CMake 3.11 ...
-add_library(${PROJECT_NAME} src/Logger.cpp src/external/WindingNumber.h)
+add_library(${PROJECT_NAME} src/Logger.cpp)
 
 # Public include directory for FloatTetwild
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)

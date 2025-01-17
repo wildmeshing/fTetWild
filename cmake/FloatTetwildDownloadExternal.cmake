@@ -26,14 +26,6 @@ endfunction()
 
 # ##############################################################################
 
-include(FetchContent)
-FetchContent_Declare(
-    libigl
-    GIT_REPOSITORY https://github.com/libigl/libigl.git GIT_TAG
-    687530283c01b91de5795959281d4cdc36f7ca1b
-)
-FetchContent_MakeAvailable(libigl)
-
 # Json
 function(float_tetwild_download_json)
     float_tetwild_download_project(

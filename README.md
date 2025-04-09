@@ -111,7 +111,7 @@ Our software is quite easy to use. Basically, users only need to provide a surfa
 
 - Envelope of size *epsilon*
 
-Using smaller envelope preserves features better but also takes longer time. The default value of *epsilon* is *b/1000*, where *b* is the length of the diagonal of the bounding box.
+Using smaller envelope preserves features better but also takes longer time (Users may try to use [Fase Envelope](https://github.com/wangbolun300/fast-envelope) to reduce the running time). The default value of *epsilon* is *b/1000*, where *b* is the length of the diagonal of the bounding box.
 
 - Ideal edge length
 

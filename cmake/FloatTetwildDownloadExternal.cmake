@@ -43,16 +43,16 @@ endfunction()
 ## Catch2
 function(float_tetwild_download_catch2)
     float_tetwild_download_project(Catch2
-        URL          https://github.com/catchorg/Catch2/archive/refs/tags/v3.1.1.tar.gz
-        URL_MD5      1f3e0d8c3297252f77d643ff06d058cb
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.1.1
     )
 endfunction()
 
 ## CLI11
 function(float_tetwild_download_cli11)
     float_tetwild_download_project(cli11
-            URL     https://github.com/CLIUtils/CLI11/archive/v1.8.0.tar.gz
-            URL_MD5 5e5470abcb76422360409297bfc446ac
+            GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+            GIT_TAG        v1.8.0
     )
 endfunction()
 
@@ -75,16 +75,16 @@ endfunction()
 ## fmt
 function(float_tetwild_download_fmt)
     float_tetwild_download_project(fmt
-        URL      https://github.com/fmtlib/fmt/archive/5.3.0.tar.gz
-        URL_MD5  1015bf3ff2a140dfe03de50ee2469401
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG        5.3.0
     )
 endfunction()
 
 ## spdlog
 function(float_tetwild_download_spdlog)
     float_tetwild_download_project(spdlog
-        URL         https://github.com/gabime/spdlog/archive/v1.3.1.tar.gz
-        URL_MD5     3c17dd6983de2a66eca8b5a0b213d29f
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG        v1.3.1
     )
 endfunction()
 

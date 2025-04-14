@@ -85,9 +85,9 @@ sudo apt-get install gmp
 conda install -c conda-forge mpir
 ```
 
-**Note Windows** The executable needs that the file `mpir.dll` is in the same directiory of `FloatTetwild_bin.exe`. Once you compliled the code, copy `mpir.dll` (e.g., `<conda_dir>\Library\bin`) to the directoy containing `FloatTetwild_bin.exe`.
+**Note Windows** The executable needs that the file `mpir.dll` is in the same directory as `FloatTetwild_bin.exe`. Once you compiled the code, copy `mpir.dll` (e.g., `<conda_dir>\Library\bin`) to the directory containing `FloatTetwild_bin.exe`.
 
-**Note** if cmake cannot find gmp you need to export the envirnement variable `GMP_INC` and `GMP_LIB` to the folder where you installed (e.g., `<conda_dir>\Library\include` for `GMP_INC` and `<conda_dir>\Library\lib` for `GMP_LIB`).
+**Note** if cmake cannot find gmp you need to export the environment variable `GMP_INC` and `GMP_LIB` to the folder where you installed (e.g., `<conda_dir>\Library\include` for `GMP_INC` and `<conda_dir>\Library\lib` for `GMP_LIB`).
 
 - Check the installation:
 
@@ -102,7 +102,7 @@ This command should show a list of fTetWild parameters.
 
 The inputs of our software are triangle surface meshes in `.off/.obj/.stl/.ply` format.
 
-We support `.mesh/.msh` format output. The default output format is `.msh` with minimum dihedral angle recorded as element scalar field, which can be visualized by software [Gmsh](http://gmsh.info/). You can use `PyMesh::MshLoader` and `PyMesh::MshSaver` in `pymesh/` for read and write `.msh` meshes.
+We support `.mesh/.msh` format output. The default output format is `.msh` with the elements' energy as the scalar field, which can be visualized by software [Gmsh](http://gmsh.info/). You can use `PyMesh::MshLoader` and `PyMesh::MshSaver` in `pymesh/` for read and write `.msh` meshes.
 
 
 ### Features
@@ -134,7 +134,7 @@ Users can provide a background tetmesh in .msh format with vertex scalar field v
 
 - Smoothing open regions
 
-Our method can fill gaps and holes but the tetmesh faces on those parts could be bumpy. We provide users an option to do Lapacian smoothing on those faces to get a smoother surface.
+Our method can fill gaps and holes but the tetmesh faces on those parts could be bumpy. We provide users an option to do Laplacian smoothing on those faces to get a smoother surface.
 
 ### Command Line Switches
 Our software supports usage via command line or via a C++ function wrapper. Here is an overview of all command line switches:
@@ -150,7 +150,7 @@ Options:
   --op INT                    Boolean operation: 0: union, 1: intersection, 2: difference.
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
-  --stop-energy FLOAT         Stop optimization when max energy is lower than this.
+  --stop-energy FLOAT         Stop optimization when max energy is lower than this. (double, optional, default: 10.0)
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).
   -q,--is-quiet               Mute console output. (optional)

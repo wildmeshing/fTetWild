@@ -202,7 +202,9 @@ int main(int argc, char** argv)
 
     command_line.add_option("--max-its", params.max_its, "(for debugging usage only)");
     command_line.add_option(
-      "--stop-energy", params.stop_energy, "Stop optimization when max energy is lower than this.");
+      "--stop-energy",
+      params.stop_energy,
+      "Stop optimization when max energy is lower than this. (double, optional, default: 10.0)");
     command_line.add_option("--stage", params.stage, "(for debugging usage only)");
     command_line.add_option("--stop-p", params.stop_p, "(for debugging usage only)");
 

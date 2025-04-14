@@ -1918,7 +1918,7 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
                 covered_fs_infos[f_id].push_back(std::make_pair(i, j));
         }
     }
-    logger().info("time1 = {}", timer.getElapsedTime());
+    logger().info("time1 = {}s", timer.getElapsedTime());
 
     bool is_all_inserted = true;
     int cnt = 0;
@@ -2060,11 +2060,11 @@ bool floatTetWild::insert_boundary_edges(const std::vector<Vector3> &input_verti
     }
 
     logger().info("uninsert boundary #e = {}/{}", b_edge_infos.size() - cnt, b_edge_infos.size());
-    logger().info("time2 = {}", time2);
-    logger().info("time3 = {}", time3);
-    logger().info("time4 = {}", time4);
-    logger().info("time5 = {}", time5);
-    logger().info("time6 = {}", time6);
+    logger().info("time2 = {}s", time2);
+    logger().info("time3 = {}s", time3);
+    logger().info("time4 = {}s", time4);
+    logger().info("time5 = {}s", time5);
+    logger().info("time6 = {}s", time6);
 
 //    logger().info("time_e1 = {}", time_e1);
 //    logger().info("time_e2 = {}", time_e2);

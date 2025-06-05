@@ -55,6 +55,8 @@ set(SOURCES
 	Types.hpp
 
 	Statistics.h
+
+	RandomSource.h
 )
 
 prepend_current_path(SOURCES)

@@ -75,16 +75,16 @@ endfunction()
 ## fmt
 function(float_tetwild_download_fmt)
     float_tetwild_download_project(fmt
-        URL      https://github.com/fmtlib/fmt/archive/5.3.0.tar.gz
-        URL_MD5  1015bf3ff2a140dfe03de50ee2469401
+        GIT_REPOSITORY https://github.com/fmtlib/fmt
+        GIT_TAG        40626af88bd7df9a5fb80be7b25ac85b122d6c21
     )
 endfunction()
 
 ## spdlog
 function(float_tetwild_download_spdlog)
     float_tetwild_download_project(spdlog
-        URL         https://github.com/gabime/spdlog/archive/v1.3.1.tar.gz
-        URL_MD5     3c17dd6983de2a66eca8b5a0b213d29f
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG        6fa36017cfd5731d617e1a934f0e5ea9c4445b13
     )
 endfunction()
 

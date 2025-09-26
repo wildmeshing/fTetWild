@@ -29,9 +29,8 @@ endif()
 if(FLOAT_TETWILD_TOPLEVEL_PROJECT AND NOT TARGET CLI11::CLI11)
     FetchContent_Declare(
         cli11
-        URL https://github.com/CLIUtils/CLI11/archive/v1.8.0.tar.gz
-        URL_HASH MD5=5e5470abcb76422360409297bfc446ac
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+        GIT_TAG v2.5.0
     )
     FetchContent_MakeAvailable(cli11)
 endif()
@@ -61,12 +60,14 @@ if(NOT TARGET spdlog::spdlog)
 endif()
 
 # libigl
-FetchContent_Declare(
-    libigl
-    GIT_REPOSITORY https://github.com/libigl/libigl.git
-    GIT_TAG        ae8f959ea26d7059abad4c698aba8d6b7c3205e8
-)
-FetchContent_MakeAvailable(libigl)
+if(NOT TARGET igl::core)
+    FetchContent_Declare(
+        libigl
+        GIT_REPOSITORY https://github.com/libigl/libigl.git
+        GIT_TAG        v2.6.0   
+    )
+    FetchContent_MakeAvailable(libigl)
+endif()
 
 # Import libigl targets - use FetchContent source directory
 list(APPEND CMAKE_MODULE_PATH "${libigl_SOURCE_DIR}/cmake")

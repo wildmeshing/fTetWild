@@ -23,14 +23,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-latest]
+        os: [ubuntu-22.04, macOS-13, macOS-14]
         config: [Debug, Release]
         envelope: [ON, OFF]
         include:
-          - os: macos-latest
-            name: macOS
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             name: Linux
+          - os: macos-13
+            name: macOS-13
+          - os: macos-14
+            name: macOS-14 ARM64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1

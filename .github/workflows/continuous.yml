@@ -56,7 +56,7 @@ jobs:
           activate-environment: test-env
 
       - name: Install Dependencies
-        run: conda install cmake=3 git -y
+        run: conda install cmake=3.29 git -y
 
       - name: Install Dependencies  (Linux)
         if: runner.os == 'Linux'

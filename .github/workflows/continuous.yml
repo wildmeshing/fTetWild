@@ -79,6 +79,7 @@ jobs:
           mkdir -p build
           cd build
           cmake .. \
+            -DCMAKE_PREFIX_PATH=$CONDA_PREFIX  \
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
             -DFLOAT_TETWILD_WITH_EXACT_ENVELOPE=${{ matrix.envelope }} \
 

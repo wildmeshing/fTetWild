@@ -12,6 +12,10 @@ env:
   CTEST_OUTPUT_ON_FAILURE: ON
   CTEST_PARALLEL_LEVEL: 2
 
+defaults:
+  run:
+    shell: bash -el {0}
+
 jobs:
   ####################
   # Linux / macOS
@@ -80,7 +84,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          $CONDA_PREFIX/bin/cmake .. \
+          cmake .. \
             -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
             -DFLOAT_TETWILD_WITH_EXACT_ENVELOPE=${{ matrix.envelope }}

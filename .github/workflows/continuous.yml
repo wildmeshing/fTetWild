@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macOS-13, macOS-, windows-2019]
+        os: [ubuntu-22.04, macOS-13, macOS-14, windows-2019]
         config: [Debug, Release]
         envelope: [ON, OFF]
         include:
@@ -56,7 +56,11 @@ jobs:
           activate-environment: test-env
 
       - name: Install Dependencies
-        run: conda install numpy svgwrite cmake=3 git -y
+        run: conda install cmake=3 git -y
+
+      - name: Install Dependencies  (Linux)
+        if: runner.os == 'Linux'
+        run: conda install conda-forge::libxrandr-conda-x86_64
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'

@@ -64,7 +64,7 @@ endif()
 FetchContent_Declare(
     libigl
     GIT_REPOSITORY https://github.com/libigl/libigl.git
-    GIT_TAG        a221faf1e4bd571529ca2101c08bc2458579b1da
+    GIT_TAG        ae8f959ea26d7059abad4c698aba8d6b7c3205e8
 )
 FetchContent_MakeAvailable(libigl)
 

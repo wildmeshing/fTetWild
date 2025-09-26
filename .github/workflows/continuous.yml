@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Dependencies  (Linux)
         if: runner.os == 'Linux'
-        run: conda install conda-forge::libxrandr-conda-x86_64
+        run: conda install conda-forge::libxrandr-devel-conda-x86_64
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'

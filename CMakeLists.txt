@@ -86,25 +86,20 @@ if(NOT ${GMP_FOUND})
     message(FATAL_ERROR "Cannot find GMP")
 endif()
 
-# find_package(MPFR) IF(NOT ${MPFR_FOUND}) MESSAGE(FATAL_ERROR "Cannot find
-# MPFR") ENDIF()
-
 # add_library() can only be called without any source since CMake 3.11 ...
 add_library(${PROJECT_NAME} src/Logger.cpp)
 
 # Public include directory for FloatTetwild
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
 
-# set(MESH_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/")
-# target_compile_definitions(${PROJECT_NAME} PUBLIC
-# -DFLOAT_TETWILD_MESH_PATH=\"${MESH_PATH}\")
-
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 
-# Use C++11
-set(CMAKE_CXX_STANDARD 11) # C++11...
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
+# Use C++14 (minimum for modern CMake practices)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 # if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 # target_compile_options(${PROJECT_NAME} PUBLIC "/Zc:__cplusplus") endif()
 # target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -153,7 +148,7 @@ endif()
 # Main executable
 if(FLOAT_TETWILD_TOPLEVEL_PROJECT)
     add_executable(${PROJECT_NAME}_bin src/main.cpp)
-    target_compile_features(${PROJECT_NAME}_bin PUBLIC ${CXX14_FEATURES})
+    target_compile_features(${PROJECT_NAME}_bin PUBLIC cxx_std_14)
 
     target_link_libraries(${PROJECT_NAME}_bin PUBLIC ${PROJECT_NAME} CLI11::CLI11
                                                    warnings::all)

@@ -1,9 +1,14 @@
-# Download Catch2 unit test framework
-float_tetwild_download_catch2()
-list(APPEND CMAKE_MODULE_PATH ${FLOAT_TETWILD_EXTERNAL}/Catch2/contrib)
+# Download Catch2 unit test framework using FetchContent
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.5.3.tar.gz
+    URL_HASH MD5=1f51d817ce81d54b12e87d06e159305f
+)
+FetchContent_MakeAvailable(Catch2)
 
-# Add catch2
-add_subdirectory(${FLOAT_TETWILD_EXTERNAL}/Catch2 catch2)
+# Add Catch2 to module path for test discovery
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 set(test_sources
 	main.cpp

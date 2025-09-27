@@ -89,6 +89,8 @@ set(MY_FLAGS
 		# GCC 6.1 #
 		###########
 
+		-Wno-error=stringop-overflow
+
 		-Wnull-dereference
 		-fdelete-null-pointer-checks
 		-Wduplicated-cond

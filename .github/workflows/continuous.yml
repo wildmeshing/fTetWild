@@ -70,7 +70,7 @@ jobs:
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'
-        run: conda install mpir -y
+        run: conda install mpir zlib -y
 
       - name: Envs (Windows)
         if: runner.os == 'Windows'

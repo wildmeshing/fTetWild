@@ -88,7 +88,7 @@ if(NOT TARGET geogram::geogram)
     # --- Final Recommended Configuration ---
     # Set the platform to force a static build
     if(MSVC)
-        set(GEO_PLATFORM "Win64-vs")
+        set(GEO_PLATFORM "Win-vs-generic")
     elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
         set(GEO_PLATFORM "Darwin-clang")
     else()

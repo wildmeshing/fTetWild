@@ -84,11 +84,41 @@ if(NOT TARGET geogram::geogram)
         GIT_REPOSITORY https://github.com/BrunoLevy/geogram
         GIT_TAG        v1.9.6
     )
+
+    # --- Final Recommended Configuration ---
+    # Set the platform to force a static build
+    if(MSVC)
+        set(GEO_PLATFORM "Win64-vs")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        set(GEO_PLATFORM "Darwin-clang")
+    else()
+        set(GEO_PLATFORM "Linux64-gcc")
+    endif()
     set(GEOGRAM_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     set(GEOGRAM_BUILD_STATIC ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(geogram)
+
+    # Pass all options directly to the Geogram sub-build.
+    # This keeps our project's configuration clean and isolated.
+    set(GEOGRAM_CMAKE_ARGS
+        -DVORPALINE_PLATFORM=${GEO_PLATFORM}
+        -DGEOGRAM_SUB_BUILD=ON
+        -DGEOGRAM_LIB_ONLY=ON
+        -DGEOGRAM_WITH_GRAPHICS=OFF
+        -DGEOGRAM_WITH_LUA=OFF
+        -DGEOGRAM_WITH_EXPLORAGRAM=OFF
+        -DGEOGRAM_WITH_LEGACY_NUMERICS=OFF
+        -DGEOGRAM_WITH_TRIANGLE=OFF
+    )
+
+    FetchContent_MakeAvailable(
+        geogram
+        CMAKE_ARGS ${GEOGRAM_CMAKE_ARGS}
+    )
+    
     include(geogram)
 endif()
+
+
 
 # TBB
 if(FLOAT_TETWILD_ENABLE_TBB AND NOT TARGET TBB::tbb)

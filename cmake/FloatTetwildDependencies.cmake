@@ -40,7 +40,7 @@ if(NOT TARGET fmt::fmt)
     FetchContent_Declare(
         fmt
         GIT_REPOSITORY https://github.com/fmtlib/fmt
-        GIT_TAG        40626af88bd7df9a5fb80be7b25ac85b122d6c21
+        GIT_TAG        11.2.0
     )
     FetchContent_MakeAvailable(fmt)
 endif()
@@ -50,7 +50,7 @@ if(NOT TARGET spdlog::spdlog)
     FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG        6fa36017cfd5731d617e1a934f0e5ea9c4445b13
+        GIT_TAG        v1.15.3
     )
     
     # Configure spdlog to use external fmt
@@ -77,7 +77,7 @@ if(NOT TARGET geogram::geogram)
     FetchContent_Declare(
         geogram
         GIT_REPOSITORY https://github.com/BrunoLevy/geogram
-        GIT_TAG        c4d9a3eefe0e4bc3e09d37f28d032bf07e025350
+        GIT_TAG        v1.9.6
     )
     FetchContent_MakeAvailable(geogram)
     include(geogram)
@@ -88,7 +88,7 @@ if(FLOAT_TETWILD_ENABLE_TBB AND NOT TARGET TBB::tbb)
     FetchContent_Declare(
         tbb
         GIT_REPOSITORY https://github.com/oneapi-src/oneTBB
-        GIT_TAG        9afd759b72c0c233cd5ea3c3c06b0894c9da9c54
+        GIT_TAG        v2021.8.0
     )
 
     # Configure TBB build options

@@ -93,7 +93,7 @@ if(FLOAT_TETWILD_ENABLE_TBB AND NOT TARGET TBB::tbb)
     FetchContent_Declare(
         tbb
         GIT_REPOSITORY https://github.com/oneapi-src/oneTBB
-        GIT_TAG        v2021.8.0
+        GIT_TAG        v2022.2.0
     )
 
     # Configure TBB build options

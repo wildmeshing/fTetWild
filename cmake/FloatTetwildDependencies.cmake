@@ -5,6 +5,9 @@
 # Use modern FetchContent for dependency management
 include(FetchContent)
 
+# Set a global preference for STATIC libraries over SHARED ones.
+#set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
 # Set FetchContent properties for better performance
 set(FETCHCONTENT_QUIET ON)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
@@ -79,6 +82,8 @@ if(NOT TARGET geogram::geogram)
         GIT_REPOSITORY https://github.com/BrunoLevy/geogram
         GIT_TAG        v1.9.6
     )
+    set(GEOGRAM_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(GEOGRAM_BUILD_STATIC ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(geogram)
     include(geogram)
 endif()

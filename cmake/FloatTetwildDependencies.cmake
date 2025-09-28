@@ -69,6 +69,8 @@ if(NOT TARGET igl::core)
         GIT_REPOSITORY https://github.com/libigl/libigl.git
         GIT_TAG        v2.6.0   
     )
+    set(LIBIGL_BUILD_STATIC ON CACHE BOOL "" FORCE)
+    set(LIBIGL_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(libigl)
 endif()
 

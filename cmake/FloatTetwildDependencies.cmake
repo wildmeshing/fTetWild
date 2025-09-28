@@ -94,6 +94,9 @@ if(NOT TARGET geogram::geogram)
     else()
         set(GEO_PLATFORM "Linux64-gcc")
     endif()
+
+    set(VORPALINE_PLATFORM ${GEO_PLATFORM})
+
     set(GEOGRAM_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     set(GEOGRAM_BUILD_STATIC ON CACHE BOOL "" FORCE)
 

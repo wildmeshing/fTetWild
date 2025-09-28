@@ -97,24 +97,15 @@ if(NOT TARGET geogram::geogram)
     set(GEOGRAM_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     set(GEOGRAM_BUILD_STATIC ON CACHE BOOL "" FORCE)
 
-    # Pass all options directly to the Geogram sub-build.
-    # This keeps our project's configuration clean and isolated.
-    set(GEOGRAM_CMAKE_ARGS
-        -DVORPALINE_PLATFORM=${GEO_PLATFORM}
-        -DGEOGRAM_SUB_BUILD=ON
-        -DGEOGRAM_LIB_ONLY=ON
-        -DGEOGRAM_WITH_GRAPHICS=OFF
-        -DGEOGRAM_WITH_LUA=OFF
-        -DGEOGRAM_WITH_EXPLORAGRAM=OFF
-        -DGEOGRAM_WITH_LEGACY_NUMERICS=OFF
-        -DGEOGRAM_WITH_TRIANGLE=OFF
-    )
+    set(GEOGRAM_SUB_BUILD ON CACHE BOOL "Building as subproject" FORCE)
+    set(GEOGRAM_LIB_ONLY ON CACHE BOOL "Build geogram lib only" FORCE)
+    set(GEOGRAM_WITH_GRAPHICS OFF CACHE BOOL "Disable graphics" FORCE)
+    set(GEOGRAM_WITH_LUA OFF CACHE BOOL "Disable LUA" FORCE)
+    set(GEOGRAM_WITH_EXPLORAGRAM OFF CACHE BOOL "Disable exploragram" FORCE)
+    set(GEOGRAM_WITH_LEGACY_NUMERICS OFF CACHE BOOL "Disable legacy numerics" FORCE)
+    set(GEOGRAM_WITH_TRIANGLE OFF CACHE BOOL "Disable triangle" FORCE)
 
-    FetchContent_MakeAvailable(
-        geogram
-        CMAKE_ARGS ${GEOGRAM_CMAKE_ARGS}
-    )
-    
+    FetchContent_MakeAvailable(geogram)
     include(geogram)
 endif()
 

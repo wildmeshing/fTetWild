@@ -51,12 +51,6 @@ jobs:
           fetch-depth: 10
           submodules: "recursive"
     
-      - name: Dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libxi-dev libxcursor-dev libxinerama-dev libxrandr-dev libx11-dev libxcb1-dev libxau-dev libxdmcp-dev
-
       - name: Setup NMake (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1

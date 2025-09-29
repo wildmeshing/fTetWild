@@ -105,4 +105,4 @@ jobs:
 
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
-        run: cd build; ./FloatTetwild_bin.exe --input ../tests/bunny.off --level 0 --stop-energy 100
+        run: cd build; ./build/${{ matrix.config }}/FloatTetwild_bin.exe --input ../tests/bunny.off --level 0 --stop-energy 100

@@ -103,9 +103,11 @@ jobs:
         if: runner.os != 'Windows'
         run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0 --stop-energy 100
 
+      - name: List Build Directory (Windows)
+        if: runner.os == 'Windows'
+        run: ls -R build
+
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
         shell: powershell
-        run: |
-          cd build
-          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0  --stop-energy 200
+        run: build\FloatTetwild_bin.exe --input tests\bunny.off --level 0  --stop-energy 200

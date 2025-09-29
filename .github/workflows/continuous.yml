@@ -99,5 +99,13 @@ jobs:
       - name: Tests
         run: cd build; ctest --verbose --output-on-failure
 
-      - name: Run Example
+      - name: Run Example (Unix)
+        if: runner.os != 'Windows'
         run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0 --stop-energy 100
+
+      - name: Run Example (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          cd build
+          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0  --stop-energy 200

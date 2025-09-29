@@ -108,6 +108,4 @@ jobs:
         shell: powershell
         run: |
           cd build
-          cp C:\Miniconda\Library\bin\mpir.dll .\
-          cp C:\Miniconda\Library\bin\gmp.dll .\
           .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0  --stop-energy 200

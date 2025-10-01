@@ -105,9 +105,10 @@ jobs:
 
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
-        shell: cmd 
+        shell: cmd
         run: |
           cd build
-          copy msvc_*/tbb12.dll .  
-          copy /c/Miniconda/envs/test-env/Library/bin/mpir.dll . 
-          FloatTetwild_bin.exe --input ../tests/bunny.off --level 0 --stop-energy 100
+          copy msvc_*\tbb12.dll .
+          rem Use the Windows-style absolute path
+          copy C:\Miniconda\envs\test-env\Library\bin\mpir.dll .
+          FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0 --stop-energy 100

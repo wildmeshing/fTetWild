@@ -101,9 +101,9 @@ jobs:
         if: runner.os == 'Windows'
         run: ls -R build
 
-      - name: Debug with tmate
-        # This step will pause the workflow and wait for your connection.
-        uses: tmate/setup-tmate@v1
+      - uses: actions/checkout@v4
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Run Example (Windows)
         if: runner.os == 'Windows'

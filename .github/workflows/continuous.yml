@@ -108,6 +108,6 @@ jobs:
         shell: cmd 
         run: |
           cd build
-          copy ./msvc_*/tbb12.dll .  
+          copy msvc_*/tbb12.dll .  
           copy /c/Miniconda/envs/test-env/Library/bin/mpir.dll . 
-          ./FloatTetwild_bin.exe --input ../tests/bunny.off --level 0 --stop-energy 100
+          FloatTetwild_bin.exe --input ../tests/bunny.off --level 0 --stop-energy 100

@@ -50,6 +50,12 @@ jobs:
         with:
           fetch-depth: 10
           submodules: "recursive"
+          
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 20
+        with:
+          detached: true
     
       - name: Setup NMake (Windows)
         if: runner.os == 'Windows'
@@ -97,16 +103,12 @@ jobs:
         if: runner.os != 'Windows'
         run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0 --stop-energy 100
 
-      - name: List Build Directory (Windows)
-        if: runner.os == 'Windows'
-        run: ls -R build
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
-        run: cd build; ./FloatTetwild_bin.exe \
+        run: cd build;  \
+            cp ./msvc_19.44_cxx_64_md_release/tbb12.dll .  \
+            cp /c/Miniconda/envs/test-env/Library/bin/mpir.dll . \
+            ./FloatTetwild_bin.exe \
             --input ../tests/bunny.off \
             --level 0 \
             --stop-energy 100

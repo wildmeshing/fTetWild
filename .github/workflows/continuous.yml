@@ -101,6 +101,10 @@ jobs:
         if: runner.os == 'Windows'
         run: ls -R build
 
+      - name: Debug with tmate
+        # This step will pause the workflow and wait for your connection.
+        uses: tmate/setup-tmate@v1
+
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
         run: cd build; ./FloatTetwild_bin.exe \

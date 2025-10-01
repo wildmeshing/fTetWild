@@ -108,7 +108,9 @@ jobs:
         shell: cmd
         run: |
           cd build
-          copy msvc_19.44_cxx_64_md_release/tbb12.dll .
-          rem Use the Windows-style absolute path
+          rem Find the msvc_* directory automatically and copy the DLL
+          for /d %%d in (msvc_*) do copy "%%d\tbb12.dll" .
+          rem Copy the other DLL
           copy C:\Miniconda\envs\test-env\Library\bin\mpir.dll .
+          rem Run the executable
           FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0 --stop-energy 100

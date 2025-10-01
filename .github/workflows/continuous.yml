@@ -108,7 +108,7 @@ jobs:
         shell: cmd
         run: |
           cd build
-          copy msvc_*\tbb12.dll .
+          copy msvc_19.44_cxx_64_md_release/tbb12.dll .
           rem Use the Windows-style absolute path
           copy C:\Miniconda\envs\test-env\Library\bin\mpir.dll .
           FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0 --stop-energy 100

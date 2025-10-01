@@ -101,7 +101,6 @@ jobs:
         if: runner.os == 'Windows'
         run: ls -R build
 
-      - uses: actions/checkout@v4
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
 

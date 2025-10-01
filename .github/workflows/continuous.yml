@@ -74,7 +74,7 @@ jobs:
 
       - name: Install Dependencies  (Windows)
         if: runner.os == 'Windows'
-        run: conda install mpir zlib -y
+        run: conda install mpir zlib m2-base -y
 
       - name: Envs (Windows)
         if: runner.os == 'Windows'

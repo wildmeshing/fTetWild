@@ -105,6 +105,7 @@ jobs:
 
       - name: Run Example (Windows)
         if: runner.os == 'Windows'
+        shell: cmd 
         run: |
           cd build
           copy ./msvc_*/tbb12.dll .  

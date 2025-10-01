@@ -109,7 +109,7 @@ jobs:
         run: |
           cd build
           rem Find the msvc_* directory automatically and copy the DLL
-          for /d %%d in (msvc_*) do copy "%%d\tbb12.dll" .
+          for /d %%d in (msvc_*) do copy "%%d\tbb*.dll" .
           rem Copy the other DLL
           copy C:\Miniconda\envs\test-env\Library\bin\mpir.dll .
           rem Run the executable

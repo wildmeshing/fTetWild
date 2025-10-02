@@ -10,6 +10,7 @@
 
 #ifdef FLOAT_TETWILD_USE_TBB
 #include <oneapi/tbb.h>
+#include <oneapi/tbb/global_control.h>
 #include <thread>
 #endif
 
@@ -270,6 +271,12 @@ int main(int argc, char** argv)
 #ifdef FLOAT_TETWILD_USE_TBB
     const size_t MB         = 1024 * 1024;
     const size_t stack_size = 64 * MB;
+    unsigned int num_threads = std::max(1u, std::thread::hardware_concurrency());
+    num_threads              = std::min(max_threads, num_threads);
+    params.num_threads       = num_threads;
+    std::cout << "TBB threads " << num_threads << std::endl;
+    tbb::global_control parallelism_limit(tbb::global_control::max_allowed_parallelism, num_threads);
+    tbb::global_control stack_size_limit(tbb::global_control::thread_stack_size, stack_size);
 #endif
 
     //    if(params.is_quiet){

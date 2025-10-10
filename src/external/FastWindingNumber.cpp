@@ -1,7 +1,7 @@
 #include <floattetwild/FastWindingNumber.hpp>
 
 #include <igl/parallel_for.h>
-#include <floattetwild/WindingNumber.h>
+#include <igl/FastWindingNumberForSoups.h>
 //#include <windingnumber/UT_SolidAngle.h>
 
 #include <cstdlib>

@@ -12,6 +12,10 @@ env:
   CTEST_OUTPUT_ON_FAILURE: ON
   CTEST_PARALLEL_LEVEL: 2
 
+defaults:
+  run:
+    shell: bash -el {0}
+
 jobs:
   ####################
   # Linux / macOS
@@ -23,145 +27,90 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-latest]
+        os: [ubuntu-22.04, ubuntu-latest, macOS-13, macOS-14, macOS-latest, windows-2022]
         config: [Debug, Release]
-        envelope: [ON, OFF]
+        envelope: [OFF]
         include:
+          - os: ubuntu-22.04
+            name: ubuntu-22.04
+          - os: ubuntu-latest
+            name: ubuntu-latest
+          - os: macos-13
+            name: macOS-13
+          - os: macos-14
+            name: macOS-14 ARM64
           - os: macos-latest
-            name: macOS
-          - os: ubuntu-18.04
-            name: Linux
+            name: macOS-latest ARM64     
+          - os: windows-2022
+            name: Windows
+            
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 10
-
-      - name: Dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install \
-          libblas-dev \
-          libboost-filesystem-dev \
-          libboost-system-dev \
-          libboost-thread-dev \
-          libglu1-mesa-dev \
-          libsuitesparse-dev \
-          xorg-dev \
-          ccache
-
-      - name: Dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install suite-sparse ccache gmp
-
-      - name: Cache Build
-        id: cache-build
-        uses: actions/cache@v1
+          submodules: "recursive"
+          
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 20
         with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-${{ matrix.config }}-${{ matrix.envelope }}-cache
+          detached: true
+    
+      - name: Setup NMake (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Prepare ccache
-        run: |
-          ccache --max-size=1.0G
-          ccache -V && ccache --show-stats && ccache --zero-stats
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          channels: conda-forge
+          python-version: ${{ matrix.python-version }}
+          channel-priority: true
+          activate-environment: test-env
+
+      - name: Install Dependencies
+        run: conda install cmake=3.29 git -y
+
+      - name: Install Dependencies  (Windows)
+        if: runner.os == 'Windows'
+        run: conda install mpir zlib -y
+
+      - name: Envs (Windows)
+        if: runner.os == 'Windows'
+        run: echo "CMAKE_GENERATOR=NMake Makefiles" >> $GITHUB_ENV
+
+      - name: Configure ssl certificate
+        if : runner.os == 'Windows'
+        run: git config --global http.sslBackend schannel
 
       - name: Configure
         run: |
           mkdir -p build
           cd build
           cmake .. \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
             -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
-            -DFLOAT_TETWILD_WITH_EXACT_ENVELOPE=${{ matrix.envelope }} \
+            -DFLOAT_TETWILD_WITH_EXACT_ENVELOPE=${{ matrix.envelope }}
 
       - name: Build
-        run: cd build; make -j2; ccache --show-stats
-
+        run: cd build; conda run -n test-env cmake --build . --parallel 2
+        
       - name: Tests
         run: cd build; ctest --verbose --output-on-failure
 
-      - name: Run Example
+      - name: Run Example (Unix)
+        if: runner.os != 'Windows'
         run: cd build; ./FloatTetwild_bin --input ../tests/bunny.off --level 0 --stop-energy 100
 
-  ####################
-  # Windows
-  ####################
-
-  Windows:
-    name: Windows-${{ matrix.envelope }} (${{ matrix.config }})
-    runs-on: windows-2019
-    env:
-      CC: cl.exe
-      CXX: cl.exe
-      SCCACHE_IDLE_TIMEOUT: "12000"
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [Debug, Release]
-        envelope: [ON, OFF]
-    steps:
-      - name: Stetup Conda
-        uses: s-weigand/setup-conda@v1
-        with:
-          conda-channels: anaconda, conda-forge
-          python-version: 3.6
-
-      - name: Install Dependencies
-        shell: powershell
-        run: |
-          conda install -c conda-forge mpir -y
-
-      - name: Checkout repository
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 10
-      - uses: seanmiddleditch/gha-setup-ninja@master
-        # https://github.com/actions/cache/issues/101
-      - name: Set env
-        run: |
-          echo "appdata=$env:LOCALAPPDATA" >> ${env:GITHUB_ENV}
-          echo "GMP_INC=C:\Miniconda\Library\include" >> ${env:GITHUB_ENV}
-          echo "GMP_LIB=C:\Miniconda\Library\lib" >> ${env:GITHUB_ENV}
-
-      - name: Cache build
-        id: cache-build
-        uses: actions/cache@v1
-        with:
-          path: ${{ env.appdata }}\Mozilla\sccache
-          key: ${{ runner.os }}-${{ matrix.config }}-${{ matrix.envelope }}-cache
-
-      - name: Prepare sccache
-        run: |
-          Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-          scoop install sccache --global
-          # Scoop modifies the PATH so we make it available for the next steps of the job
-          echo "${env:PATH}" >> ${env:GITHUB_PATH}
-
-      - name: Configure and build
+      - name: Run Example (Windows)
+        if: runner.os == 'Windows'
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=x64
-          cmake --version
-          cmake -G Ninja ^
-            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ^
-            -DCMAKE_BUILD_TYPE=${{ matrix.config }} ^
-            -DFLOAT_TETWILD_WITH_EXACT_ENVELOPE=${{ matrix.envelope }} ^
-            -B build ^
-            -S .
           cd build
-          ninja -j1
-
-      - name: Tests
-        run: |
-          cd build
-          ctest --verbose --output-on-failure
-
-      - name: Run Example
-        shell: powershell
-        run: |
-          cd build
-          cp C:\Miniconda\Library\bin\mpir.dll .\
-          cp C:\Miniconda\Library\bin\gmp.dll .\
-          .\FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0  --stop-energy 200
+          rem Find the msvc_* directory automatically and copy the DLL
+          for /d %%d in (msvc_*) do copy "%%d\tbb*.dll" .
+          rem Copy the other DLL
+          copy C:\Miniconda\envs\test-env\Library\bin\mpir.dll .
+          rem Run the executable
+          FloatTetwild_bin.exe --input ..\tests\bunny.off --level 0 --stop-energy 100

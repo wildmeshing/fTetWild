@@ -15,7 +15,7 @@
 #include <floattetwild/VertexSmoothing.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/MeshIO.hpp>
-//#include <floattetwild/FastWindingNumber.hpp>
+#include <floattetwild/FastWindingNumber.hpp>
 #include <floattetwild/CSGTreeParser.hpp>
 
 //#include <floattetwild/FloatTetCutting.h>
@@ -1296,52 +1296,11 @@ void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
-    GEO::Mesh bg_mesh;
-    bg_mesh.vertices.clear();
-    bg_mesh.vertices.create_vertices((int)mesh.params.V_sizing_field.rows() / 3);
-    for (int i = 0; i < mesh.params.V_sizing_field.rows() / 3; i++) {
-        GEO::vec3& p = bg_mesh.vertices.point(i);
-        for (int j = 0; j < 3; j++)
-            p[j] = mesh.params.V_sizing_field(i * 3 + j);
-    }
-    bg_mesh.cells.clear();
-    bg_mesh.cells.create_tets((int)mesh.params.T_sizing_field.rows() / 4);
-    for (int i = 0; i < mesh.params.T_sizing_field.rows() / 4; i++) {
-        for (int j = 0; j < 4; j++)
-            bg_mesh.cells.set_vertex(i, j, mesh.params.T_sizing_field(i * 4 + j));
-    }
-    GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
-
-    auto get_sizing_field_value = [&](const Vector3& p) {
-        GEO::vec3 geo_p(p[0], p[1], p[2]);
-        int  bg_t_id = bg_aabb.containing_tet(geo_p);
-        if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
-            return -1.;
-
-        // compute barycenter
-        std::array<Vector3, 4> vs;
-        for (int j = 0; j < 4; j++) {
-            vs[j] = Vector3(mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3),
-                            mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3 + 1),
-                            mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3 + 2));
-        }
-        double value = 0;
-        for (int j = 0; j < 4; j++) {
-            Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
-            double  d = (vs[(j + 3) % 4] - vs[j]).dot(n);
-            if (d == 0)
-                continue;
-            double weight = abs((p - vs[j]).dot(n) / d);
-            value += weight * mesh.params.values_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + (j + 3) % 4));
-        }
-        return value;  // / mesh.params.ideal_edge_length;
-    };
-
     for (auto &p: tet_vertices) {
         if (p.is_removed)
             continue;
         p.sizing_scalar = 1; //reset
-        double value = get_sizing_field_value(p.pos);
+        double value = mesh.params.get_sizing_field_value(p.pos);
         if (value > 0) {
             p.sizing_scalar = value / mesh.params.ideal_edge_length;
         }
@@ -1512,10 +1471,10 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json& csg_tree_with_ids, 
         for (int i = 0; i <= max_id; ++i) {
             get_tracked_surface(mesh, vs, fs, i);
 
-//            if (!mesh.params.use_general_wn)
-//                floatTetWild::fast_winding_number(
-//                  Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
-//            else
+            if (!mesh.params.use_general_wn)
+                floatTetWild::fast_winding_number(
+                  Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
+            else
                 igl::winding_number(
                   Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
         }
@@ -1546,10 +1505,10 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json& csg_tree_with_ids, 
             for (int k = 0; k < fs.rows(); ++k)
                 fs.row(k) = Fs[i][k];
 
-//            if (!mesh.params.use_general_wn)
-//                floatTetWild::fast_winding_number(
-//                  Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
-//            else
+            if (!mesh.params.use_general_wn)
+                floatTetWild::fast_winding_number(
+                  Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
+            else
                 igl::winding_number(
                   Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
         }
@@ -1613,11 +1572,10 @@ void floatTetWild::boolean_operation(Mesh& mesh, int op){
     }
 
     Eigen::VectorXd w1, w2;
-//    if(!mesh.params.use_general_wn) {
-//        floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
-//        floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
-//    }else
-    {
+    if(!mesh.params.use_general_wn) {
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+    }else {
         igl::winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
         igl::winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
     }
@@ -1671,9 +1629,9 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
         F.col(1) = F.col(2).eval();
         F.col(2) = tmp;
     }
-//    if(!mesh.params.use_general_wn)
-//        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-//    else
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
     index = 0;
@@ -1748,9 +1706,9 @@ void floatTetWild::filter_outside(Mesh& mesh, const std::vector<Vector3> &input_
 //        F.col(1) = F.col(2).eval();
 //        F.col(2) = tmp;
 //    }
-//    if(!mesh.params.use_general_wn)
-//        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-//    else
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
     index = 0;
@@ -1862,9 +1820,9 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
         F.col(2) = tmp;
     }
     Eigen::VectorXd W;
-//    if(!mesh.params.use_general_wn)
-//        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
-//    else
+    if(!mesh.params.use_general_wn)
+        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+    else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
     index = 0;
@@ -2187,7 +2145,7 @@ void floatTetWild::smooth_open_boundary_aux(Mesh& mesh, const AABBWrapper& tree)
 //        vertex_smoothing(mesh, tree);
 
         ///unfreeze
-        for (int v_id; v_id < tet_vertices.size(); v_id++) {
+        for (int v_id=0; v_id < tet_vertices.size(); v_id++) {
 //            if (is_b_vs[v_id])
 //            if (!conn_b_fs[v_id].empty())
                 tet_vertices[v_id].is_freezed = false;

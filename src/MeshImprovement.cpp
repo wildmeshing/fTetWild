@@ -615,7 +615,7 @@ void floatTetWild::operation(const std::vector<Vector3> &input_vertices, const s
 bool floatTetWild::update_scaling_field(Mesh &mesh, Scalar max_energy) {
 //    return false;
 
-    cout << "updating sclaing field ..." << endl;
+    cout << "updating scaling field ..." << endl;
     bool is_hit_min_edge_length = false;
 
     Scalar radius0 = mesh.params.ideal_edge_length * 1.8;//increasing the radius would increase the #v in output

@@ -148,7 +148,8 @@ Options:
   -o,--output TEXT            Output tetmesh OUTPUT in .msh format. (string, optional, default: input_file+postfix+'.msh')
   --tag TEXT:FILE             Tag input faces for Boolean operation.
   --op INT                    Boolean operation: 0: union, 1: intersection, 2: difference.
-  -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)
+  -a,--la FLOAT               Ideal edge length not scaled by diag_of_bbox. Excludes: --lr. (double, optional)
+  -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. Excludes: --la. (double, optional, default: 0.05)
   -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
   --stop-energy FLOAT         Stop optimization when max energy is lower than this.
   --log TEXT                  Log info to given file.

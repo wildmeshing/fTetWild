@@ -193,10 +193,16 @@ int main(int argc, char** argv)
     command_line.add_option(
       "--op", boolean_op, "Boolean operation: 0: union, 1: intersection, 2: difference.");
 
-    command_line.add_option(
+    auto absolute_op = command_line.add_option(
+      "-a,--la",
+      params.ideal_edge_length_abs,
+      "Ideal edge length not scaled by diag_of_bbox. (double, optional)");
+    auto relative_op = command_line.add_option(
       "-l,--lr",
       params.ideal_edge_length_rel,
       "ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)");
+    relative_op->excludes(absolute_op);
+
     command_line.add_option("-e,--epsr",
                             params.eps_rel,
                             "epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)");

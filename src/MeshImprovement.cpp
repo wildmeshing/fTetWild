@@ -15,7 +15,6 @@
 #include <floattetwild/VertexSmoothing.h>
 #include <floattetwild/Parameters.h>
 #include <floattetwild/MeshIO.hpp>
-#include <floattetwild/FastWindingNumber.hpp>
 #include <floattetwild/CSGTreeParser.hpp>
 
 //#include <floattetwild/FloatTetCutting.h>
@@ -26,6 +25,7 @@
 
 #include <igl/Timer.h>
 #include <igl/winding_number.h>
+#include <igl/fast_winding_number.h>
 
 #include <floattetwild/MshLoader.h>
 #include <geogram/mesh/mesh_AABB.h>
@@ -1472,7 +1472,7 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json& csg_tree_with_ids, 
             get_tracked_surface(mesh, vs, fs, i);
 
             if (!mesh.params.use_general_wn)
-                floatTetWild::fast_winding_number(
+                igl::fast_winding_number(
                   Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
             else
                 igl::winding_number(
@@ -1506,13 +1506,13 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json& csg_tree_with_ids, 
                 fs.row(k) = Fs[i][k];
 
             if (!mesh.params.use_general_wn)
-                floatTetWild::fast_winding_number(
+                igl::fast_winding_number(
                   Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
             else
                 igl::winding_number(
                   Eigen::MatrixXd(vs.cast<double>()), Eigen::MatrixXi(fs), C, w[i]);
+            }
         }
-    }
 
     boolean_operation(mesh, csg_tree_with_ids, w);
 }
@@ -1530,7 +1530,7 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json &csg_tree_with_ids, 
         auto &t = mesh.tets[t_id];
         if(t.is_removed)
             continue;
-
+        
         bool keep = CSGTreeParser::keep_tet(csg_tree_with_ids, cnt, w);
         t.is_removed = !keep;
         int tid = 0;
@@ -1573,8 +1573,8 @@ void floatTetWild::boolean_operation(Mesh& mesh, int op){
 
     Eigen::VectorXd w1, w2;
     if(!mesh.params.use_general_wn) {
-        floatTetWild::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
-        floatTetWild::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
+        igl::fast_winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
+        igl::fast_winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
     }else {
         igl::winding_number(Eigen::MatrixXd(v1.cast<double>()), Eigen::MatrixXi(f1), C, w1);
         igl::winding_number(Eigen::MatrixXd(v2.cast<double>()), Eigen::MatrixXi(f2), C, w2);
@@ -1630,7 +1630,7 @@ void floatTetWild::filter_outside(Mesh& mesh, bool invert_faces) {
         F.col(2) = tmp;
     }
     if(!mesh.params.use_general_wn)
-        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+        igl::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
     else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
@@ -1707,7 +1707,7 @@ void floatTetWild::filter_outside(Mesh& mesh, const std::vector<Vector3> &input_
 //        F.col(2) = tmp;
 //    }
     if(!mesh.params.use_general_wn)
-        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+        igl::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
     else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 
@@ -1821,7 +1821,7 @@ void floatTetWild::mark_outside(Mesh& mesh, bool invert_faces){
     }
     Eigen::VectorXd W;
     if(!mesh.params.use_general_wn)
-        floatTetWild::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
+        igl::fast_winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
     else
         igl::winding_number(Eigen::MatrixXd(V.cast<double>()), Eigen::MatrixXi(F), C, W);
 

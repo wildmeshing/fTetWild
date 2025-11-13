@@ -30,6 +30,8 @@
 
 #include <igl/Timer.h>
 #include <igl/write_triangle_mesh.h>
+#include "igl/default_num_threads.h"
+
 
 #ifdef LIBIGL_WITH_TETGEN
 #include <igl/copyleft/tetgen/tetrahedralize.h>
@@ -283,6 +285,9 @@ int main(int argc, char** argv)
     std::cout << "TBB threads " << num_threads << std::endl;
     tbb::global_control parallelism_limit(tbb::global_control::max_allowed_parallelism, num_threads);
     tbb::global_control stack_size_limit(tbb::global_control::thread_stack_size, stack_size);
+    // IGL has issues with a nested for loop and oversubscription, see
+    // https://github.com/libigl/libigl/issues/2412
+    igl::default_num_threads(std::ceil(std::sqrt(num_threads)));
 #endif
 
     //    if(params.is_quiet){

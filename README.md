@@ -150,7 +150,8 @@ Options:
   --op INT                    Boolean operation: 0: union, 1: intersection, 2: difference.
   -a,--la FLOAT               Ideal edge length not scaled by diag_of_bbox. Excludes: --lr. (double, optional)
   -l,--lr FLOAT               ideal_edge_length = diag_of_bbox * L. Excludes: --la. (double, optional, default: 0.05)
-  -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)
+  -d,--espr-abs FLOAT         Epsilon as a unitless distance. Excludes: --epsr. (double, optional)
+  -e,--epsr FLOAT             epsilon = diag_of_bbox * EPS. Excludes: --epsr-abs. (double, optional, default: 1e-3)
   --stop-energy FLOAT         Stop optimization when max energy is lower than this.
   --log TEXT                  Log info to given file.
   --level INT                 Log level (0 = most verbose, 6 = off).

@@ -205,9 +205,13 @@ int main(int argc, char** argv)
       "ideal_edge_length = diag_of_bbox * L. (double, optional, default: 0.05)");
     relative_op->excludes(absolute_op);
 
-    command_line.add_option("-e,--epsr",
-                            params.eps_rel,
-                            "epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)");
+    auto absolute_eps = command_line.add_option("-d,--espr-abs",
+                                                params.eps_abs,
+                                                "Epsilon as a unitless distance. (double, optional)");
+    auto relative_eps = command_line.add_option("-e,--epsr",
+                                                params.eps_rel,
+                                                "epsilon = diag_of_bbox * EPS. (double, optional, default: 1e-3)");
+    relative_eps->excludes(absolute_eps);
 
     command_line.add_option("--max-its", params.max_its, "(for debugging usage only)");
     command_line.add_option(

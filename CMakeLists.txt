@@ -47,6 +47,7 @@ option(FLOAT_TETWILD_ENABLE_TBB "Enable TBB" ON)
 option(FLOAT_TETWILD_USE_FLOAT "Use floats instead of double" OFF)
 option(FLOAT_TETWILD_WITH_SANITIZERS "Use sanitizers" OFF)
 option(FLOAT_TETWILD_WITH_EXACT_ENVELOPE "Use exact envelope" OFF)
+option(FLOAT_TETWILD_USE_GMP "Use GMP for exact rational arithmetic (AMIPS energy stabilisation). When OFF a long double fallback is used." OFF)
 
 # Sanitizer options
 option(SANITIZE_ADDRESS "Sanitize Address" OFF)
@@ -81,9 +82,14 @@ igl_include(predicates)
 # FloatTetwild library
 # ##############################################################################
 
-find_package(GMPfTetWild)
-if(NOT ${GMP_FOUND})
-    message(FATAL_ERROR "Cannot find GMP")
+if(FLOAT_TETWILD_USE_GMP)
+    find_package(GMPfTetWild)
+    if(NOT ${GMP_FOUND})
+        message(FATAL_ERROR "Cannot find GMP. Install libgmp-dev or disable with -DFLOAT_TETWILD_USE_GMP=OFF.")
+    endif()
+    message(STATUS "GMP enabled: using exact rational arithmetic for AMIPS energy stabilisation")
+else()
+    message(STATUS "GMP disabled: using long double fallback for AMIPS energy stabilisation")
 endif()
 
 # add_library() can only be called without any source since CMake 3.11 ...
@@ -117,7 +123,10 @@ if(FLOAT_TETWILD_USE_FLOAT)
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DFLOAT_TETWILD_USE_FLOAT)
 endif()
 
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
+if(FLOAT_TETWILD_USE_GMP)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC FLOAT_TETWILD_USE_GMP)
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
+endif()
 
 target_link_libraries(
   ${PROJECT_NAME}
@@ -126,11 +135,12 @@ target_link_libraries(
          geogram::geogram
          spdlog::spdlog
          Threads::Threads
-         # fast_winding_number
          json
-         ${GMP_LIBRARIES}
-         # ${MPFR_LIBRARIES}
 )
+
+if(FLOAT_TETWILD_USE_GMP)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${GMP_LIBRARIES})
+endif()
 if(FLOAT_TETWILD_ENABLE_TBB)
     target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
     target_compile_definitions(${PROJECT_NAME} PUBLIC FLOAT_TETWILD_USE_TBB)

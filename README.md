@@ -50,9 +50,20 @@ Here is pre-generated tetmeshes and the extracted surface meshes for research-pu
 
 - Figures in the paper: [Input/output & scripts](https://drive.google.com/file/d/1qTukYF3N05jLxKxYQK5tNOUdFAr_0sf1/view?usp=sharing)
 
+## Documentation
+
+Full documentation is available in the [`doc/`](doc/index.md) folder:
+
+- [Algorithm overview](doc/overview.md)
+- [Dependencies](doc/dependencies.md)
+- [Library API](doc/library_api.md)
+- [Data structures](doc/data_structures.md)
+- [Preprocessing](doc/preprocessing.md), [Triangle insertion](doc/triangle_insertion.md), [Mesh improvement](doc/mesh_improvement.md), [Filtering & Booleans](doc/filtering_and_booleans.md)
+- [Envelope & AABB](doc/envelope_and_aabb.md)
+
 ## Installation via CMake
 
-Our code was originally developed on MacOS and has been tested on Linux and Windows. We provide the commands for installing fTetWild in MacOS:
+Our code was originally developed on MacOS and has been tested on Linux and Windows.
 
 - Clone the repository into your local machine:
 
@@ -70,24 +81,25 @@ cmake ..
 make
 ```
 
-You may need to install `gmp` before compiling the code. You can install it via
+No system packages are required by default. All dependencies are fetched automatically at configure time via CMake's `FetchContent`.
 
-- [homebrew](https://brew.sh/) on mac:
+**Optional: GMP for exact rational arithmetic**
+
+GMP is no longer required. By default fTetWild uses a `long double` fallback for the AMIPS energy stabilisation step. To opt in to the original exact GMP-backed implementation:
+
 ```bash
-brew install gmp
-```
-- Package manager on Unix:
-```
-sudo apt-get install gmp
-```
-- [Conda](https://anaconda.org) on Windows:
-```
-conda install -c conda-forge mpir
+cmake .. -DFLOAT_TETWILD_USE_GMP=ON
 ```
 
-**Note Windows** The executable needs that the file `mpir.dll` is in the same directiory of `FloatTetwild_bin.exe`. Once you compliled the code, copy `mpir.dll` (e.g., `<conda_dir>\Library\bin`) to the directoy containing `FloatTetwild_bin.exe`.
+You will then need GMP installed:
 
-**Note** if cmake cannot find gmp you need to export the envirnement variable `GMP_INC` and `GMP_LIB` to the folder where you installed (e.g., `<conda_dir>\Library\include` for `GMP_INC` and `<conda_dir>\Library\lib` for `GMP_LIB`).
+- [homebrew](https://brew.sh/) on mac: `brew install gmp`
+- Package manager on Unix: `sudo apt-get install libgmp-dev`
+- [Conda](https://anaconda.org) on Windows: `conda install -c conda-forge mpir`
+
+**Note Windows** The executable needs `mpir.dll` in the same directory as `FloatTetwild_bin.exe`.
+
+**Note** if cmake cannot find GMP set the environment variables `GMP_INC` and `GMP_LIB` to the include and library directories respectively.
 
 - Check the installation:
 

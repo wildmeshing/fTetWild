@@ -1296,11 +1296,52 @@ void floatTetWild::apply_sizingfield(Mesh& mesh, AABBWrapper& tree) {
     auto &tet_vertices = mesh.tet_vertices;
     auto &tets = mesh.tets;
 
+    GEO::Mesh bg_mesh;
+    bg_mesh.vertices.clear();
+    bg_mesh.vertices.create_vertices((int)mesh.params.V_sizing_field.rows() / 3);
+    for (int i = 0; i < mesh.params.V_sizing_field.rows() / 3; i++) {
+        GEO::vec3& p = bg_mesh.vertices.point(i);
+        for (int j = 0; j < 3; j++)
+            p[j] = mesh.params.V_sizing_field(i * 3 + j);
+    }
+    bg_mesh.cells.clear();
+    bg_mesh.cells.create_tets((int)mesh.params.T_sizing_field.rows() / 4);
+    for (int i = 0; i < mesh.params.T_sizing_field.rows() / 4; i++) {
+        for (int j = 0; j < 4; j++)
+            bg_mesh.cells.set_vertex(i, j, mesh.params.T_sizing_field(i * 4 + j));
+    }
+    GEO::MeshCellsAABB bg_aabb(bg_mesh, false);
+
+    auto get_sizing_field_value = [&](const Vector3& p) {
+        GEO::vec3 geo_p(p[0], p[1], p[2]);
+        int  bg_t_id = bg_aabb.containing_tet(geo_p);
+        if (bg_t_id == GEO::MeshCellsAABB::NO_TET)
+            return -1.;
+
+        // compute barycenter
+        std::array<Vector3, 4> vs;
+        for (int j = 0; j < 4; j++) {
+            vs[j] = Vector3(mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3),
+                            mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3 + 1),
+                            mesh.params.V_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + j) * 3 + 2));
+        }
+        double value = 0;
+        for (int j = 0; j < 4; j++) {
+            Vector3 n = ((vs[(j + 1) % 4] - vs[j]).cross(vs[(j + 2) % 4] - vs[j])).normalized();
+            double  d = (vs[(j + 3) % 4] - vs[j]).dot(n);
+            if (d == 0)
+                continue;
+            double weight = abs((p - vs[j]).dot(n) / d);
+            value += weight * mesh.params.values_sizing_field(mesh.params.T_sizing_field(bg_t_id * 4 + (j + 3) % 4));
+        }
+        return value;  // / mesh.params.ideal_edge_length;
+    };
+
     for (auto &p: tet_vertices) {
         if (p.is_removed)
             continue;
         p.sizing_scalar = 1; //reset
-        double value = mesh.params.get_sizing_field_value(p.pos);
+        double value = get_sizing_field_value(p.pos);
         if (value > 0) {
             p.sizing_scalar = value / mesh.params.ideal_edge_length;
         }

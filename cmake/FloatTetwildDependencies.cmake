@@ -55,10 +55,10 @@ if(NOT TARGET spdlog::spdlog)
         GIT_REPOSITORY https://github.com/gabime/spdlog
         GIT_TAG        v1.15.3
     )
-    
+
     # Configure spdlog to use external fmt
     set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
-    
+
     FetchContent_MakeAvailable(spdlog)
 endif()
 
@@ -67,7 +67,7 @@ if(NOT TARGET igl::core)
     FetchContent_Declare(
         libigl
         GIT_REPOSITORY https://github.com/libigl/libigl.git
-        GIT_TAG        v2.6.0   
+        GIT_TAG        v2.6.0
     )
     set(LIBIGL_BUILD_STATIC ON CACHE BOOL "" FORCE)
     set(LIBIGL_BUILD_SHARED OFF CACHE BOOL "" FORCE)
@@ -91,6 +91,8 @@ if(NOT TARGET geogram::geogram)
         set(GEO_PLATFORM "Win-vs-generic")
     elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
         set(GEO_PLATFORM "Darwin-clang")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+        set(GEO_PLATFORM "Linux64-gcc-aarch64")
     else()
         set(GEO_PLATFORM "Linux64-gcc")
     endif()
@@ -145,7 +147,7 @@ if(NOT TARGET json)
         GIT_TAG        0901d33bf6e7dfe6f70fd9d142c8f5c6695c6c5b
     )
     FetchContent_MakeAvailable(json)
-    
+
     # Create interface target if not provided by the library
     if(NOT TARGET json)
         add_library(json INTERFACE)

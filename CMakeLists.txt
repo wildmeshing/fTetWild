@@ -92,6 +92,11 @@ add_library(${PROJECT_NAME} src/Logger.cpp)
 # Public include directory for FloatTetwild
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/include)
 
+# On aarch64, char is unsigned by default, so force it signed explicitly
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64" AND NOT MSVC)
+    target_compile_options(${PROJECT_NAME} PUBLIC -fsigned-char)
+endif()
+
 # Extra warnings
 target_link_libraries(${PROJECT_NAME} PRIVATE warnings::all)
 

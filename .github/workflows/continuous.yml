@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-latest, macOS-15, macOS-14, macOS-latest, windows-2022]
+        os: [ubuntu-22.04, ubuntu-latest, ubuntu-24.04-arm, macOS-15, macOS-14, macOS-latest, windows-2022]
         config: [Debug, Release]
         envelope: [OFF]
         include:
@@ -35,28 +35,30 @@ jobs:
             name: ubuntu-22.04
           - os: ubuntu-latest
             name: ubuntu-latest
+          - os: ubuntu-24.04-arm
+            name: Ubuntu 24.04 ARM64
           - os: macos-13
             name: macOS-13
           - os: macos-14
             name: macOS-14 ARM64
           - os: macos-latest
-            name: macOS-latest ARM64     
+            name: macOS-latest ARM64
           - os: windows-2022
             name: Windows
-            
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 10
           submodules: "recursive"
-          
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 20
         with:
           detached: true
-    
+
       - name: Setup NMake (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -95,7 +97,7 @@ jobs:
 
       - name: Build
         run: cd build; conda run -n test-env cmake --build . --parallel 2
-        
+
       - name: Tests
         run: cd build; ctest --verbose --output-on-failure
 

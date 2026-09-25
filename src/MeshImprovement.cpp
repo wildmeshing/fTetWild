@@ -1571,7 +1571,7 @@ void floatTetWild::boolean_operation(Mesh& mesh, const json &csg_tree_with_ids, 
         auto &t = mesh.tets[t_id];
         if(t.is_removed)
             continue;
-        
+
         bool keep = CSGTreeParser::keep_tet(csg_tree_with_ids, cnt, w);
         t.is_removed = !keep;
         int tid = 0;

@@ -64,6 +64,8 @@ namespace floatTetWild {
 
         // initial absolute target edge length not scaled to the box diagonal
         Scalar ideal_edge_length_abs = 0.0;
+        // initial absolute epsilon not scaled to the box diagonal
+        Scalar eps_abs = 0.0;
 
         int max_its = 80;
         Scalar stop_energy = 10;
@@ -116,7 +118,13 @@ namespace floatTetWild {
             }
             ideal_edge_length_2 = ideal_edge_length * ideal_edge_length;
 
-            eps_input = bbox_diag_length * eps_rel;
+            if (eps_abs > 0.0) {
+                eps_input = eps_abs;
+                eps_rel   = eps_abs / bbox_diag_length;
+            }
+            else {
+                eps_input = bbox_diag_length * eps_rel;
+            }
             dd = eps_input;// / stage;
             dd /= 1.5;
 

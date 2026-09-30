@@ -15,6 +15,8 @@
 #include <igl/unique_rows.h>
 #include <igl/writeOFF.h>
 
+#include <stdexcept>
+
 #ifdef FLOAT_TETWILD_USE_TBB
 #include <oneapi/tbb/concurrent_unordered_set.h>
 #include <oneapi/tbb/concurrent_vector.h>
@@ -52,10 +54,28 @@ void floatTetWild::simplify(std::vector<Vector3>&  input_vertices,
 
     // clean up vs, fs
     // v
+    //
+    // A vertex survives iff some surviving (non-removed) face still
+    // references it. conn_fs is updated incrementally by collapsing()/
+    // swapping() as a bookkeeping aid, but it can drift out of sync with
+    // input_faces/f_is_removed (e.g. a live face left referencing a vertex
+    // whose conn_fs entry went empty) -- using conn_fs[i].empty() here to
+    // decide removal would then map that vertex to -1 below and corrupt the
+    // surviving face's vertex index. Derive survival directly from
+    // input_faces instead, which cannot desync from the remap loop that
+    // follows it.
+    std::vector<bool> v_is_used(input_vertices.size(), false);
+    for (int i = 0; i < input_faces.size(); i++) {
+        if (f_is_removed[i])
+            continue;
+        for (int j = 0; j < 3; j++)
+            v_is_used[input_faces[i][j]] = true;
+    }
+
     std::vector<int> map_v_ids(input_vertices.size(), -1);
     int              cnt = 0;
     for (int i = 0; i < input_vertices.size(); i++) {
-        if (v_is_removed[i] || conn_fs[i].empty())
+        if (v_is_removed[i] || !v_is_used[i])
             continue;
         map_v_ids[i] = cnt;
         cnt++;
@@ -64,7 +84,7 @@ void floatTetWild::simplify(std::vector<Vector3>&  input_vertices,
     std::vector<Vector3> new_input_vertices(cnt);
     cnt = 0;
     for (int i = 0; i < input_vertices.size(); i++) {
-        if (v_is_removed[i] || conn_fs[i].empty())
+        if (v_is_removed[i] || !v_is_used[i])
             continue;
         new_input_vertices[cnt++] = input_vertices[i];
     }
@@ -75,8 +95,14 @@ void floatTetWild::simplify(std::vector<Vector3>&  input_vertices,
     for (int i = 0; i < input_faces.size(); i++) {
         if (f_is_removed[i])
             continue;
-        for (int j = 0; j < 3; j++)
+        for (int j = 0; j < 3; j++) {
             input_faces[i][j] = map_v_ids[input_faces[i][j]];
+            if (input_faces[i][j] < 0) {
+                throw std::runtime_error(
+                  "simplify(): internal error remapping surviving face " + std::to_string(i) +
+                  " -- a live vertex was mapped to an invalid index");
+            }
+        }
         cnt++;
     }
 

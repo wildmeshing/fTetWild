@@ -181,4 +181,10 @@ if(FLOAT_TETWILD_TOPLEVEL_PROJECT)
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
+
+    # Standalone regression reproducer for the crash fixed in this commit
+    # (see tests/repro_dragon.cpp for usage). Not registered as a CTest case
+    # since it needs an external mesh not bundled with the repo.
+    add_executable(repro_dragon tests/repro_dragon.cpp)
+    target_link_libraries(repro_dragon PUBLIC ${PROJECT_NAME} igl::core)
 endif()
